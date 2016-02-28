@@ -167,7 +167,7 @@ end
 --local d = loadDOMTree("../datasets/clustvx/adidas.com_1.htm")
 --printDOM(d,true)
 --exit()
-processTestBed2("tpsf")
+processTestBed2("../datasets/tpsf")
 --processTestBed2("../datasets/wien")
 --processTestBed2("../datasets/zhao1")
 --processTestBed2("../datasets/clustvx")

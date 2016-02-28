@@ -12,7 +12,8 @@
 #include <unordered_map>
 #include <tidy.h>
 #include <tidybuffio.h>
-#include "tTPSFilter.h"
+
+#include "SRDEFilter.h"
 
 class Node;
 using pNode = Node *;
@@ -28,7 +29,7 @@ public:
 	pNode html();
 	void traverse(pNode, size_t ident = 0);
 
-	tTPSFilter tpsf;
+	SRDEFilter tpsf;
 private:
 	void mapNodes(TidyNode node);
 	unordered_map<TidyNode, pNode> domNodes;

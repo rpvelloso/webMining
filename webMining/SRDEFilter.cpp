@@ -17,15 +17,17 @@
     along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "SRDEFilter.h"
+
 #include <queue>
 #include <iostream>
 #include <set>
 #include <functional>
 #include <algorithm>
 #include <map>
+#include <unordered_map>
 #include <list>
 #include <vector>
-#include "tTPSFilter.h"
 #include "misc.h"
 #include "hsfft.h"
 #include <tidy.h>
@@ -33,13 +35,13 @@
 
 using namespace std;
 
-tTPSFilter::tTPSFilter() : count(0),pathCount(0) {
+SRDEFilter::SRDEFilter() {
 }
 
-tTPSFilter::~tTPSFilter() {
+SRDEFilter::~SRDEFilter() {
 }
 
-const wstring& tTPSFilter::getTagPathSequence(int dr) {
+const wstring& SRDEFilter::getTagPathSequence(int dr) {
 	if (dr < 0)
 		return tagPathSequence;
 	else {
@@ -52,26 +54,8 @@ const wstring& tTPSFilter::getTagPathSequence(int dr) {
 	}
 }
 
-bool tTPSFilter::prune(pNode n) {
-	list<pNode> remove;
-
-	if (n == NULL) return false;
-
-	for (auto child = n->child(); child; child = child->next()) {
-		if (prune(child)) remove.push_back(child);
-	}
-
-	count -= remove.size();
-
-	if (find(nodeSequence.begin(),nodeSequence.end(),n) == nodeSequence.end() &&
-			!n->child()) {
-		return true;
-	}
-	return false;
-}
-
-map<int,int> tTPSFilter::symbolFrequency(wstring s, set<int> &alphabet) {
-	map<int, int> symbolCount;
+unordered_map<int,int> SRDEFilter::symbolFrequency(wstring s, set<int> &alphabet) {
+	unordered_map<int, int> symbolCount;
 
 	// compute symbol frequency
 	for (size_t i=0;i<s.size();i++) {
@@ -86,7 +70,7 @@ map<int,int> tTPSFilter::symbolFrequency(wstring s, set<int> &alphabet) {
 	return symbolCount;
 }
 
-map<int,int> tTPSFilter::frequencyThresholds(map<int,int> symbolCount) {
+map<int,int> SRDEFilter::frequencyThresholds(unordered_map<int,int> symbolCount) {
 	map<int,int> thresholds;
 
 	// create sorted list of frequency thresholds
@@ -96,65 +80,7 @@ map<int,int> tTPSFilter::frequencyThresholds(map<int,int> symbolCount) {
 	return thresholds;
 }
 
-long int tTPSFilter::searchRegion(wstring s) {
-	set<int> alphabet,filteredAlphabet,regionAlphabet,intersect;
-	map<int,int> currentSymbolCount,symbolCount,thresholds;
-	bool regionFound=false;
-	size_t border=0;
-
-
-	symbolCount = symbolFrequency(s,alphabet);
-	thresholds = frequencyThresholds(symbolCount);
-	auto threshold = thresholds.begin();
-
-	while (!regionFound && (threshold != thresholds.end())) {
-		// filter alphabet
-		filteredAlphabet.clear();
-		for (auto j=symbolCount.begin();j!=symbolCount.end();j++) {
-			if ((*j).second > (*threshold).first) filteredAlphabet.insert((*j).first);
-		}
-		if (filteredAlphabet.size() < 2) break;
-		threshold++;
-
-		regionAlphabet.clear();
-		currentSymbolCount = symbolCount;
-		for (size_t i=0;i<s.size();i++) {
-			if (filteredAlphabet.find(s[i]) != filteredAlphabet.end()) {
-				regionAlphabet.insert(s[i]);
-				currentSymbolCount[s[i]]--;
-				if (currentSymbolCount[s[i]]==0) {
-					filteredAlphabet.erase(s[i]);
-					set_intersection(filteredAlphabet.begin(),filteredAlphabet.end(),regionAlphabet.begin(),regionAlphabet.end(),inserter(intersect,intersect.begin()));
-
-					if (intersect.empty()) {
-						if (!filteredAlphabet.empty()) {
-							regionFound = true;
-							border=i;
-						}
-						break;
-					}
-					intersect.clear();
-				}
-			}
-		}
-	}
-
-	if (regionFound) {
-		if (border <= s.size()/2) {
-			border++;
-			s = s.substr(border,s.size());
-		} else {
-			s = s.substr(0,border);
-			border = 0;
-		}
-		tagPathSequence = s;
-		border += searchRegion(s);
-	}
-	return border;
-}
-
-#define STYLEATTR_COUNT 8
-void tTPSFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) {
+void SRDEFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) {
 	vector<string> styleAttr = {"style", "class", "bgcolor", "width", "height", "align", "valign", "halign"};
 	string tagStyle;
 
@@ -177,7 +103,7 @@ void tTPSFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) 
 		else s = s + "/" + tagName;
 	}
 
-	if (tagPathMap.find(s) == tagPathMap.end()) {
+	if (tagPathMap.count(s) == 0) {
 		pathCount++;
 		tagPathMap[s] = pathCount;
 	}
@@ -194,7 +120,7 @@ void tTPSFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) 
 		buildTagPath(s,child,print,css,fp);
 }
 
-map<long int, tTPSRegion> tTPSFilter::detectStructure(map<long int, tTPSRegion> &r) {
+map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &r) {
 	float angCoeffThreshold=0.17633; // 10 degrees
 	long int sizeThreshold = (tagPathSequence.size()*3)/100; // % page size
 	map<long int,tTPSRegion> structured;
@@ -213,71 +139,7 @@ map<long int, tTPSRegion> tTPSFilter::detectStructure(map<long int, tTPSRegion> 
 	return structured;
 }
 
-map<long int, tTPSRegion> tTPSFilter::tagPathSequenceFilter(pNode n, bool css) {
-	wstring originalTPS;
-	vector<pNode> originalNodeSequence;
-	queue<pair<wstring,long int>> seqQueue;
-	vector<long int> start;
-	int originalTPSsize;
-	long int sizeThreshold;
-
-	buildTagPath("",n,false,css,false);
-	originalTPS = tagPathSequence;
-	originalNodeSequence = nodeSequence;
-	originalTPSsize = originalTPS.size();
-	sizeThreshold = (originalTPSsize*5)/100; // % page size
-
-	seqQueue.push(make_pair(originalTPS,0)); // insert first sequence in queue for processing
-
-	while (seqQueue.size()) {
-		long int len,off,rlen,pos;
-		wstring tps;
-
-		auto s = seqQueue.front();
-
-		seqQueue.pop();
-
-		tps = s.first;
-		len = tps.size();
-		off = s.second;
-		pos = searchRegion(tps);
-		rlen = tagPathSequence.size();
-
-		if (len > rlen) {
-			if (pos > 0)
-				seqQueue.push(make_pair(tps.substr(0,pos),off));
-			if ((len-pos-rlen) > 0)
-				seqQueue.push(make_pair(tps.substr(pos+rlen),off+pos+rlen));
-			if (rlen > sizeThreshold) {
-				_regions[off+pos].len=rlen;
-				_regions[off+pos].tps = originalTPS.substr(off+pos,rlen);
-			}
-		}
-	}
-
-	if (_regions.size()) {
-		auto r=_regions.begin();
-		if ((*r).first > sizeThreshold) {
-			_regions[0].len = (*r).first;
-			_regions[0].tps = originalTPS.substr(0,(*r).first);
-		}
-	} else {
-		_regions[0].len=originalTPSsize;
-		_regions[0].tps = originalTPS;
-	}
-
-	/*buildTagPath("",n,false,false,false); // rebuild TPS without css to increase periodicity
-	for (auto i=_regions.begin();i!=_regions.end();i++) {
-		(*i).second.tps = tagPathSequence.substr((*i).second.pos,(*i).second.len);
-	}*/
-
-	tagPathSequence = originalTPS;
-	nodeSequence = originalNodeSequence;
-
-	return detectStructure(_regions);
-}
-
-map<long int, tTPSRegion> tTPSFilter::SRDEFilter(pNode n, bool css) {
+map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css) {
 	set<int> alphabet;
 	wstring s;
 	long int lastRegPos = -1;
@@ -364,7 +226,7 @@ map<long int, tTPSRegion> tTPSFilter::SRDEFilter(pNode n, bool css) {
 	return ret;
 }
 
-void tTPSFilter::SRDE(pNode n, bool css) {
+void SRDEFilter::SRDE(pNode n, bool css) {
 	vector<size_t> recpos;
 	vector<wstring> m;
 	map<long int, tTPSRegion> structured;
@@ -372,7 +234,7 @@ void tTPSFilter::SRDE(pNode n, bool css) {
 
 	_regions.clear();
 
-	structured=SRDEFilter(n,css); // segment page and detects structured regions
+	structured=filter(n,css); // segment page and detects structured regions
 	//structured = tagPathSequenceFilter(n,css);
 
 	for (auto i=structured.begin();i!=structured.end();i++) {
@@ -389,7 +251,7 @@ void tTPSFilter::SRDE(pNode n, bool css) {
 		cerr << endl;
 
 		// identify the start position of each record
-		recpos = SRDELocateRecords(_regions[(*i).first],period);
+		recpos = locateRecords(_regions[(*i).first],period);
 		//recpos = LZLocateRecords(_regions[(*i).first],period);
 
 		// consider only leaf nodes when performing field alignment
@@ -511,89 +373,7 @@ void tTPSFilter::SRDE(pNode n, bool css) {
     });
 }
 
-void tTPSFilter::DRDE(pNode n, bool css, float st) {
-	vector<size_t> recpos;
-	vector<wstring> m;
-	map<long int, tTPSRegion> structured;
-
-	_regions.clear();
-
-	structured=tagPathSequenceFilter(n,css); // locate main content regions
-
-	for (auto i=structured.begin();i!=structured.end();i++) {
-		auto firstNode = nodeSequence.begin()+(*i).first;
-		auto lastNode = firstNode + (*i).second.len;
-
-		_regions[(*i).first].tps = tagPathSequence.substr((*i).first,(*i).second.len);
-		_regions[(*i).first].nodeSeq.assign(firstNode,lastNode);
-		m.clear();
-		recpos.clear();
-
-		cerr << "TPS: " << endl;
-		for (size_t j=0;j<_regions[(*i).first].tps.size();j++)
-			cerr << _regions[(*i).first].tps[j] << " ";
-		cerr << endl;
-
-		// identify the start position of each record
-		recpos = locateRecords(_regions[(*i).first].tps,st);
-
-		// consider only leaf nodes when searching record boundary & performing field alignment
-		auto j = _regions[(*i).first].nodeSeq.begin();
-		auto t=_regions[(*i).first].tps.begin();
-		size_t k=0;
-		while (k < _regions[(*i).first].tps.size()) {
-			bool erase = (!(*j)->isImage() && !(*j)->isText() && !(*j)->isLink());
-			for (size_t w=0;w<recpos.size();w++) {
-				if (recpos[w] == k) {
-					erase=false;
-					break;
-				}
-			}
-
-			if (erase) {
-				j = _regions[(*i).first].nodeSeq.erase(j);
-				t = _regions[(*i).first].tps.erase(t);
-				for (size_t w=0;w<recpos.size();w++) {
-					if (recpos[w] > k) recpos[w]--;
-				}
-			} else {
-				j++;
-				t++;
-				k++;
-			}
-		}
-
-		// create a sequence for each record found
-		int prev=-1;
-		size_t max_size=0;
-		for (size_t j=0;j<recpos.size();j++) {
-			if (prev==-1) prev=recpos[j];
-			else {
-				m.push_back(_regions[(*i).first].tps.substr(prev,recpos[j]-prev));
-				max_size = max(recpos[j]-prev,max_size);
-				prev = recpos[j];
-			}
-		}
-		if (prev != -1) {
-			if (max_size == 0) max_size = recpos.size();
-			m.push_back(_regions[(*i).first].tps.substr(prev,max_size));
-		}
-
-		// align the records (one alternative to 'center star' algorithm is ClustalW)
-		centerStar(m);
-
-		// and extracts them
-		if (m.size()) onDataRecordFound(m,recpos,&_regions[(*i).first]);
-	}
-
-	regions.clear();
-	for (auto i=_regions.begin();i!=_regions.end();i++) {
-		(*i).second.pos = (*i).first;
-		regions.push_back((*i).second);
-	}
-}
-
-vector<size_t> tTPSFilter::SRDELocateRecords(tTPSRegion &region, double &period) {
+vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	wstring s = region.tps;
 	vector<double> signal(s.size());
 	float avg;
@@ -680,123 +460,17 @@ vector<size_t> tTPSFilter::SRDELocateRecords(tTPSRegion &region, double &period)
 	return ret.size()?ret:recpos;
 }
 
-vector<size_t> tTPSFilter::locateRecords(wstring s, double st) {
-	vector<int> d(s.size()-1);
-	map<int, vector<int> > diffMap;
-	map<int, int> TPMap;
-	vector<size_t> recpos;
-	int rootTag;
-	int tagCount=0;
-	int gap=0;
-	size_t interval=0xffffffff;
-
-	/* compute sequence's first difference, keeping only the negative values (i.e. keeping only
-	 * fast transitions from very high to very low values, L - H = negative difference). The
-	 * difference points are stored and processed in ascending order (higher absolute values first).
-	 *
-	 * the difference is weighted with the inverse TPC value, the lower, the better
-	*/
-
-
-	auto z=s;
-	auto off=trimSequence(z);
-
-	cerr << off << " diff: " << endl;
-
-	for (size_t i=1;i<z.size();i++) {
-		d[i-1]=(z[i]-z[i-1])*z[i-1];
-		/*if (d[i-1] < 0) {
-			cerr << d[i-1]*s[i] << " ";
-			diffMap[d[i-1]].push_back(i);
-		} else cerr << 0 << " ";*/
-	}
-
-	for (size_t i=1;i<d.size();i++) {
-		if (sign(d[i-1])==sign(sign(d[i]))) {
-			if (sign(d[i])>0)
-				d[i] += d[i-1];
-			else
-				d[i] -= d[i-1];
-		} else if (d[i] >= 0) {
-			diffMap[d[i-1]].push_back(i+off);
-		}
-		cerr << (d[i-1]<0?d[i-1]:0) << " ";
-	}
-	cerr << endl;
-
-	// process lowest values until the gap between points achieve enough sequence coverage
-	int l=(*(diffMap.begin())).second[0];
-	int r=l;
-	for (auto i=diffMap.begin();i!=diffMap.end();i++) {
-
-		for (size_t j=0; j<(*i).second.size();j++) {
-			if ((*i).second[j]<l) l = (*i).second[j];
-			if ((*i).second[j]>r) r = (*i).second[j];
-			TPMap[s[(*i).second[j]]]++;
-			cerr << "TPS[" << (*i).second[j] << "] = " << s[(*i).second[j]] << endl;
-			if (j>1) {
-				size_t itv = abs((*i).second[j]-(*i).second[j-1]);
-				if (itv < interval) interval = itv;
-			}
-		}
-		if (interval!=0xffffffff) gap += interval*(*i).second.size();
-		if (((float)gap / (float)s.size()) > st) break;
-	}
-
-	// find the most frequent tag path code within the lowest difference values
-	for (auto i=TPMap.begin();i!=TPMap.end();i++) {
-		cerr << (*i).first << " " << (*i).second << endl;
-		if ((*i).second > tagCount) {
-			tagCount = (*i).second;
-			rootTag = (*i).first;
-		}
-	}
-
-	/* TESTE */
-	TPMap.clear();
-	float _max_score=0;
-	for (size_t i=0;i<=s.size();i++) {
-		TPMap[s[i]]++;
-	}
-	rootTag=0;
-	for (auto i=TPMap.begin();i!=TPMap.end();i++) {
-		if ((*i).first <= 0) continue;
-		if ((*i).second < (s.size()*0.01)) continue;
-		float _score = (((float)((*i).second)) / ((float)((*i).first)));
-		cerr << "*** SCORE " << (*i).first << " / " << (*i).second << " = " << _score << endl;
-		if ( _score >= _max_score) {
-			if ((rootTag > (*i).first) || (!rootTag)) {
-				tagCount = (*i).second;
-				rootTag = (*i).first;
-				_max_score = _score;
-			}
-		}
-	}
-	cerr << "*** FINAL " << rootTag << " / " << tagCount << " = " << _max_score << endl;
-	/* fim TESTE */
-
-	// find the beginning of each record, using the tag path code found before
-	for (size_t i=0;i<s.size();i++) {
-		if (s[i] == rootTag) {
-			//cerr << "root: " << i << " " << nodeSequence[i]->tagName << " : " << nodeSequence[i]->text << endl;
-			recpos.push_back(i);
-		}
-	}
-
-	return recpos;
-}
-
-tTPSRegion *tTPSFilter::getRegion(size_t r) {
+tTPSRegion *SRDEFilter::getRegion(size_t r) {
 	if (r < regions.size())
 		return &regions[r];
 	return NULL;
 }
 
-size_t tTPSFilter::getRegionCount() {
+size_t SRDEFilter::getRegionCount() {
 	return regions.size();
 }
 
-vector<pNode> tTPSFilter::getRecord(size_t dr, size_t rec) {
+vector<pNode> SRDEFilter::getRecord(size_t dr, size_t rec) {
 	if (dr < regions.size()) {
 		if (rec < regions[dr].records.size())
 			return regions[dr].records[rec];
@@ -836,7 +510,7 @@ vector<pNode> tTPSFilter::getRecord(size_t dr, size_t rec) {
 
 #define NUM_PEAKS 15
 
-double tTPSFilter::estimatePeriod(vector<double> signal) {
+double SRDEFilter::estimatePeriod(vector<double> signal) {
 	size_t N = (signal.size() + (signal.size()%2));
 	double maxPeak=-INFINITY;
 
@@ -902,89 +576,7 @@ vector<size_t> searchPrefix(wstring &s, wstring &prefix) {
 	return ret;
 }
 
-
-vector<size_t> tTPSFilter::LZLocateRecords(tTPSRegion& region, double& period) {
-	wstring seq = region.tps;
-	map<size_t,size_t> patternCount, patternSize;
-	map<size_t,wstring> pattern;
-	vector<size_t> ret;
-
-	size_t n = seq.size();
-
-	for (size_t i=1;i<seq.size()-1;i++) {
-		wstring prefix = seq.substr(0,i);
-		wstring suffix = seq.substr(i,n-i);
-		pair<size_t,size_t> prior = searchLongestPrefix(prefix,suffix);
-
-		cout << "[" << prior.first << ", " << prior.second << "]" << " = ";
-		for (size_t j=0;j<prior.second;j++)
-			cout << seq[prior.first+j] << " ";
-		cout << endl;
-
-		wstring patt = seq.substr(prior.first,prior.second);
-
-		patternCount[prior.first]++;
-		patternSize[prior.first]+=prior.second;
-		pattern[prior.first]=seq.substr(prior.first,1);
-
-		/*patternCount[seq[prior.first]]++;
-		patternSize[seq[prior.first]]+=prior.second;
-		pattern[seq[prior.first]]=seq.substr(prior.first,1);*/
-
-		/*if (pattern[seq[prior.first]].size() == 0) pattern[seq[prior.first]] = patt;
-		else {
-			if (
-					( (patt.size() < pattern[seq[prior.first]].size()) && (pattern[seq[prior.first]].size() > 1) )
-					|| ((pattern[seq[prior.first]].size() < 2) && (patt.size() > pattern[seq[prior.first]].size()))
-				)
-				pattern[seq[prior.first]]=patt;
-		}*/
-
-		i+=prior.second-1;
-	}
-
-	double stddev,avgsize,mindev=INFINITY;
-
-	cout << "code;count;len;prefix;rcount;dev" << endl;
-
-	for (auto i = patternCount.begin();i!=patternCount.end(); i++) {
-		vector<size_t> recpos = searchPrefix(seq,pattern[(*i).first]);
-
-		avgsize=0;
-		for (size_t i=1;i<recpos.size();i++) {
-			avgsize += (recpos[i] - recpos[i-1]);
-		}
-		avgsize /= (float)(recpos.size()-1);
-
-		stddev = 0;
-		for (size_t i=1;i<recpos.size();i++) {
-			float diff = (float)(recpos[i] - recpos[i-1])-avgsize;
-			stddev += (diff*diff);
-		}
-		stddev = sqrt(stddev/max((float)(recpos.size()-2),(float)1));
-
-		if ((stddev < mindev) && (patternSize[(*i).first] > seq.size()*.10)) {
-			mindev = stddev;
-			ret = recpos;
-		}
-
-		cout << (*i).first << ";" << (*i).second << ";" << patternSize[(*i).first] << ";";
-
-		for (size_t j=0;j<pattern[(*i).first].size();j++)
-			cout << pattern[(*i).first][j] << " ";
-
-		cout << ";" << recpos.size() << ";" << stddev << ";";
-
-		for (size_t j=0;j<recpos.size();j++) {
-			cout << recpos[j] << " ";
-		}
-		cout << endl;
-	}
-
-	return ret;
-}
-
-void tTPSFilter::onDataRecordFound(vector<wstring> &m, vector<size_t> &recpos, tTPSRegion *reg) {
+void SRDEFilter::onDataRecordFound(vector<wstring> &m, vector<size_t> &recpos, tTPSRegion *reg) {
 	if ((m.size() == 0) || (recpos.size() == 0)) return;// -1;
 
 	int rows=m.size(),cols=m[0].size();

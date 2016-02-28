@@ -17,10 +17,11 @@
     along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TTPSFILTER_H_
-#define TTPSFILTER_H_
+#ifndef SRDEFILTER_H_
+#define SRDEFILTER_H_
 
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 //#include "dom.hpp"
@@ -41,41 +42,34 @@ struct tTPSRegion {
 	bool content=false;
 };
 
-
-class tTPSFilter : public tExtractInterface {
+class SRDEFilter : public tExtractInterface {
 public:
-	tTPSFilter();
-	virtual ~tTPSFilter();
+	SRDEFilter();
+	virtual ~SRDEFilter();
 
-    void buildTagPath(string, pNode, bool, bool, bool);
-	map<long int, tTPSRegion> tagPathSequenceFilter(pNode, bool);
-	map<long int, tTPSRegion> SRDEFilter(pNode, bool);
-	void DRDE(pNode, bool, float);
 	void SRDE(pNode, bool);
 	const wstring& getTagPathSequence(int = -1);
 	tTPSRegion *getRegion(size_t);
 	virtual size_t getRegionCount();
 	virtual vector<pNode> getRecord(size_t, size_t);
 protected:
-	long int searchRegion(wstring);
-	bool prune(pNode);
-	vector<size_t> locateRecords(wstring, double);
-	vector<size_t> SRDELocateRecords(tTPSRegion &, double &);
-	vector<size_t> LZLocateRecords(tTPSRegion &, double &);
-	map<int,int> symbolFrequency(wstring, set<int> &);
-	map<int,int> frequencyThresholds(map<int,int>);
+    void buildTagPath(string, pNode, bool, bool, bool);
+	map<long int, tTPSRegion> filter(pNode, bool);
+	vector<size_t> locateRecords(tTPSRegion &, double &);
+	unordered_map<int,int> symbolFrequency(wstring, set<int> &);
+	map<int,int> frequencyThresholds(unordered_map<int,int>);
 	double estimatePeriod(vector<double>);
-	map<long int, tTPSRegion> detectStructure(map<long int, tTPSRegion> &);
+	map<long int, tTPSRegion> detectStructure(unordered_map<long int, tTPSRegion> &);
 
 	virtual void onDataRecordFound(vector<wstring> &, vector<size_t> &, tTPSRegion *);
 
-	map<string, int> tagPathMap;
+	unordered_map<string, int> tagPathMap;
 	wstring tagPathSequence;
 	vector<pNode> nodeSequence;
 	int count=0,pathCount=0;
 
-	map<long int, tTPSRegion> _regions;
+	unordered_map<long int, tTPSRegion> _regions;
 	vector<tTPSRegion> regions;
 };
 
-#endif /* TTPSFILTER_H_ */
+#endif /* SRDEFILTER_H_ */
