@@ -29,6 +29,7 @@ Node::Node(DOM *d, TidyNode n) : node(n), dom(d) {
 }
 
 Node::~Node() {};
+
 pNode Node::next() {
 	auto n = tidyGetNext(node);
 	if (dom->domNodes.count(n) > 0)

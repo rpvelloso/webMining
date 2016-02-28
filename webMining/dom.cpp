@@ -88,7 +88,7 @@ void DOM::clean() {
 
 	unordered_set<TidyNode> remove;
 
-	cleanHelper(body()->node, remove);
+	cleanHelper(tidyGetBody(tdoc), remove);
 	for (auto node:remove)
 		tidyDiscardElement(tdoc, node);
 }
