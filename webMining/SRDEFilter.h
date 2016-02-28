@@ -22,6 +22,7 @@
 
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <string>
 //#include "dom.hpp"
@@ -54,9 +55,9 @@ public:
 	virtual vector<pNode> getRecord(size_t, size_t);
 protected:
     void buildTagPath(string, pNode, bool, bool, bool);
-	map<long int, tTPSRegion> filter(pNode, bool);
+	map<long int, tTPSRegion> filter(pNode, bool, unordered_map<long int, tTPSRegion> &);
 	vector<size_t> locateRecords(tTPSRegion &, double &);
-	unordered_map<int,int> symbolFrequency(wstring, set<int> &);
+	unordered_map<int,int> symbolFrequency(wstring, unordered_set<int> &);
 	map<int,int> frequencyThresholds(unordered_map<int,int>);
 	double estimatePeriod(vector<double>);
 	map<long int, tTPSRegion> detectStructure(unordered_map<long int, tTPSRegion> &);
@@ -66,9 +67,7 @@ protected:
 	unordered_map<string, int> tagPathMap;
 	wstring tagPathSequence;
 	vector<pNode> nodeSequence;
-	int count=0,pathCount=0;
 
-	unordered_map<long int, tTPSRegion> _regions;
 	vector<tTPSRegion> regions;
 };
 

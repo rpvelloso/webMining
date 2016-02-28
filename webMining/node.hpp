@@ -20,6 +20,7 @@ using pNode = Node *;
 class DOM;
 
 class Node {
+friend class DOM;
 public:
 	Node(DOM *d, TidyNode n);
 	~Node();

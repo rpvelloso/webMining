@@ -16,7 +16,7 @@ using namespace std;
 
 extern "C" {
 
-int checkDOM(lua_State *L, DOM *d) {
+bool checkDOM(lua_State *L, DOM *d) {
 	tlua *ctx;
 
 	lua_getglobal(L,"context");
@@ -293,8 +293,8 @@ void tlua::removeDOM(DOM *d) {
 	}
 }
 
-int tlua::checkDOM(DOM *d) {
-	return dom_set.find(d) != dom_set.end();
+bool tlua::checkDOM(DOM *d) {
+	return dom_set.count(d) > 0;
 }
 
 tlua::tlua(const char *inp) {

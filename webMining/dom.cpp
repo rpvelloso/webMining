@@ -21,6 +21,7 @@ DOM::DOM(const std::string filename) {
 		tidySaveBuffer(tdoc, &output);
 		loaded = true;
 		mapNodes(tidyGetHtml(tdoc));
+		clean();
 	}
 };
 
@@ -49,18 +50,6 @@ pNode DOM::html() {
 	return domNodes[tidyGetHtml(tdoc)];
 };
 
-void DOM::traverse(pNode node, size_t ident) {
-	for (size_t i = 0; i < ident; ++i)
-		std::cout << " ";
-
-	std::cout << node->type() << ": ";
-	std::cout << node->toString();
-	std::cout << std::endl;
-
-	for (auto child = node->child(); child != nullptr; child = child->next())
-		traverse(child, ident+2);
-};
-
 void DOM::mapNodes(TidyNode node) {
 	if (domNodes.count(node) == 0) {
 		domNodes[node] = new Node(this, node);
@@ -68,4 +57,23 @@ void DOM::mapNodes(TidyNode node) {
 		for (auto child = tidyGetChild(node); child; child = tidyGetNext(child))
 			mapNodes(child);
 	}
-};
+}
+;
+
+void DOM::clean() {
+	unordered_set<TidyNode> remove;
+
+	cleanHelper(body(), remove);
+	for (auto node:remove) {
+		domNodes.erase(node);
+		tidyDiscardElement(tdoc, node);
+	}
+}
+
+void DOM::cleanHelper(pNode n, unordered_set<TidyNode> &remove) {
+	if (n->tagName() == "script" || n->tagName() == "noscript")
+		remove.insert(n->node);
+
+	for (auto c = n->child(); c != nullptr; c = c->next())
+		cleanHelper(c, remove);
+}

@@ -46,19 +46,6 @@ string stringTok(string &, string);
 
 #define sign(v) ((v<0)?-1:1)
 
-template <class K, class V>
-int multimap_pair_search(multimap<K,V> &mm, K k, V v) {
-
-		pair<typename multimap<K,V>::iterator, typename multimap<K,V>::iterator> range;
-		typename multimap<K,V>::iterator i;
-
-		range = mm.equal_range(k);
-		for (i=range.first; i!=range.second; i++) {
-			if ((*i).second == v) return 0;
-		}
-		return -1;
-}
-
 template<typename T>
 string to_string(T val) {
 	stringstream ss;

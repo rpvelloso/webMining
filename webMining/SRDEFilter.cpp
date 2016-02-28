@@ -54,13 +54,13 @@ const wstring& SRDEFilter::getTagPathSequence(int dr) {
 	}
 }
 
-unordered_map<int,int> SRDEFilter::symbolFrequency(wstring s, set<int> &alphabet) {
+unordered_map<int,int> SRDEFilter::symbolFrequency(wstring s, unordered_set<int> &alphabet) {
 	unordered_map<int, int> symbolCount;
 
 	// compute symbol frequency
 	for (size_t i=0;i<s.size();i++) {
 		if (s[i] != 0) {
-			if (alphabet.find(s[i]) == alphabet.end()) {
+			if (alphabet.count(s[i]) == 0) {
 				symbolCount[s[i]]=0;
 				alphabet.insert(s[i]);
 			}
@@ -81,11 +81,10 @@ map<int,int> SRDEFilter::frequencyThresholds(unordered_map<int,int> symbolCount)
 }
 
 void SRDEFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) {
-	vector<string> styleAttr = {"style", "class", "bgcolor", "width", "height", "align", "valign", "halign"};
+	static vector<string> styleAttr = {"style", "class", "bgcolor", "width", "height", "align", "valign", "halign"};
 	string tagStyle;
 
 	if (s == "") {
-		pathCount = 0;
 		tagPathMap.clear();
 		tagPathSequence.clear();
 		nodeSequence.clear();
@@ -103,10 +102,9 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) 
 		else s = s + "/" + tagName;
 	}
 
-	if (tagPathMap.count(s) == 0) {
-		pathCount++;
-		tagPathMap[s] = pathCount;
-	}
+	if (tagPathMap.count(s) == 0)
+		tagPathMap[s] = tagPathMap.size()+1;
+
 	tagPathSequence = tagPathSequence + wchar_t(tagPathMap[s]);
 	nodeSequence.push_back(n);
 
@@ -139,8 +137,8 @@ map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tT
 	return structured;
 }
 
-map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css) {
-	set<int> alphabet;
+map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, tTPSRegion> &_regions) {
+	unordered_set<int> alphabet;
 	wstring s;
 	long int lastRegPos = -1;
 	map<long int, tTPSRegion> ret;
@@ -155,6 +153,7 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css) {
 	//threshold++;
 
 	do {
+		_regions.clear();
 		threshold++;
 
 		cerr << "threshold: " << (*threshold).first << " / " << (*(thresholds.rbegin())).first << endl;
@@ -185,7 +184,7 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css) {
 						reg.tps = tagPathSequence.substr(reg.pos,reg.len);
 
 						if (lastRegPos != -1) {
-							set<int> palpha,alpha,intersect;
+							unordered_set<int> palpha,alpha,intersect;
 
 							symbolFrequency(_regions[lastRegPos].tps,palpha);
 							symbolFrequency(reg.tps,alpha);
@@ -231,10 +230,9 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 	vector<wstring> m;
 	map<long int, tTPSRegion> structured;
 	double period;
+	unordered_map<long int, tTPSRegion> _regions;
 
-	_regions.clear();
-
-	structured=filter(n,css); // segment page and detects structured regions
+	structured=filter(n,css, _regions); // segment page and detects structured regions
 	//structured = tagPathSequenceFilter(n,css);
 
 	for (auto i=structured.begin();i!=structured.end();i++) {
@@ -379,7 +377,7 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	float avg;
 	set<float> candidates;
 	vector<size_t> recpos,ret;
-	set<int> alphabet;
+	unordered_set<int> alphabet;
 	map<int,int> reencode;
 	double estPeriod,estFreq;
 	double maxCode=0,maxScore=0;
@@ -387,7 +385,7 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	// reencode signal
 	symbolFrequency(s,alphabet);
 	for (size_t i=0,j=0;i<s.size();i++) {
-		if (alphabet.find(s[i])!=alphabet.end()) {
+		if (alphabet.count(s[i]) > 0) {
 			alphabet.erase(s[i]);
 			j++;
 			reencode[s[i]]=j;

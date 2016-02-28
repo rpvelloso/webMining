@@ -27,12 +27,13 @@ public:
 	void printHTML();
 	pNode body();
 	pNode html();
-	void traverse(pNode, size_t ident = 0);
 
 	SRDEFilter tpsf;
 private:
 	void mapNodes(TidyNode node);
 	unordered_map<TidyNode, pNode> domNodes;
+	void clean();
+	void cleanHelper(pNode n, unordered_set<TidyNode> &remove);
 
 	TidyDoc tdoc;
 	TidyBuffer output = {0};

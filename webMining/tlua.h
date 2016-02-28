@@ -41,9 +41,9 @@ public:
 	virtual ~tlua();
 	void insertDOM(DOM *);
 	void removeDOM(DOM *);
-	int checkDOM(DOM *);
+	bool checkDOM(DOM *);
 protected:
-	set<DOM *> dom_set;
+	unordered_set<DOM *> dom_set;
 };
 
 #endif /* TLUA_H_ */
