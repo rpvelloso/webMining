@@ -1,8 +1,16 @@
 /*
- * dom.cpp
- *
- *  Created on: 26 de fev de 2016
- *      Author: rvelloso
+    Copyright 2011 Roberto Panerai Velloso.
+    This file is part of libsockets.
+    libsockets is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    libsockets is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <string>
@@ -19,9 +27,9 @@ DOM::DOM(const std::string filename) {
 		tidyCleanAndRepair(tdoc);
 		tidyOptSetBool(tdoc, TidyForceOutput, yes);
 		tidySaveBuffer(tdoc, &output);
+		clean();
 		loaded = true;
 		mapNodes(tidyGetHtml(tdoc));
-		clean();
 	}
 };
 
@@ -60,20 +68,27 @@ void DOM::mapNodes(TidyNode node) {
 }
 ;
 
-void DOM::clean() {
-	unordered_set<TidyNode> remove;
+static void cleanHelper(TidyNode n, unordered_set<TidyNode> &remove) {
+	static unordered_set<string> removeTags = {"script", "noscript"};
 
-	cleanHelper(body(), remove);
-	for (auto node:remove) {
-		domNodes.erase(node);
-		tidyDiscardElement(tdoc, node);
-	}
+	auto pTagName = tidyNodeGetName(n);
+	string tagName;
+
+	if (pTagName != nullptr)
+		tagName = pTagName;
+
+	if (removeTags.count(tagName) > 0)
+		remove.insert(n);
+
+	for (auto c = tidyGetChild(n); c ; c = tidyGetNext(c))
+		cleanHelper(c, remove);
 }
 
-void DOM::cleanHelper(pNode n, unordered_set<TidyNode> &remove) {
-	if (n->tagName() == "script" || n->tagName() == "noscript")
-		remove.insert(n->node);
+void DOM::clean() {
 
-	for (auto c = n->child(); c != nullptr; c = c->next())
-		cleanHelper(c, remove);
+	unordered_set<TidyNode> remove;
+
+	cleanHelper(body()->node, remove);
+	for (auto node:remove)
+		tidyDiscardElement(tdoc, node);
 }
