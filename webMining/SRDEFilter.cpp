@@ -36,7 +36,7 @@
 
 using namespace std;
 
-SRDEFilter::SRDEFilter(DOM *d) : tExtractInterface() {
+SRDEFilter::SRDEFilter(DOM *d) : ExtractorInterface() {
 	SRDE(d->body(), true);
 }
 

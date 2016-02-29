@@ -5,16 +5,17 @@
  *      Author: roberto
  */
 
+#include "ExtractorInterface.h"
+
 #include "node.hpp"
-#include "tExtractInterface.h"
 
-tExtractInterface::tExtractInterface() {
+ExtractorInterface::ExtractorInterface() {
 }
 
-tExtractInterface::~tExtractInterface() {
+ExtractorInterface::~ExtractorInterface() {
 }
 
-void tExtractInterface::cleanRegion(vector<vector<pNode> > &recs) {
+void ExtractorInterface::cleanRegion(vector<vector<pNode> > &recs) {
 	if (!(recs.size())) return;
 	if (!(recs[0].size())) return;
 

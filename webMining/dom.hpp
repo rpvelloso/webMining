@@ -22,8 +22,8 @@
 #include <tidy.h>
 #include <tidybuffio.h>
 
+#include "ExtractorInterface.h"
 #include "SRDEFilter.h"
-#include "tExtractInterface.h"
 
 class Node;
 using pNode = Node *;
@@ -37,8 +37,8 @@ public:
 	void printHTML();
 	pNode body();
 	pNode html();
-	tExtractInterface* getExtractor() const;
-	void setExtractor(tExtractInterface* extractor);
+	ExtractorInterface* getExtractor() const;
+	void setExtractor(ExtractorInterface* extractor);
 
  private:
 	void mapNodes(TidyNode node);
@@ -50,7 +50,7 @@ public:
 	TidyBuffer errbuf = {0};
 	bool loaded = false;
 	DOM() = delete;
-	unique_ptr<tExtractInterface> extractor;
+	unique_ptr<ExtractorInterface> extractor;
 };
 
 #endif /* DOM_HPP_ */

@@ -93,10 +93,10 @@ void DOM::clean() {
 		tidyDiscardElement(tdoc, node);
 }
 
-tExtractInterface* DOM::getExtractor() const {
+ExtractorInterface* DOM::getExtractor() const {
 	return extractor.get();
 }
 
-void DOM::setExtractor(tExtractInterface* extractor) {
-	this->extractor = unique_ptr<tExtractInterface>(extractor);
+void DOM::setExtractor(ExtractorInterface* extractor) {
+	this->extractor = unique_ptr<ExtractorInterface>(extractor);
 }

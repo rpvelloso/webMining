@@ -25,9 +25,10 @@
 #include <unordered_set>
 #include <vector>
 #include <string>
+
+#include "ExtractorInterface.h"
 //#include "dom.hpp"
 #include "node.hpp"
-#include "tExtractInterface.h"
 #include "misc.h"
 
 using namespace std;
@@ -43,7 +44,7 @@ struct tTPSRegion {
 	bool content=false;
 };
 
-class SRDEFilter : public tExtractInterface {
+class SRDEFilter : public ExtractorInterface {
 public:
 	SRDEFilter(DOM *d);
 	virtual ~SRDEFilter();

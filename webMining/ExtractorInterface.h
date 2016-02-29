@@ -5,8 +5,8 @@
  *      Author: roberto
  */
 
-#ifndef TEXTRACTINTERFACE_H_
-#define TEXTRACTINTERFACE_H_
+#ifndef EXTRACTORINTERFACE_H_
+#define EXTRACTORINTERFACE_H_
 
 #include <vector>
 #include <deque>
@@ -18,10 +18,10 @@ using namespace std;
 
 struct tTPSRegion;
 
-class tExtractInterface {
+class ExtractorInterface {
 public:
-	tExtractInterface();
-	virtual ~tExtractInterface();
+	ExtractorInterface();
+	virtual ~ExtractorInterface();
 
 	virtual const wstring& getTagPathSequence(int = -1) = 0;
 	virtual tTPSRegion *getRegion(size_t) = 0;
@@ -31,4 +31,4 @@ public:
 	void cleanRegion(vector<vector<pNode> > &);
 };
 
-#endif /* TEXTRACTINTERFACE_H_ */
+#endif /* EXTRACTORINTERFACE_H_ */

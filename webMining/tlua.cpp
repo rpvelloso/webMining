@@ -125,7 +125,7 @@ static int lua_api_getRegionCount(lua_State *L) {
 	if (nargs == 2) {
 		DOM *dom = (DOM *)lua_touserdata(L,-2);
 		string methodstr = lua_tostring(L,-1);
-		tExtractInterface *method;
+		ExtractorInterface *method;
 
 		method = dom->getExtractor();
 		lua_pushnumber(L,method->getRegionCount());
@@ -146,7 +146,7 @@ static int lua_api_getDataRegion(lua_State *L) {
 				int dtr_no = lua_tonumber(L,-1);
 				int rec_no=0;
 				vector<pNode> rec;
-				tExtractInterface *method;
+				ExtractorInterface *method;
 				tTPSRegion *tpsreg;
 
 				method = dom->getExtractor();
