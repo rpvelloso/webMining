@@ -94,10 +94,12 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 	if (tagPathMap.count(s) == 0)
 		tagPathMap[s] = tagPathMap.size()+1;
 
+	cout << s << endl;
+
 	tagPathSequence = tagPathSequence + wchar_t(tagPathMap[s]);
 	nodeSequence.push_back(n);
 
-	for (auto child = n->child(); child; child = child->next())
+	for (auto child = n->child(); child != nullptr; child = child->next())
 		buildTagPath(s,child,css);
 }
 
@@ -133,7 +135,7 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 	auto thresholds = frequencyThresholds(symbolCount);
 	auto threshold = thresholds.begin();
 	threshold++;
-	//threshold++;
+	threshold++;
 
 	do {
 		regs.clear();

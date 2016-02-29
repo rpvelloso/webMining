@@ -178,21 +178,23 @@ processFile = function(filename)
     
     print("Plotting graphs.")
     plotSequences(dom,"file","output.html")
+    
+    printDOM(dom, true);
 end
 
 if #arg > 3 then
   processFile(arg[4])
- end
+end
 
 --local d = loadDOMTree("../datasets/alvarez/allbooks4less.htm")
 --printDOM(d,true)
---exit()
+exit()
 
 --processTestBed2("../datasets/alvarez")
 --processTestBed2("../datasets/tpsf")
 --processTestBed2("../datasets/wien")
 --processTestBed2("../datasets/clustvx")
---processTestBed2("../datasets/zhao1")
+processTestBed2("../datasets/zhao1")
 --processTestBed2("../datasets/zhao2")
 --processTestBed2("../datasets/zhao3")
 --processTestBed2("../datasets/yamada")

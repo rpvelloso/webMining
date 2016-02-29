@@ -25,6 +25,16 @@ DOM::DOM(const std::string filename) {
 	tidyOptSetBool(tdoc, TidyXhtmlOut, yes);
 	tidyOptSetValue(tdoc, TidyIndentContent, "auto");
 	tidyOptSetInt(tdoc,TidyIndentSpaces,2);
+	tidyOptSetBool(tdoc, TidyJoinClasses, yes);
+	tidyOptSetBool(tdoc, TidyJoinStyles, yes);
+	tidyOptSetBool(tdoc, TidyCoerceEndTags, yes);
+
+	tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
+	tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
+
+	//tidyOptSetBool(tdoc, TidyDropFontTags, yes);
+
+	tidyOptSetValue(tdoc, TidySortAttributes, "alpha");
 	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
 
 	tidySetErrorBuffer(tdoc, &errbuf);
