@@ -32,8 +32,8 @@ friend class Node;
 public:
 	DOM(const std::string filename);
 	~DOM();
-	bool isLoaded();
-	void printHTML();
+	bool isLoaded() const;
+	void printHTML() const;
 	pNode body();
 	pNode html();
 	ExtractorInterface* getExtractor() const;

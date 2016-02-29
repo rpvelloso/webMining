@@ -44,16 +44,6 @@ extern vector<double> autoCorrelation(vector<double>);
 string &trim(string &);
 string stringTok(string &, string);
 
-#define sign(v) ((v<0)?-1:1)
-
-template<typename T>
-string to_string(T val) {
-	stringstream ss;
-
-	ss << val;
-	return ss.str();
-}
-
 template<typename T>
 float mean(T s) {
 

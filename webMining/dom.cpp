@@ -42,11 +42,11 @@ DOM::~DOM() {
 		delete n.second;
 };
 
-bool DOM::isLoaded() {
+bool DOM::isLoaded() const {
 	return loaded;
 }
 
-void DOM::printHTML() {
+void DOM::printHTML() const {
 	if (loaded)
 		std::cout << output.bp << std::endl;
 };

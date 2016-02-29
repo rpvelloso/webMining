@@ -50,7 +50,7 @@ public:
 	virtual ~LuaContext();
 	void insertDOM(DOM *);
 	void removeDOM(DOM *);
-	bool checkDOM(DOM *);
+	bool checkDOM(DOM *) const;
 protected:
 	unordered_set<DOM *> domSet;
 	lua_State *state;

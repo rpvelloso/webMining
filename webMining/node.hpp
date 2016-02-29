@@ -32,15 +32,15 @@ friend class DOM;
 public:
 	Node(DOM *d, TidyNode n);
 	~Node();
-	pNode next();
+	pNode next() const;
 	string getAttr(string attrName);
-	pNode child();
-	TidyNodeType type();
-	string tagName();
-	bool isImage();
-	bool isLink();
-	bool isText();
-	string toString();
+	pNode child() const;
+	int type() const;
+	string tagName() const;
+	bool isImage() const;
+	bool isLink() const;
+	bool isText() const;
+	string toString() const;
 private:
 	Node() = delete;
 	TidyNode node;

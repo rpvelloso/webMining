@@ -20,7 +20,6 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-
 #include "LuaContext.h"
 
 
@@ -28,9 +27,8 @@ using namespace std;
 
 void printUsage(char *p)
 {
-	cout << "usage: "<<p<<" [-i input_file] [-o output_file] [-debug]"<<endl;
-	cout << "-i      input file (default stdin)" << endl;
-	cout << "-o      output file (default stdout)" << endl;
+	cout << "usage: "<<p<<" [-i input_file] [-debug]"<<endl;
+	cout << "-i      input file" << endl;
 	cout << "-debug  output debug info to stderr" << endl;
 	cout << "-h      shows help screen" << endl;
 	exit(-1);
@@ -43,13 +41,12 @@ int main(int argc, char *argv[])
 	fstream inputFile;
 	filebuf outputFile;
 
-	while ((opt = getopt(argc, argv, "i:o:d:h")) != -1) {
+	while ((opt = getopt(argc, argv, "i:d:h")) != -1) {
 		switch (opt) {
 		case 'i':
+			if (!optarg)
+				printUsage(argv[0]);
 			inp = optarg;
-			break;
-		case 'o':
-			outp = optarg;
 			break;
 		case 'd':
 			if (optarg && string(optarg) == "ebug") dbg=1;
@@ -67,15 +64,10 @@ int main(int argc, char *argv[])
 		cerr.rdbuf(NULL);
 	}
 
-	if (outp != "") {
-		outputFile.open(outp.c_str(),ios_base::out|ios_base::binary);
-
-		if (outputFile.is_open())
-			cout.rdbuf(&outputFile);
-	}
-
 	if (inp != "")
 		delete (new LuaContext(inp.c_str()));
+	else
+		printUsage(argv[0]);
 
 	cout.flush();
 	return 0;

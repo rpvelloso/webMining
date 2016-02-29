@@ -31,7 +31,7 @@ Node::Node(DOM *d, TidyNode n) : node(n), dom(d) {
 
 Node::~Node() {};
 
-pNode Node::next() {
+pNode Node::next() const {
 	auto n = tidyGetNext(node);
 	if (dom->domNodes.count(n) > 0)
 		return dom->domNodes[n];
@@ -46,7 +46,7 @@ string Node::getAttr(string attrName) {
 		return "";
 }
 
-pNode Node::child() {
+pNode Node::child() const {
 	auto c = tidyGetChild(node);
 	if (dom->domNodes.count(c) > 0)
 		return dom->domNodes[c];
@@ -54,11 +54,11 @@ pNode Node::child() {
 		return nullptr;
 }
 
-TidyNodeType Node::type() {
+int Node::type() const {
 	return tidyNodeGetType(node);
 }
 
-string Node::tagName() {
+string Node::tagName() const {
 	auto name = tidyNodeGetName(node);
 	if (name)
 		return string(name);
@@ -66,11 +66,11 @@ string Node::tagName() {
 		return "";
 }
 
-bool Node::isImage() {return tidyNodeIsIMG(node);}
-bool Node::isLink() {return tidyNodeIsLINK(node);}
-bool Node::isText() {return tidyNodeIsText(node);}
+bool Node::isImage() const {return tidyNodeIsIMG(node);}
+bool Node::isLink() const {return tidyNodeIsLINK(node);}
+bool Node::isText() const {return tidyNodeIsText(node);}
 
-string Node::toString() {
+string Node::toString() const {
 	stringstream result;
 	auto name = tagName();
 

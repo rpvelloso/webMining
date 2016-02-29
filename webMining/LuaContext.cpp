@@ -263,7 +263,7 @@ void LuaContext::removeDOM(DOM *d) {
 	}
 }
 
-bool LuaContext::checkDOM(DOM *d) {
+bool LuaContext::checkDOM(DOM *d) const {
 	return domSet.count(d) > 0;
 }
 
