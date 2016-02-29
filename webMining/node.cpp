@@ -15,6 +15,7 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 #include "dom.hpp"
 #include "node.hpp"
 #include "tidy.h"

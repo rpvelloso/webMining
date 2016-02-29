@@ -18,12 +18,11 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <tidy.h>
 #include <tidybuffio.h>
-
 #include "ExtractorInterface.h"
-#include "SRDEFilter.h"
 
 class Node;
 using pNode = Node *;

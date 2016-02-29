@@ -43,19 +43,6 @@ SRDEFilter::SRDEFilter(DOM *d) : ExtractorInterface() {
 SRDEFilter::~SRDEFilter() {
 }
 
-const wstring& SRDEFilter::getTagPathSequence(int dr) {
-	if (dr < 0)
-		return tagPathSequence;
-	else {
-		size_t i = dr;
-
-		if (i < regions.size())
-			return regions[dr].tps;
-		else
-			return tagPathSequence;
-	}
-}
-
 unordered_map<int,int> SRDEFilter::symbolFrequency(wstring s, unordered_set<int> &alphabet) {
 	unordered_map<int, int> symbolCount;
 
@@ -82,7 +69,7 @@ map<int,int> SRDEFilter::frequencyThresholds(unordered_map<int,int> symbolCount)
 	return thresholds;
 }
 
-void SRDEFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) {
+void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 	static vector<string> styleAttr = {"style", "class", "bgcolor", "width", "height", "align", "valign", "halign"};
 	string tagStyle;
 
@@ -110,14 +97,8 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool print, bool css, bool fp) 
 	tagPathSequence = tagPathSequence + wchar_t(tagPathMap[s]);
 	nodeSequence.push_back(n);
 
-	if (print) {
-		cout << tagPathMap[s];
-		if (fp) cout << ":\t" << s;
-		cout << endl;
-	}
-
 	for (auto child = n->child(); child; child = child->next())
-		buildTagPath(s,child,print,css,fp);
+		buildTagPath(s,child,css);
 }
 
 map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &r) {
@@ -139,13 +120,13 @@ map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tT
 	return structured;
 }
 
-map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, tTPSRegion> &_regions) {
+map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
 	unordered_set<int> alphabet;
 	wstring s;
 	long int lastRegPos = -1;
 	map<long int, tTPSRegion> ret;
 
-	buildTagPath("",n,false,css,false);
+	buildTagPath("",n,css);
 	s = tagPathSequence;
 
 	auto symbolCount = symbolFrequency(s,alphabet);
@@ -155,7 +136,7 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 	//threshold++;
 
 	do {
-		_regions.clear();
+		regs.clear();
 		threshold++;
 
 		cerr << "threshold: " << (*threshold).first << " / " << (*(thresholds.rbegin())).first << endl;
@@ -175,32 +156,32 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 				}
 			} else {
 				if ((s[i] == 0) || (i == s.size()-1)) {
-					tTPSRegion reg;
+					tTPSRegion r;
 
 					regionOpened = false;
 					regionEnd = i-1;
 					if (i == s.size()-1) regionEnd++;
-					reg.pos = regionStart;
-					reg.len = regionEnd - regionStart + 1;
-					if (reg.len > 3) {
-						reg.tps = tagPathSequence.substr(reg.pos,reg.len);
+					r.pos = regionStart;
+					r.len = regionEnd - regionStart + 1;
+					if (r.len > 3) {
+						r.tps = tagPathSequence.substr(r.pos,r.len);
 
 						if (lastRegPos != -1) {
 							unordered_set<int> palpha,alpha,intersect;
 
-							symbolFrequency(_regions[lastRegPos].tps,palpha);
-							symbolFrequency(reg.tps,alpha);
+							symbolFrequency(regs[lastRegPos].tps,palpha);
+							symbolFrequency(r.tps,alpha);
 
 							set_intersection(palpha.begin(),palpha.end(),alpha.begin(),alpha.end(),inserter(intersect,intersect.begin()));
 
 							if (!intersect.empty()) {
-								_regions[lastRegPos].len = regionEnd - _regions[lastRegPos].pos + 1;
-								_regions[lastRegPos].tps = tagPathSequence.substr(_regions[lastRegPos].pos,_regions[lastRegPos].len);
+								regs[lastRegPos].len = regionEnd - regs[lastRegPos].pos + 1;
+								regs[lastRegPos].tps = tagPathSequence.substr(regs[lastRegPos].pos,regs[lastRegPos].len);
 								//cout << "merge " << _regions[lastRegPos].pos << " " << _regions[lastRegPos].len << endl;
 								continue;
 							}
 						}
-						_regions[regionStart] = reg;
+						regs[regionStart] = r;
 						lastRegPos = regionStart;
 						//cout << "new   " << _regions[lastRegPos].pos << " " << _regions[lastRegPos].len << endl;
 					}
@@ -208,20 +189,19 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 			}
 		}
 
-		if (_regions.size() == 0) {
-			//_regions.clear();
-			_regions[0].content = true;
-			_regions[0].len = tagPathSequence.size();
-			_regions[0].pos = 0;
-			_regions[0].nodeSeq = nodeSequence;
-			_regions[0].tps = tagPathSequence;
+		if (regs.size() == 0) {
+			regs[0].content = true;
+			regs[0].len = tagPathSequence.size();
+			regs[0].pos = 0;
+			regs[0].nodeSeq = nodeSequence;
+			regs[0].tps = tagPathSequence;
 		}
 
-		/*buildTagPath("",n,false,false,false); // rebuild TPS without CSS to increase periodicity
+		/*buildTagPath("",n,false); // rebuild TPS without CSS to increase periodicity
 		for (auto i=_regions.begin();i!=_regions.end();i++) {
 			(*i).second.tps = tagPathSequence.substr((*i).second.pos,(*i).second.len);
 		}*/
-		ret=detectStructure(_regions);
+		ret=detectStructure(regs);
 	} while ((ret.size()==0) && (threshold != thresholds.end()));
 
 	return ret;
@@ -232,33 +212,32 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 	vector<wstring> m;
 	map<long int, tTPSRegion> structured;
 	double period;
-	unordered_map<long int, tTPSRegion> _regions;
+	unordered_map<long int, tTPSRegion> regs;
 
-	structured=filter(n,css, _regions); // segment page and detects structured regions
+	structured=filter(n,css, regs); // segment page and detects structured regions
 	//structured = tagPathSequenceFilter(n,css);
 
 	for (auto i=structured.begin();i!=structured.end();i++) {
 		auto firstNode = nodeSequence.begin()+(*i).first;
 		auto lastNode = firstNode + (*i).second.len;
 
-		_regions[(*i).first].nodeSeq.assign(firstNode,lastNode);
+		regs[(*i).first].nodeSeq.assign(firstNode,lastNode);
 		m.clear();
 		recpos.clear();
 
 		cerr << "TPS: " << endl;
-		for (size_t j=0;j<_regions[(*i).first].tps.size();j++)
-			cerr << _regions[(*i).first].tps[j] << " ";
+		for (size_t j=0;j<regs[(*i).first].tps.size();j++)
+			cerr << regs[(*i).first].tps[j] << " ";
 		cerr << endl;
 
 		// identify the start position of each record
-		recpos = locateRecords(_regions[(*i).first],period);
-		//recpos = LZLocateRecords(_regions[(*i).first],period);
+		recpos = locateRecords(regs[(*i).first],period);
 
 		// consider only leaf nodes when performing field alignment
-		auto j = _regions[(*i).first].nodeSeq.begin();
-		auto t=_regions[(*i).first].tps.begin();
+		auto j = regs[(*i).first].nodeSeq.begin();
+		auto t=regs[(*i).first].tps.begin();
 		size_t k=0;
-		while (k < _regions[(*i).first].tps.size()) {
+		while (k < regs[(*i).first].tps.size()) {
 			bool erase = (!(*j)->isImage() && !(*j)->isLink() && !(*j)->isText());
 			for (size_t w=0;w<recpos.size();w++) {
 				if (recpos[w] == k) {
@@ -268,8 +247,8 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			}
 
 			if (erase) {
-				j = _regions[(*i).first].nodeSeq.erase(j);
-				t = _regions[(*i).first].tps.erase(t);
+				j = regs[(*i).first].nodeSeq.erase(j);
+				t = regs[(*i).first].tps.erase(t);
 				for (size_t w=0;w<recpos.size();w++) {
 					if (recpos[w] > k) recpos[w]--;
 				}
@@ -287,7 +266,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			if (prev==-1) prev=recpos[j];
 			else {
 				if ((recpos[j]-prev) > 0) {
-					m.push_back(_regions[(*i).first].tps.substr(prev,recpos[j]-prev));
+					m.push_back(regs[(*i).first].tps.substr(prev,recpos[j]-prev));
 					max_size = max(recpos[j]-prev,max_size);
 					prev = recpos[j];
 				}
@@ -295,30 +274,30 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		}
 		if (prev != -1) {
 			if (period > max_size) max_size = period;
-			m.push_back(_regions[(*i).first].tps.substr(prev,max_size));
+			m.push_back(regs[(*i).first].tps.substr(prev,max_size));
 		}
 
 		if (m.size()) {
 			// align the records (one alternative to 'center star' algorithm is ClustalW)
 			//align(m);
-			_regions[(*i).first].score = centerStar(m);
+			regs[(*i).first].score = centerStar(m);
 
 			// and extracts them
-			onDataRecordFound(m,recpos,&_regions[(*i).first]);
+			onDataRecordFound(m,recpos,&regs[(*i).first]);
 		}
 	}
 
 	// remove regions with only a single record
 	for (auto i=structured.begin();i!=structured.end();) {
-		if (_regions[(*i).first].records.size() < 2) structured.erase(i++);
+		if (regs[(*i).first].records.size() < 2) structured.erase(i++);
 		else {
-			auto stddev = _regions[(*i).first].stddev;
-			auto recCount = _regions[(*i).first].records.size();
-			auto recSize = _regions[(*i).first].records[0].size();
+			auto stddev = regs[(*i).first].stddev;
+			auto recCount = regs[(*i).first].records.size();
+			auto recSize = regs[(*i).first].records[0].size();
 
-			_regions[(*i).first].score = //stddev;
+			regs[(*i).first].score = //stddev;
 					((min((double)recCount,(double)recSize) /
-					max((double)recCount,(double)recSize))) * stddev * ((double)_regions[(*i).first].len / (double)tagPathSequence.size());
+					max((double)recCount,(double)recSize))) * stddev * ((double)regs[(*i).first].len / (double)tagPathSequence.size());
 					//(double)recCount * (double)recSize * stddev;
 			++i;
 		}
@@ -330,16 +309,16 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 
 		ckmeansScoreInput.push_back(0);
 		for (auto i=structured.begin();i!=structured.end();i++) {
-			ckmeansScoreInput.push_back(_regions[(*i).first].score);
+			ckmeansScoreInput.push_back(regs[(*i).first].score);
 		}
 		scoreResult = kmeans_1d_dp(ckmeansScoreInput,2,2);
 
 		auto j=++(scoreResult.cluster.begin());
 		for (auto i=structured.begin();i!=structured.end();i++,j++) {
-			_regions[(*i).first].content = (((*j) == 2) || (scoreResult.nClusters < 2));
+			regs[(*i).first].content = (((*j) == 2) || (scoreResult.nClusters < 2));
 
 			// restore the original region's tps
-			_regions[(*i).first].tps = tagPathSequence.substr((*i).first,(*i).second.len);
+			regs[(*i).first].tps = tagPathSequence.substr((*i).first,(*i).second.len);
 		}
 
 		// -----
@@ -356,14 +335,14 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			_regions[(*i).first].content |= (((*j) == 2) || (scoreResult.nClusters < 2));*/
 	}
 
-	for (auto i = _regions.begin();i!=_regions.end();) {
-		if ((*i).second.records.size() < 2) _regions.erase(i++);
+	for (auto i = regs.begin();i!=regs.end();) {
+		if ((*i).second.records.size() < 2) regs.erase(i++);
 		else ++i;
 	}
 
 	regions.clear();
 
-	for (auto i=_regions.begin();i!=_regions.end();i++) {
+	for (auto i=regs.begin();i!=regs.end();i++) {
 		(*i).second.pos = (*i).first;
 		regions.push_back((*i).second);
 	}
@@ -460,6 +439,19 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	return ret.size()?ret:recpos;
 }
 
+const wstring& SRDEFilter::getTagPathSequence(int dr) {
+	if (dr < 0)
+		return tagPathSequence;
+	else {
+		size_t i = dr;
+
+		if (i < regions.size())
+			return regions[dr].tps;
+		else
+			return tagPathSequence;
+	}
+}
+
 tTPSRegion *SRDEFilter::getRegion(size_t r) {
 	if (r < regions.size())
 		return &regions[r];
@@ -543,37 +535,6 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 	}
 
 	return period;
-}
-
-pair<size_t,size_t> searchLongestPrefix(const wstring &prefix, const wstring &suffix) {
-	pair<size_t,size_t> ret;
-
-	for (size_t i=min(suffix.size(),prefix.size());i>0;i--) {
-		ret.first = prefix.find(suffix.substr(0,i));
-		if (ret.first != wstring::npos) {
-			ret.second = i;
-			break;
-		}
-	}
-
-	if (ret.first == wstring::npos) {
-		ret.first = prefix.size();
-		ret.second = 1;
-	}
-
-	return ret;
-}
-
-vector<size_t> searchPrefix(wstring &s, wstring &prefix) {
-	size_t pos=0;
-	vector<size_t> ret;
-
-	while ((pos=s.find(prefix,pos)) != wstring::npos) {
-		ret.push_back(pos);
-		pos += prefix.size();
-	}
-
-	return ret;
 }
 
 void SRDEFilter::onDataRecordFound(vector<wstring> &m, vector<size_t> &recpos, tTPSRegion *reg) {

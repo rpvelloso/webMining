@@ -19,6 +19,7 @@
 #include <fstream>
 #include "dom.hpp"
 #include "node.hpp"
+#include "SRDEFilter.h"
 
 using namespace std;
 

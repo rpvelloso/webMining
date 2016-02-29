@@ -56,7 +56,7 @@ public:
 protected:
 	SRDEFilter() = delete;
 	void SRDE(pNode, bool);
-    void buildTagPath(string, pNode, bool, bool, bool);
+    void buildTagPath(string, pNode, bool);
 	map<long int, tTPSRegion> filter(pNode, bool, unordered_map<long int, tTPSRegion> &);
 	vector<size_t> locateRecords(tTPSRegion &, double &);
 	unordered_map<int,int> symbolFrequency(wstring, unordered_set<int> &);

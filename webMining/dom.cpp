@@ -13,6 +13,7 @@
     along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include "dom.hpp"
@@ -88,7 +89,7 @@ void DOM::clean() {
 
 	unordered_set<TidyNode> remove;
 
-	cleanHelper(tidyGetBody(tdoc), remove);
+	cleanHelper(tidyGetHtml(tdoc), remove);
 	for (auto node:remove)
 		tidyDiscardElement(tdoc, node);
 }
