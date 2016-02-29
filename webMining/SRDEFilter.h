@@ -45,15 +45,16 @@ struct tTPSRegion {
 
 class SRDEFilter : public tExtractInterface {
 public:
-	SRDEFilter();
+	SRDEFilter(DOM *d);
 	virtual ~SRDEFilter();
 
-	void SRDE(pNode, bool);
-	const wstring& getTagPathSequence(int = -1);
+	const wstring& getTagPathSequence(int);
 	tTPSRegion *getRegion(size_t);
-	virtual size_t getRegionCount();
-	virtual vector<pNode> getRecord(size_t, size_t);
+	size_t getRegionCount();
+	vector<pNode> getRecord(size_t, size_t);
 protected:
+	SRDEFilter() = delete;
+	void SRDE(pNode, bool);
     void buildTagPath(string, pNode, bool, bool, bool);
 	map<long int, tTPSRegion> filter(pNode, bool, unordered_map<long int, tTPSRegion> &);
 	vector<size_t> locateRecords(tTPSRegion &, double &);

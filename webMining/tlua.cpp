@@ -97,11 +97,8 @@ static int lua_api_SRDExtract(lua_State *L) {
 	if (nargs == 1) {
 		if (lua_islightuserdata(L,-1)) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
-			if (checkDOM(L,dom)) {
-				dom->tpsf.SRDE(dom->body(),true);
-				/*if (dom->tpsf.getRegionCount() == 0)
-					dom->tpsf.SRDE(dom->getBody(),false);*/
-			}
+			if (checkDOM(L,dom))
+				dom->setExtractor(new SRDEFilter(dom));
 		}
 	}
 	return 0;
@@ -130,10 +127,7 @@ static int lua_api_getRegionCount(lua_State *L) {
 		string methodstr = lua_tostring(L,-1);
 		tExtractInterface *method;
 
-		//if ((methodstr == "drde") || (methodstr == "srde"))
-			method = &(dom->tpsf);
-		/*else
-			method = &(dom->mdr);*/
+		method = dom->getExtractor();
 		lua_pushnumber(L,method->getRegionCount());
 		return 1;
 	}
@@ -155,17 +149,14 @@ static int lua_api_getDataRegion(lua_State *L) {
 				tExtractInterface *method;
 				tTPSRegion *tpsreg;
 
-				/*if (methodstr == "mdr")
-					method = &(dom->mdr);*/
-				//else
-					method = &(dom->tpsf);
+				method = dom->getExtractor();
 
 				// main table returned
 				lua_createtable(L,0,0);
 
 				// tps data of this data region
 				if ((methodstr == "drde") || (methodstr == "srde")) {
-					tpsreg = dom->tpsf.getRegion(dtr_no);
+					tpsreg = method->getRegion(dtr_no);
 					if (tpsreg && tpsreg->tps.size()) {
 						lua_pushstring(L,"tps");
 						lua_createtable(L,tpsreg->tps.size(),0);
@@ -240,7 +231,7 @@ static int lua_api_DOMTPS(lua_State *L) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
 
 			if (checkDOM(L,dom)) {
-				wstring tps = dom->tpsf.getTagPathSequence(-1);
+				wstring tps = dom->getExtractor()->getTagPathSequence(-1);
 
 				lua_createtable(L,tps.size(),0);
 				for (size_t i=0;i<tps.size();i++) {
@@ -291,18 +282,18 @@ static int lua_api_nodeToString(lua_State *L) {
 
 void tlua::insertDOM(DOM *d) {
 	if (d)
-		dom_set.insert(d);
+		domSet.insert(d);
 }
 
 void tlua::removeDOM(DOM *d) {
 	if (checkDOM(d)) {
-		dom_set.erase(d);
+		domSet.erase(d);
 		delete d;
 	}
 }
 
 bool tlua::checkDOM(DOM *d) {
-	return dom_set.count(d) > 0;
+	return domSet.count(d) > 0;
 }
 
 tlua::tlua(const char *inp) {
@@ -333,9 +324,9 @@ tlua::tlua(const char *inp) {
 }
 
 tlua::~tlua() {
-	for (auto i=dom_set.begin();i!=dom_set.end();i++) {
+	for (auto i=domSet.begin();i!=domSet.end();i++) {
 		delete (*i);
 	}
-	dom_set.clear();
+	domSet.clear();
 }
 

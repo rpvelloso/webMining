@@ -51,7 +51,7 @@ public:
 	void removeDOM(DOM *);
 	bool checkDOM(DOM *);
 protected:
-	unordered_set<DOM *> dom_set;
+	unordered_set<DOM *> domSet;
 };
 
 #endif /* TLUA_H_ */

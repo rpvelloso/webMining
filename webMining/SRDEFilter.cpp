@@ -28,14 +28,16 @@
 #include <unordered_map>
 #include <list>
 #include <vector>
+#include <tidy.h>
 #include "misc.h"
 #include "hsfft.h"
-#include <tidy.h>
+#include "dom.hpp"
 //#include "Ckmeans.1d.dp.h"
 
 using namespace std;
 
-SRDEFilter::SRDEFilter() {
+SRDEFilter::SRDEFilter(DOM *d) : tExtractInterface() {
+	SRDE(d->body(), true);
 }
 
 SRDEFilter::~SRDEFilter() {

@@ -92,3 +92,11 @@ void DOM::clean() {
 	for (auto node:remove)
 		tidyDiscardElement(tdoc, node);
 }
+
+tExtractInterface* DOM::getExtractor() const {
+	return extractor.get();
+}
+
+void DOM::setExtractor(tExtractInterface* extractor) {
+	this->extractor = unique_ptr<tExtractInterface>(extractor);
+}

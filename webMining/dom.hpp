@@ -18,10 +18,12 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 #include <tidy.h>
 #include <tidybuffio.h>
 
 #include "SRDEFilter.h"
+#include "tExtractInterface.h"
 
 class Node;
 using pNode = Node *;
@@ -35,9 +37,10 @@ public:
 	void printHTML();
 	pNode body();
 	pNode html();
+	tExtractInterface* getExtractor() const;
+	void setExtractor(tExtractInterface* extractor);
 
-	SRDEFilter tpsf;
-private:
+ private:
 	void mapNodes(TidyNode node);
 	unordered_map<TidyNode, pNode> domNodes;
 	void clean();
@@ -47,6 +50,7 @@ private:
 	TidyBuffer errbuf = {0};
 	bool loaded = false;
 	DOM() = delete;
+	unique_ptr<tExtractInterface> extractor;
 };
 
 #endif /* DOM_HPP_ */
