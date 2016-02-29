@@ -164,16 +164,20 @@ processTestBed2 = function(dir)
   end
 end
 
---local d = loadDOMTree("../datasets/clustvx/adidas.com_1.htm")
+
+
+--local d = loadDOMTree("../datasets/alvarez/allbooks4less.htm")
 --printDOM(d,true)
 --exit()
+
+processTestBed2("../datasets/alvarez")
 processTestBed2("../datasets/tpsf")
---processTestBed2("../datasets/wien")
---processTestBed2("../datasets/zhao1")
---processTestBed2("../datasets/clustvx")
---processTestBed2("../datasets/zhao2")
---processTestBed2("../datasets/zhao3")
---processTestBed2("../datasets/yamada")
---processTestBed("../datasets/trieschnigg1")
---processTestBed("../datasets/trieschnigg2")
+processTestBed2("../datasets/wien")
+processTestBed2("../datasets/zhao1")
+processTestBed2("../datasets/clustvx")
+processTestBed2("../datasets/zhao2")
+processTestBed2("../datasets/zhao3")
+processTestBed2("../datasets/yamada")
+--processTestBed2("../datasets/trieschnigg1")
+--processTestBed2("../datasets/trieschnigg2")
 exit()

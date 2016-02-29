@@ -21,7 +21,12 @@
 
 DOM::DOM(const std::string filename) {
 	tdoc = tidyCreate();
+
 	tidyOptSetBool(tdoc, TidyXhtmlOut, yes);
+	tidyOptSetValue(tdoc, TidyIndentContent, "auto");
+	tidyOptSetInt(tdoc,TidyIndentSpaces,2);
+	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
+
 	tidySetErrorBuffer(tdoc, &errbuf);
 
 	if (tidyParseFile(tdoc, filename.c_str()) >= 0) {

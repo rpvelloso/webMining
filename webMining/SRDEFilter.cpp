@@ -359,7 +359,7 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	set<float> candidates;
 	vector<size_t> recpos,ret;
 	unordered_set<int> alphabet;
-	map<int,int> reencode;
+	unordered_map<int,int> reencode;
 	double estPeriod,estFreq;
 	double maxCode=0,maxScore=0;
 
