@@ -46,12 +46,13 @@
 
 class LuaContext {
 public:
-	LuaContext(const char *);
+	LuaContext(const char *, int argc, char **argv);
 	virtual ~LuaContext();
 	void insertDOM(DOM *);
 	void removeDOM(DOM *);
 	bool checkDOM(DOM *) const;
 protected:
+	LuaContext() = delete;
 	unordered_set<DOM *> domSet;
 	lua_State *state;
 };

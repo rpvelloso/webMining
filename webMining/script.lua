@@ -164,20 +164,38 @@ processTestBed2 = function(dir)
   end
 end
 
+processFile = function(filename)
+    print(string.format("Loading DOM tree: %s",filename),CRLF)
+    local dom = loadDOMTree(filename)
+    
+    print("Extracting records.")
+    local start = os.clock()
+    SRDExtract(dom)
+    print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
+    
+    print("Outputting results.")
+    displayResults(dom,"srde","./","output.html")
+    
+    print("Plotting graphs.")
+    plotSequences(dom,"file","output.html")
+end
 
+if #arg > 3 then
+  processFile(arg[4])
+ end
 
 --local d = loadDOMTree("../datasets/alvarez/allbooks4less.htm")
 --printDOM(d,true)
 --exit()
 
-processTestBed2("../datasets/alvarez")
-processTestBed2("../datasets/tpsf")
-processTestBed2("../datasets/wien")
-processTestBed2("../datasets/zhao1")
-processTestBed2("../datasets/clustvx")
-processTestBed2("../datasets/zhao2")
-processTestBed2("../datasets/zhao3")
-processTestBed2("../datasets/yamada")
+--processTestBed2("../datasets/alvarez")
+--processTestBed2("../datasets/tpsf")
+--processTestBed2("../datasets/wien")
+--processTestBed2("../datasets/clustvx")
+--processTestBed2("../datasets/zhao1")
+--processTestBed2("../datasets/zhao2")
+--processTestBed2("../datasets/zhao3")
+--processTestBed2("../datasets/yamada")
 --processTestBed2("../datasets/trieschnigg1")
 --processTestBed2("../datasets/trieschnigg2")
 exit()

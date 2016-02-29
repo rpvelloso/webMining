@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (inp != "")
-		delete (new LuaContext(inp.c_str()));
+		delete (new LuaContext(inp.c_str(), argc, argv));
 	else
 		printUsage(argv[0]);
 

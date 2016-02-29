@@ -78,12 +78,14 @@ static void cleanHelper(TidyNode n, unordered_set<TidyNode> &remove) {
 	static unordered_set<string> removeTags = {"script", "noscript"};
 
 	auto pTagName = tidyNodeGetName(n);
+	auto nodeType = tidyNodeGetType(n);
 	string tagName;
 
 	if (pTagName != nullptr)
 		tagName = pTagName;
 
-	if (removeTags.count(tagName) > 0)
+	if (removeTags.count(tagName) > 0 ||
+		nodeType == TidyNode_Comment)
 		remove.insert(n);
 
 	for (auto c = tidyGetChild(n); c ; c = tidyGetNext(c))

@@ -267,7 +267,7 @@ bool LuaContext::checkDOM(DOM *d) const {
 	return domSet.count(d) > 0;
 }
 
-LuaContext::LuaContext(const char *inp) {
+LuaContext::LuaContext(const char *inp, int argc, char **argv) {
 	state = luaL_newstate();
 
 	luaL_openlibs(state);
@@ -275,6 +275,15 @@ LuaContext::LuaContext(const char *inp) {
 	int s = luaL_loadfile(state, inp);
 
 	if (!s) {
+
+		lua_createtable(state,argc,0);
+		for (int i=0;i<argc;i++) {
+			lua_pushnumber(state,i+1);
+			lua_pushstring(state,argv[i]);
+			lua_settable(state,-3);
+		}
+		lua_setglobal(state,"arg");
+
 		LUA_SET_GLOBAL_LUDATA(state,"context",this);
 		LUA_SET_GLOBAL_CFUNC(state,"loadDOMTree",lua_api_loadDOMTree);
 		LUA_SET_GLOBAL_CFUNC(state,"unloadDOMTree",lua_api_unloadDOMTree);
