@@ -20,7 +20,8 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include "tlua.h"
+
+#include "LuaContext.h"
 
 
 using namespace std;
@@ -74,7 +75,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (inp != "")
-		delete (new tlua(inp.c_str()));
+		delete (new LuaContext(inp.c_str()));
 
 	cout.flush();
 	return 0;

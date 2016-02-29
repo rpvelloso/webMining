@@ -13,10 +13,10 @@
     along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "LuaContext.h"
+
 #include <iostream>
 #include <fstream>
-#include <lua.hpp>
-#include "tlua.h"
 #include "dom.hpp"
 #include "node.hpp"
 
@@ -25,22 +25,22 @@ using namespace std;
 extern "C" {
 
 bool checkDOM(lua_State *L, DOM *d) {
-	tlua *ctx;
+	LuaContext *ctx;
 
 	lua_getglobal(L,"context");
-	ctx = (tlua *)lua_touserdata(L,-1);
+	ctx = (LuaContext *)lua_touserdata(L,-1);
 	lua_pop(L,1);
 	return ctx->checkDOM(d);
 }
 
 static int lua_api_loadDOMTree(lua_State *L) {
 	int nargs = lua_gettop(L);
-	tlua *ctx;
+	LuaContext *ctx;
 	DOM *dom;
 
 	if (nargs == 1) {
 		lua_getglobal(L,"context");
-		ctx = (tlua *)lua_touserdata(L,-1);
+		ctx = (LuaContext *)lua_touserdata(L,-1);
 		lua_pop(L,1);
 
 		if (lua_isstring(L,-1)) {
@@ -58,11 +58,11 @@ static int lua_api_loadDOMTree(lua_State *L) {
 
 static int lua_api_unloadDOMTree(lua_State *L) {
 	int nargs = lua_gettop(L);
-	tlua *ctx;
+	LuaContext *ctx;
 
 	if (nargs == 1) {
 		lua_getglobal(L,"context");
-		ctx = (tlua *)lua_touserdata(L,-1);
+		ctx = (LuaContext *)lua_touserdata(L,-1);
 		lua_pop(L,1);
 
 		if (lua_islightuserdata(L,-1)) {
@@ -76,21 +76,6 @@ static int lua_api_unloadDOMTree(lua_State *L) {
 	return 0;
 }
 
-/*static int lua_api_DRDExtract(lua_State *L) {
-	int nargs = lua_gettop(L);
-
-	if (nargs == 2) {
-		if (lua_islightuserdata(L,-2) && lua_isnumber(L,-1)) {
-			DOM *dom = (DOM *)lua_touserdata(L,-2);
-			if (checkDOM(L,dom)) {
-				float st = lua_tonumber(L,-1);
-				dom->tpsf.DRDE(dom->body(),true,st);
-			}
-		}
-	}
-	return 0;
-}*/
-
 static int lua_api_SRDExtract(lua_State *L) {
 	int nargs = lua_gettop(L);
 
@@ -103,21 +88,6 @@ static int lua_api_SRDExtract(lua_State *L) {
 	}
 	return 0;
 }
-
-/*static int lua_api_MDRExtract(lua_State *L) {
-	int nargs = lua_gettop(L);
-
-	if (nargs == 2) {
-		if (lua_islightuserdata(L,-2) && lua_isnumber(L,-1)) {
-			DOM *dom = (DOM *)lua_touserdata(L,-2);
-			if (checkDOM(L,dom)) {
-				float st = lua_tonumber(L,-1);
-				dom->mdr.mineDataRecords(dom->body(),10,st,1);
-			}
-		}
-	}
-	return 0;
-}*/
 
 static int lua_api_getRegionCount(lua_State *L) {
 	int nargs = lua_gettop(L);
@@ -280,50 +250,48 @@ static int lua_api_nodeToString(lua_State *L) {
 
 }
 
-void tlua::insertDOM(DOM *d) {
+void LuaContext::insertDOM(DOM *d) {
 	if (d)
 		domSet.insert(d);
 }
 
-void tlua::removeDOM(DOM *d) {
+void LuaContext::removeDOM(DOM *d) {
 	if (checkDOM(d)) {
 		domSet.erase(d);
 		delete d;
 	}
 }
 
-bool tlua::checkDOM(DOM *d) {
+bool LuaContext::checkDOM(DOM *d) {
 	return domSet.count(d) > 0;
 }
 
-tlua::tlua(const char *inp) {
-	lua_State *L = luaL_newstate();
+LuaContext::LuaContext(const char *inp) {
+	state = luaL_newstate();
 
-	luaL_openlibs(L);
+	luaL_openlibs(state);
 
-	int s = luaL_loadfile(L, inp);
+	int s = luaL_loadfile(state, inp);
 
 	if (!s) {
-		LUA_SET_GLOBAL_LUDATA(L,"context",this);
-		LUA_SET_GLOBAL_CFUNC(L,"loadDOMTree",lua_api_loadDOMTree);
-		LUA_SET_GLOBAL_CFUNC(L,"unloadDOMTree",lua_api_unloadDOMTree);
-		//LUA_SET_GLOBAL_CFUNC(L,"DRDExtract",lua_api_DRDExtract);
-		LUA_SET_GLOBAL_CFUNC(L,"SRDExtract",lua_api_SRDExtract);
-		//LUA_SET_GLOBAL_CFUNC(L,"MDRExtract",lua_api_MDRExtract);
-		LUA_SET_GLOBAL_CFUNC(L,"getDataRegion",lua_api_getDataRegion);
-		LUA_SET_GLOBAL_CFUNC(L,"getRegionCount",lua_api_getRegionCount);
-		LUA_SET_GLOBAL_CFUNC(L,"DOMTPS",lua_api_DOMTPS);
-		LUA_SET_GLOBAL_CFUNC(L,"printDOM",lua_api_printDOM);
-		LUA_SET_GLOBAL_CFUNC(L,"nodeToString",lua_api_nodeToString);
-		s = lua_pcall(L, 0, LUA_MULTRET, 0);
+		LUA_SET_GLOBAL_LUDATA(state,"context",this);
+		LUA_SET_GLOBAL_CFUNC(state,"loadDOMTree",lua_api_loadDOMTree);
+		LUA_SET_GLOBAL_CFUNC(state,"unloadDOMTree",lua_api_unloadDOMTree);
+		LUA_SET_GLOBAL_CFUNC(state,"SRDExtract",lua_api_SRDExtract);
+		LUA_SET_GLOBAL_CFUNC(state,"getDataRegion",lua_api_getDataRegion);
+		LUA_SET_GLOBAL_CFUNC(state,"getRegionCount",lua_api_getRegionCount);
+		LUA_SET_GLOBAL_CFUNC(state,"DOMTPS",lua_api_DOMTPS);
+		LUA_SET_GLOBAL_CFUNC(state,"printDOM",lua_api_printDOM);
+		LUA_SET_GLOBAL_CFUNC(state,"nodeToString",lua_api_nodeToString);
+		s = lua_pcall(state, 0, LUA_MULTRET, 0);
 	} else {
-		cout << "Lua error: " << lua_tostring(L, -1) << endl;
-		lua_pop(L, 1);
+		cout << "Lua error: " << lua_tostring(state, -1) << endl;
+		lua_pop(state, 1);
 	}
-	lua_close(L);
+	lua_close(state);
 }
 
-tlua::~tlua() {
+LuaContext::~LuaContext() {
 	for (auto i=domSet.begin();i!=domSet.end();i++) {
 		delete (*i);
 	}

@@ -13,10 +13,11 @@
     along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TLUA_H_
-#define TLUA_H_
+#ifndef LUACONTEXT_H_
+#define LUACONTEXT_H_
 
 #include <set>
+#include <lua.hpp>
 #include "dom.hpp"
 
 #define LUA_SET_GLOBAL_NUMBER(L,name,value) \
@@ -43,15 +44,16 @@
 		lua_setglobal(L,name); \
 		} while (0)
 
-class tlua {
+class LuaContext {
 public:
-	tlua(const char *);
-	virtual ~tlua();
+	LuaContext(const char *);
+	virtual ~LuaContext();
 	void insertDOM(DOM *);
 	void removeDOM(DOM *);
 	bool checkDOM(DOM *);
 protected:
 	unordered_set<DOM *> domSet;
+	lua_State *state;
 };
 
-#endif /* TLUA_H_ */
+#endif /* LUACONTEXT_H_ */
