@@ -25,9 +25,7 @@
 #include <unordered_set>
 #include <vector>
 #include <string>
-
 #include "ExtractorInterface.h"
-//#include "dom.hpp"
 #include "node.hpp"
 #include "misc.h"
 
