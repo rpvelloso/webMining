@@ -16,6 +16,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <algorithm>
 #include "dom.hpp"
 #include "node.hpp"
 
@@ -98,7 +99,7 @@ void DOM::mapNodes(TidyNode node) {
 }
 ;
 
-static void cleanHelper(TidyNode n, unordered_set<TidyNode> &remove) {
+static void cleanHelper(TidyNode n, vector<TidyNode> &remove) {
 	static unordered_set<string> removeTags = {"script", "noscript"};
 
 	auto pTagName = tidyNodeGetName(n);
@@ -110,18 +111,22 @@ static void cleanHelper(TidyNode n, unordered_set<TidyNode> &remove) {
 
 	if (removeTags.count(tagName) > 0 ||
 		nodeType == TidyNode_Comment)
-		remove.insert(n);
+		remove.push_back(n);
 
 	for (auto c = tidyGetChild(n); c ; c = tidyGetNext(c))
 		cleanHelper(c, remove);
 }
 
 void DOM::clean() {
-	unordered_set<TidyNode> remove;
+	vector<TidyNode> remove;
 
 	cleanHelper(tidyGetHtml(tdoc), remove);
-	for (auto node:remove)
+
+	while (!remove.empty()) {
+		auto node = remove.back();
+		remove.pop_back();
 		tidyDiscardElement(tdoc, node);
+	}
 }
 
 ExtractorInterface* DOM::getExtractor() const {

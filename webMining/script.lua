@@ -183,11 +183,11 @@ processFile = function(filename)
 end
 
 --if #arg > 3 then
+--  local d = loadDOMTree(arg[5])
+--  printDOM(d,true)
 --  processFile(arg[5])
 --end
 
---local d = loadDOMTree("../datasets/alvarez/allbooks4less.htm")
---printDOM(d,true)
 --exit()
 
 --processTestBed2("../datasets/alvarez")
@@ -198,6 +198,6 @@ end
 --processTestBed2("../datasets/zhao2")
 --processTestBed2("../datasets/zhao3")
 --processTestBed2("../datasets/yamada")
-processTestBed2("../datasets/trieschnigg1")
---processTestBed2("../datasets/trieschnigg2")
+--processTestBed2("../datasets/trieschnigg1")
+processTestBed2("../datasets/trieschnigg2")
 exit()
