@@ -62,7 +62,7 @@ protected:
 	double estimatePeriod(vector<double>);
 	map<long int, tTPSRegion> detectStructure(unordered_map<long int, tTPSRegion> &);
 
-	virtual void onDataRecordFound(vector<wstring> &, vector<size_t> &, tTPSRegion *);
+	virtual void onDataRecordFound(vector<wstring> &, vector<size_t> &, tTPSRegion &);
 
 	unordered_map<string, int> tagPathMap;
 	wstring tagPathSequence;

@@ -42,10 +42,11 @@ DOM::DOM(const std::string filename) {
 	tidyOptSetBool(tdoc, TidyMakeClean, yes);
 	tidyOptSetBool(tdoc, TidyJoinClasses, yes);
 	tidyOptSetBool(tdoc, TidyJoinStyles, yes);
-	//tidyOptSetBool(tdoc, TidyCoerceEndTags, yes);
-	//tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
-	//tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
+	tidyOptSetBool(tdoc, TidyCoerceEndTags, yes);
+	tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
+	tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
 	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
+	tidyOptSetBool(tdoc, TidyHideComments, yes);
 
 	//tidyOptSetBool(tdoc, TidyDropFontTags, yes);
 

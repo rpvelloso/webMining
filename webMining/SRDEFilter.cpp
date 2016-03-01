@@ -46,14 +46,15 @@ SRDEFilter::~SRDEFilter() {
 unordered_map<int,int> SRDEFilter::symbolFrequency(wstring s, set<int> &alphabet) {
 	unordered_map<int, int> symbolCount;
 
+	alphabet.clear();
 	// compute symbol frequency
-	for (size_t i=0;i<s.size();i++) {
-		if (s[i] != 0) {
-			if (alphabet.count(s[i]) == 0) {
-				symbolCount[s[i]]=0;
-				alphabet.insert(s[i]);
+	for (auto c:s) {
+		if (c != 0) {
+			if (alphabet.count(c) == 0) {
+				symbolCount[c]=0;
+				alphabet.insert(c);
 			}
-			symbolCount[s[i]]++;
+			symbolCount[c]++;
 		}
 	}
 	return symbolCount;
@@ -63,8 +64,8 @@ map<int,int> SRDEFilter::frequencyThresholds(unordered_map<int,int> symbolCount)
 	map<int,int> thresholds;
 
 	// create sorted list of frequency thresholds
-	for (auto i=symbolCount.begin();i!=symbolCount.end();i++)
-		thresholds[(*i).second] = (*i).first;
+	for (auto i:symbolCount)
+		thresholds[i.second] = i.first;
 
 	return thresholds;
 }
@@ -110,21 +111,21 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 	}
 }
 
-map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &r) {
+map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &regs) {
 	float angCoeffThreshold=0.17633; // 10 degrees
 	long int sizeThreshold = (tagPathSequence.size()*3)/100; // % page size
 	map<long int,tTPSRegion> structured;
 
-	for (auto i=r.begin();i!=r.end();i++) {
-		(*i).second.lc = linearRegression((*i).second.tps);
+	for (auto &r:regs) {
+		r.second.lc = linearRegression(r.second.tps);
 
-		cerr << "size: " << (*i).second.len << " ang.coeff.: " << (*i).second.lc.a << endl;
+		cerr << "size: " << r.second.len << " ang.coeff.: " << r.second.lc.a << endl;
 
 		if (
-			(abs((*i).second.lc.a) < angCoeffThreshold) && // test for structure
-			((*i).second.len >= sizeThreshold) // test for size
+			(abs(r.second.lc.a) < angCoeffThreshold) && // test for structure
+			(r.second.len >= sizeThreshold) // test for size
 			)
-			structured.insert(*i);
+			structured.insert(r);
 	}
 	return structured;
 }
@@ -142,7 +143,7 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 	auto thresholds = frequencyThresholds(symbolCount);
 	auto threshold = thresholds.begin();
 	threshold++;
-	threshold++;
+	//threshold++;
 
 	do {
 		regs.clear();
@@ -226,27 +227,28 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 	structured=filter(n,css, regs); // segment page and detects structured regions
 	//structured = tagPathSequenceFilter(n,css);
 
-	for (auto i=structured.begin();i!=structured.end();i++) {
-		auto firstNode = nodeSequence.begin()+(*i).first;
-		auto lastNode = firstNode + (*i).second.len;
+	for (auto i:structured) {
+		auto firstNode = nodeSequence.begin()+i.first;
+		auto lastNode = firstNode + i.second.len;
+		auto &region = regs[i.first];
 
-		regs[(*i).first].nodeSeq.assign(firstNode,lastNode);
+		region.nodeSeq.assign(firstNode,lastNode);
 		m.clear();
 		recpos.clear();
 
 		cerr << "TPS: " << endl;
-		for (size_t j=0;j<regs[(*i).first].tps.size();j++)
-			cerr << regs[(*i).first].tps[j] << " ";
+		for (size_t j=0;j<region.tps.size();j++)
+			cerr << region.tps[j] << " ";
 		cerr << endl;
 
 		// identify the start position of each record
-		recpos = locateRecords(regs[(*i).first],period);
+		recpos = locateRecords(region,period);
 
 		// consider only leaf nodes when performing field alignment
-		auto j = regs[(*i).first].nodeSeq.begin();
-		auto t=regs[(*i).first].tps.begin();
+		auto j = region.nodeSeq.begin();
+		auto t=region.tps.begin();
 		size_t k=0;
-		while (k < regs[(*i).first].tps.size()) {
+		while (k < region.tps.size()) {
 			bool erase = (!(*j)->isImage() && !(*j)->isLink() && !(*j)->isText());
 			for (size_t w=0;w<recpos.size();w++) {
 				if (recpos[w] == k) {
@@ -256,8 +258,8 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			}
 
 			if (erase) {
-				j = regs[(*i).first].nodeSeq.erase(j);
-				t = regs[(*i).first].tps.erase(t);
+				j = region.nodeSeq.erase(j);
+				t = region.tps.erase(t);
 				for (size_t w=0;w<recpos.size();w++) {
 					if (recpos[w] > k) recpos[w]--;
 				}
@@ -275,7 +277,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			if (prev==-1) prev=recpos[j];
 			else {
 				if ((recpos[j]-prev) > 0) {
-					m.push_back(regs[(*i).first].tps.substr(prev,recpos[j]-prev));
+					m.push_back(region.tps.substr(prev,recpos[j]-prev));
 					max_size = max(recpos[j]-prev,max_size);
 					prev = recpos[j];
 				}
@@ -283,22 +285,23 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		}
 		if (prev != -1) {
 			if (period > max_size) max_size = period;
-			m.push_back(regs[(*i).first].tps.substr(prev,max_size));
+			m.push_back(region.tps.substr(prev,max_size));
 		}
 
 		if (m.size()) {
 			// align the records (one alternative to 'center star' algorithm is ClustalW)
 			//align(m);
-			regs[(*i).first].score = centerStar(m);
+			region.score = centerStar(m);
 
 			// and extracts them
-			onDataRecordFound(m,recpos,&regs[(*i).first]);
+			onDataRecordFound(m,recpos,region);
 		}
 	}
 
 	// remove regions with only a single record
 	for (auto i=structured.begin();i!=structured.end();) {
-		if (regs[(*i).first].records.size() < 2) structured.erase(i++);
+		if (regs[(*i).first].records.size() < 2)
+			i = structured.erase(i);
 		else {
 			auto stddev = regs[(*i).first].stddev;
 			auto recCount = regs[(*i).first].records.size();
@@ -464,7 +467,7 @@ const wstring& SRDEFilter::getTagPathSequence(int dr) {
 tTPSRegion *SRDEFilter::getRegion(size_t r) {
 	if (r < regions.size())
 		return &regions[r];
-	return NULL;
+	return nullptr;
 }
 
 size_t SRDEFilter::getRegionCount() {
@@ -546,33 +549,30 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 	return period;
 }
 
-void SRDEFilter::onDataRecordFound(vector<wstring> &m, vector<size_t> &recpos, tTPSRegion *reg) {
+void SRDEFilter::onDataRecordFound(vector<wstring> &m, vector<size_t> &recpos, tTPSRegion &reg) {
 	if ((m.size() == 0) || (recpos.size() == 0)) return;// -1;
 
 	int rows=m.size(),cols=m[0].size();
-	vector<pNode> rec;
-	bool keepRec;
 
 	for (int i=0;i<rows;i++) {
-		keepRec = false;
+		vector<pNode> rec;
 
-		rec.clear();
 		cerr << endl;
 		for (int j=0,k=0;j<cols;j++) {
 			if (m[i][j] != 0) {
-				rec.push_back(reg->nodeSeq[recpos[i]+k]);
+				auto node = reg.nodeSeq[recpos[i]+k];
+				rec.push_back(node);
 
-				auto tagName = reg->nodeSeq[recpos[i]+k]->tagName();
+				auto tagName = node->tagName();
 				if (tagName != "") {
 					cerr << tagName << "[" <<
-							reg->nodeSeq[recpos[i]+k]->toString() << "];";
+							node->toString() << "];";
 				}
 				k++;
-				if (j>0) keepRec=true;
-			} else rec.push_back(NULL);
+			} else rec.push_back(nullptr);
 		}
-		if (keepRec) reg->records.push_back(rec);
+		reg.records.push_back(rec);
 	}
-	cleanRegion(reg->records);
+	cleanRegion(reg.records);
 	cerr << endl;
 }

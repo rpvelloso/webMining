@@ -5,7 +5,10 @@
  *      Author: roberto
  */
 
+#include <algorithm>
 #include "ExtractorInterface.h"
+
+using namespace std;
 
 #include "node.hpp"
 
@@ -16,31 +19,31 @@ ExtractorInterface::~ExtractorInterface() {
 }
 
 void ExtractorInterface::cleanRegion(vector<vector<pNode> > &recs) {
-	if (!(recs.size())) return;
-	if (!(recs[0].size())) return;
+	if (recs.size() == 0) return;
+	if (recs[0].size() == 0) return;
 
-	bool field[recs[0].size()];
-
-	for (size_t i=0;i<recs[0].size();i++) field[i]=false;
+	vector<bool> record(recs.size(), false);
+	vector<bool> field(recs[0].size(), false);
 
 	for (size_t i=0;i<recs.size();i++) {
 		for (size_t j=0;j<recs[i].size();j++) {
-			if (recs[i][j] && (
-					recs[i][j]->isImage() ||
-					recs[i][j]->isLink() ||
-					recs[i][j]->isText())
+			auto node = recs[i][j];
+			if (node && (
+					node->isImage() ||
+					node->isLink() ||
+					node->isText())
 
-			) field[j]=true;
-		}
-	}
-
-	int k=0;
-	for (size_t j=0;j<recs[0].size();j++,k++) {
-		if (!field[j]) {
-			for (size_t i=0;i<recs.size();i++) {
-				recs[i].erase(recs[i].begin()+k);
+			) { // do not erase this node
+				field[j]=true;
+				record[i]=true;
 			}
-			k--;
 		}
 	}
+
+	size_t l=0;
+	remove_if(recs.begin(), recs.end(), [&l, record](const vector<pNode> &a)->bool{ return !record[l++];});
+
+	l = 0;
+	for (auto r:recs)
+		remove_if(r.begin(), r.end(), [&l, field](const pNode &a)->bool{ return !field[l++]; });
 }
