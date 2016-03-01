@@ -43,7 +43,7 @@ SRDEFilter::SRDEFilter(DOM *d) : ExtractorInterface() {
 SRDEFilter::~SRDEFilter() {
 }
 
-unordered_map<int,int> SRDEFilter::symbolFrequency(wstring s, unordered_set<int> &alphabet) {
+unordered_map<int,int> SRDEFilter::symbolFrequency(wstring s, set<int> &alphabet) {
 	unordered_map<int, int> symbolCount;
 
 	// compute symbol frequency
@@ -85,22 +85,29 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 			tagStyle = tagStyle + " " + attrName + "=" + attrValue;
 	}
 
-	auto tagName = n->tagName();
+	string tagName;
+
+	if (n->isText())
+		tagName = "#text";
+	else
+		tagName = n->tagName();
+
 	if (tagName != "") {
 		if (css && (tagStyle != "")) s = s + "/" + tagName + tagStyle;
 		else s = s + "/" + tagName;
+
+		if (tagPathMap.count(s) == 0)
+			tagPathMap[s] = tagPathMap.size()+1;
+
+		tagPathSequence = tagPathSequence + wchar_t(tagPathMap[s]);
+		nodeSequence.push_back(n);
+
+		for (auto child = n->child(); child != nullptr; child = child->next())
+			buildTagPath(s,child,css);
+	} else {
+		cout << "empty tagName!!! : " << n->toString() << endl;
+		//terminate();
 	}
-
-	if (tagPathMap.count(s) == 0)
-		tagPathMap[s] = tagPathMap.size()+1;
-
-	cout << s << endl;
-
-	tagPathSequence = tagPathSequence + wchar_t(tagPathMap[s]);
-	nodeSequence.push_back(n);
-
-	for (auto child = n->child(); child != nullptr; child = child->next())
-		buildTagPath(s,child,css);
 }
 
 map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &r) {
@@ -123,7 +130,7 @@ map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tT
 }
 
 map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
-	unordered_set<int> alphabet;
+	set<int> alphabet;
 	wstring s;
 	long int lastRegPos = -1;
 	map<long int, tTPSRegion> ret;
@@ -169,7 +176,7 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 						r.tps = tagPathSequence.substr(r.pos,r.len);
 
 						if (lastRegPos != -1) {
-							unordered_set<int> palpha,alpha,intersect;
+							set<int> palpha,alpha,intersect;
 
 							symbolFrequency(regs[lastRegPos].tps,palpha);
 							symbolFrequency(r.tps,alpha);
@@ -360,7 +367,7 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	float avg;
 	set<float> candidates;
 	vector<size_t> recpos,ret;
-	unordered_set<int> alphabet;
+	set<int> alphabet;
 	unordered_map<int,int> reencode;
 	double estPeriod,estFreq;
 	double maxCode=0,maxScore=0;

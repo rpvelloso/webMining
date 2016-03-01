@@ -57,7 +57,7 @@ protected:
     void buildTagPath(string, pNode, bool);
 	map<long int, tTPSRegion> filter(pNode, bool, unordered_map<long int, tTPSRegion> &);
 	vector<size_t> locateRecords(tTPSRegion &, double &);
-	unordered_map<int,int> symbolFrequency(wstring, unordered_set<int> &);
+	unordered_map<int,int> symbolFrequency(wstring, set<int> &);
 	map<int,int> frequencyThresholds(unordered_map<int,int>);
 	double estimatePeriod(vector<double>);
 	map<long int, tTPSRegion> detectStructure(unordered_map<long int, tTPSRegion> &);

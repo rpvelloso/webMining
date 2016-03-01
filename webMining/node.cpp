@@ -33,7 +33,7 @@ Node::~Node() {};
 
 pNode Node::next() const {
 	auto n = tidyGetNext(node);
-	if (dom->domNodes.count(n) > 0)
+	if (n && dom->domNodes.count(n) > 0)
 		return dom->domNodes[n];
 	else
 		return nullptr;
@@ -48,7 +48,7 @@ string Node::getAttr(string attrName) {
 
 pNode Node::child() const {
 	auto c = tidyGetChild(node);
-	if (dom->domNodes.count(c) > 0)
+	if (c && dom->domNodes.count(c) > 0)
 		return dom->domNodes[c];
 	else
 		return nullptr;

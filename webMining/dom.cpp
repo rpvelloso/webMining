@@ -19,23 +19,35 @@
 #include "dom.hpp"
 #include "node.hpp"
 
+/*static void traverse(DOM *dom, TidyNode node, size_t ident = 0) {
+	Node n(dom, node);
+
+	for (size_t i = 0; i < ident; ++i)
+		cout << " ";
+	cout << n.toString() << endl;
+
+	for (auto c = tidyGetChild(node); c; c = tidyGetNext(c))
+		traverse(dom, c, ident+2);
+}*/
+
 DOM::DOM(const std::string filename) {
 	tdoc = tidyCreate();
 
-	tidyOptSetBool(tdoc, TidyXhtmlOut, yes);
 	tidyOptSetValue(tdoc, TidyIndentContent, "auto");
+	tidyOptSetValue(tdoc, TidySortAttributes, "alpha");
+
 	tidyOptSetInt(tdoc,TidyIndentSpaces,2);
+
+	tidyOptSetBool(tdoc, TidyXhtmlOut, yes);
+	tidyOptSetBool(tdoc, TidyMakeClean, yes);
 	tidyOptSetBool(tdoc, TidyJoinClasses, yes);
 	tidyOptSetBool(tdoc, TidyJoinStyles, yes);
-	tidyOptSetBool(tdoc, TidyCoerceEndTags, yes);
-
-	tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
-	tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
+	//tidyOptSetBool(tdoc, TidyCoerceEndTags, yes);
+	//tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
+	//tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
+	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
 
 	//tidyOptSetBool(tdoc, TidyDropFontTags, yes);
-
-	tidyOptSetValue(tdoc, TidySortAttributes, "alpha");
-	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
 
 	tidySetErrorBuffer(tdoc, &errbuf);
 
@@ -46,6 +58,7 @@ DOM::DOM(const std::string filename) {
 		clean();
 		loaded = true;
 		mapNodes(tidyGetHtml(tdoc));
+		//traverse(this,tidyGetHtml(tdoc));
 	}
 };
 
@@ -103,7 +116,6 @@ static void cleanHelper(TidyNode n, unordered_set<TidyNode> &remove) {
 }
 
 void DOM::clean() {
-
 	unordered_set<TidyNode> remove;
 
 	cleanHelper(tidyGetHtml(tdoc), remove);
