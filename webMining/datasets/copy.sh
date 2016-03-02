@@ -1,11 +1,13 @@
 #!/bin/bash
 
 let i=1
-for x in `find|grep htm`; do
-	x=${x/./}
-	x=${x/\//}
-	dest=${x//\//_}
-	cp $x ./$dest
+set IFS="\n"
+find . -type f -name '*.htm*' -print0 | while IFS= read -r -d '' org; do
+	org="${org/./}"
+	org="${org/\//}"
+	dest="${org//\//_}"
+	dest="${dest// /_}"
+	cp "$org" ./$dest
 	echo $dest
 	let i=i+1
 done
