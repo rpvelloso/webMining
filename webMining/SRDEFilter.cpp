@@ -71,7 +71,10 @@ map<int,int> SRDEFilter::frequencyThresholds(unordered_map<int,int> symbolCount)
 }
 
 void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
-	static vector<string> styleAttr = {"style", "class", "bgcolor", "width", "height", "align", "valign", "halign"};
+	static vector<string> styleAttr = {
+			"style", "class", "color", "bgcolor", "width", "height",
+			"align", "valign", "halign", "colspan", "rowspan"};
+
 	string tagStyle;
 
 	if (s == "") {
@@ -111,10 +114,10 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 	}
 }
 
-map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &regs) {
+vector<long int> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &regs) {
 	float angCoeffThreshold=0.17633; // 10 degrees
 	long int sizeThreshold = (tagPathSequence.size()*3)/100; // % page size
-	map<long int,tTPSRegion> structured;
+	vector<long int> structured;
 
 	for (auto &r:regs) {
 		r.second.lc = linearRegression(r.second.tps);
@@ -125,16 +128,16 @@ map<long int, tTPSRegion> SRDEFilter::detectStructure(unordered_map<long int, tT
 			(abs(r.second.lc.a) < angCoeffThreshold) && // test for structure
 			(r.second.len >= sizeThreshold) // test for size
 			)
-			structured.insert(r);
+			structured.push_back(r.first);
 	}
 	return structured;
 }
 
-map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
+vector<long int> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
 	set<int> alphabet;
 	wstring s;
 	long int lastRegPos = -1;
-	map<long int, tTPSRegion> ret;
+	vector<long int> ret;
 
 	buildTagPath("",n,css);
 	s = tagPathSequence;
@@ -143,7 +146,8 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 	auto thresholds = frequencyThresholds(symbolCount);
 	auto threshold = thresholds.begin();
 	threshold++;
-	//threshold++;
+	threshold++;
+	threshold++;
 
 	do {
 		regs.clear();
@@ -220,7 +224,7 @@ map<long int, tTPSRegion> SRDEFilter::filter(pNode n, bool css, unordered_map<lo
 void SRDEFilter::SRDE(pNode n, bool css) {
 	vector<size_t> recpos;
 	vector<wstring> m;
-	map<long int, tTPSRegion> structured;
+	vector<long int> structured;
 	double period;
 	unordered_map<long int, tTPSRegion> regs;
 
@@ -228,9 +232,9 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 	//structured = tagPathSequenceFilter(n,css);
 
 	for (auto i:structured) {
-		auto firstNode = nodeSequence.begin()+i.first;
-		auto lastNode = firstNode + i.second.len;
-		auto &region = regs[i.first];
+		auto &region = regs[i];
+		auto firstNode = nodeSequence.begin()+i;
+		auto lastNode = firstNode + region.len;
 
 		region.nodeSeq.assign(firstNode,lastNode);
 		m.clear();
@@ -299,68 +303,61 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 	}
 
 	// remove regions with only a single record
-	for (auto i=structured.begin();i!=structured.end();) {
-		if (regs[(*i).first].records.size() < 2)
-			i = structured.erase(i);
-		else {
-			auto stddev = regs[(*i).first].stddev;
-			auto recCount = regs[(*i).first].records.size();
-			auto recSize = regs[(*i).first].records[0].size();
-
-			regs[(*i).first].score = //stddev;
-					((min((double)recCount,(double)recSize) /
-					max((double)recCount,(double)recSize))) * stddev * ((double)regs[(*i).first].len / (double)tagPathSequence.size());
-					//(double)recCount * (double)recSize * stddev;
-			++i;
-		}
-	}
+	remove_if(structured.begin(), structured.end(), [&regs](long int i)->bool{
+		return regs[i].records.size() < 2;
+	});
 
 	if (structured.size()) {
-		vector<double> ckmeansScoreInput;
-		ClusterResult scoreResult;
+		for (auto i:structured) {
+			auto stddev = regs[i].stddev;
+			auto recCount = regs[i].records.size();
+			auto recSize = regs[i].records[0].size();
 
-		ckmeansScoreInput.push_back(0);
-		for (auto i=structured.begin();i!=structured.end();i++) {
-			ckmeansScoreInput.push_back(regs[(*i).first].score);
+			regs[i].score = //stddev;
+					((min((double)recCount,(double)recSize) /
+					max((double)recCount,(double)recSize))) * stddev * ((double)regs[i].len / (double)tagPathSequence.size());
+					//(double)recCount * (double)recSize * stddev;
 		}
-		scoreResult = kmeans_1d_dp(ckmeansScoreInput,2,2);
+
+		vector<double> ckmeansScoreInput;
+		ckmeansScoreInput.push_back(0);
+		for (auto i:structured)
+			ckmeansScoreInput.push_back(regs[i].score); // cluster by score
+		auto scoreResult = kmeans_1d_dp(ckmeansScoreInput,2,2);
 
 		auto j=++(scoreResult.cluster.begin());
-		for (auto i=structured.begin();i!=structured.end();i++,j++) {
-			regs[(*i).first].content = (((*j) == 2) || (scoreResult.nClusters < 2));
+		for (auto i:structured) {
+			regs[i].content = (((*j) == 2) || (scoreResult.nClusters < 2));
 
 			// restore the original region's tps
-			regs[(*i).first].tps = tagPathSequence.substr((*i).first,(*i).second.len);
+			regs[i].tps = tagPathSequence.substr(i,regs[i].len);
+			++j;
 		}
 
-		// -----
-
-		/*ckmeansScoreInput.clear();
+		ckmeansScoreInput.clear();
 		ckmeansScoreInput.push_back(0);
-		for (auto i=structured.begin();i!=structured.end();i++) {
-			ckmeansScoreInput.push_back(_regions[(*i).first].stddev);
-		}
+		for (auto i:structured)
+			ckmeansScoreInput.push_back(regs[i].stddev); // cluster by stddev
 		scoreResult = kmeans_1d_dp(ckmeansScoreInput,2,2);
 
 		j=++(scoreResult.cluster.begin());
-		for (auto i=structured.begin();i!=structured.end();i++,j++)
-			_regions[(*i).first].content |= (((*j) == 2) || (scoreResult.nClusters < 2));*/
-	}
-
-	for (auto i = regs.begin();i!=regs.end();) {
-		if ((*i).second.records.size() < 2) regs.erase(i++);
-		else ++i;
+		for (auto i:structured) {
+			regs[i].content |= (((*j) == 2) || (scoreResult.nClusters < 2));
+			++j;
+		}
 	}
 
 	regions.clear();
 
 	for (auto i=regs.begin();i!=regs.end();i++) {
-		(*i).second.pos = (*i).first;
-		regions.push_back((*i).second);
+		if ((*i).second.records.size() >= 2) {
+			(*i).second.pos = (*i).first;
+			regions.push_back((*i).second);
+		}
 	}
 
-    sort(regions.begin(),regions.end(),[](const tTPSRegion &a, const tTPSRegion &b) {
-    		return (a.score > b.score);
+    sort(regions.begin(),regions.end(),[](auto &a, auto &b) {
+    	return (a.score > b.score);
     });
 }
 
@@ -373,28 +370,29 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	set<int> alphabet;
 	unordered_map<int,int> reencode;
 	double estPeriod,estFreq;
-	double maxCode=0,maxScore=0;
+	double maxCode=numeric_limits<double>::min(),maxScore=0,minCode=numeric_limits<double>::max();
 
 	// reencode signal
 	symbolFrequency(s,alphabet);
-	for (size_t i=0,j=0;i<s.size();i++) {
-		if (alphabet.count(s[i]) > 0) {
-			alphabet.erase(s[i]);
-			j++;
-			reencode[s[i]]=j;
-		}
+	for (size_t i=0; i < s.size(); ++i) {
+		auto c = s[i];
+
+		if (reencode.count(c) == 0)
+			reencode[c]=reencode.size()+1;
 		//signal[i]=reencode[s[i]];
-		signal[i]=s[i];
+		signal[i]=c;
 	}
+
 	avg = mean(signal);
 
 	// remove DC & compute signal's std.dev.
 	region.stddev = 0;
-	for (size_t i=0;i<s.size();i++) {
+	for (size_t i=0; i < s.size(); ++i) {
 		signal[i] = signal[i] - avg;
 		region.stddev += signal[i]*signal[i];
 		if (signal[i] < 0) candidates.insert(signal[i]);
-		if (abs(signal[i]) > maxCode) maxCode = abs(signal[i]);
+		if (signal[i] > maxCode) maxCode = signal[i];
+		if (signal[i] < minCode) minCode = signal[i];
 	}
 	region.stddev = sqrt(region.stddev/max((double)1,(double)(s.size()-2)));
 
@@ -404,47 +402,53 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 	cout << endl;
 
 	for (auto value = candidates.begin(); value != candidates.end(); value ++ ) {
-		double stddev,avgsize;
+		double stddev = 0, avgsize = 0;
 
 		recpos.clear();
-		stddev=0;
-		avgsize=0;
-
-		for (size_t i=0;i<s.size();i++) {
+		for (size_t i=0; i < s.size(); ++i) {
 			if ((signal[i] == *value))
 				recpos.push_back(i);
 		}
 
 		if (recpos.size() > 1) {
-			for (size_t i=1;i<recpos.size();i++) {
-				avgsize += (recpos[i] - recpos[i-1]);
-			}
+			for (size_t i=1 ; i < recpos.size(); ++i)
+				avgsize += recpos[i] - recpos[i-1];
 			avgsize /= (float)(recpos.size()-1);
 
-			for (size_t i=1;i<recpos.size();i++) {
-				float diff = (float)(recpos[i] - recpos[i-1])-avgsize;
-				stddev += (diff*diff);
+			for (size_t i=1 ; i < recpos.size(); ++i) {
+				float diff = (float)(recpos[i] - recpos[i-1]) - avgsize;
+				stddev += diff * diff;
 			}
 			stddev = sqrt(stddev/max((float)(recpos.size()-2),(float)1));
 
-			double regionCoverage = min(avgsize*(double)recpos.size()/(double)signal.size(), (double)1);
-			double estRegionCoverage = min(estPeriod*estFreq/(double)signal.size(), (double)1);
-			double regCoverageRatio = min(regionCoverage,estRegionCoverage)/max(regionCoverage,estRegionCoverage);
+			auto cv = 1.0 - min(stddev, avgsize)/max(stddev, avgsize);
+			double regionCoverage =
+					(double)(recpos.back() - recpos.front()) /
+					(double)(signal.size());
+
 			double freqRatio =
 					min( (double)recpos.size() ,estFreq) /
 					max( (double)recpos.size() ,estFreq);
-			if (stddev>1) avgsize /= stddev; // SNR
-			double recSizeRatio = min( avgsize, estPeriod )/max( avgsize, estPeriod );
-			//recSizeRatio = sqrt(recSizeRatio);
-			double tpcRatio = (double)abs(*value)/maxCode; // DNR
 
-			double score = (regCoverageRatio + freqRatio + recSizeRatio + tpcRatio)/(double)4;
-			//double score = regionCoverage * recCountRatio * recSizeRatio * tpcRatio;
-			if (score > maxScore) {
+			double recSizeRatio =
+					min( avgsize, estPeriod )/
+					max( avgsize, estPeriod );
+
+			double tpcRatio;
+			if (maxCode > minCode)
+				tpcRatio = (double)abs(*value)/(maxCode-minCode); // DNR
+			else
+				tpcRatio = 1;
+
+			double score = (regionCoverage+recSizeRatio+freqRatio)/3.0;
+			printf("value=%.2f, cov=%.2f, #=%.2f, size=%.2f, t=%.2f, s=%.4f - %.2f\n",*value,regionCoverage,freqRatio,recSizeRatio,tpcRatio,score,estPeriod);
+
+			if (regionCoverage > 0.6 && recSizeRatio > 0.6 && freqRatio > 0.6) {
+			//if (score > maxScore) {
 				maxScore = score;
 				ret = recpos;
+				break;
 			}
-			printf("value=%.2f, cov=%.2f, #=%.2f, size=%.2f, t=%.2f, s=%.4f - %.2f\n",*value,regCoverageRatio,freqRatio,recSizeRatio,tpcRatio,score,estPeriod);
 		}
 	}
 

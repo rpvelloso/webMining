@@ -74,6 +74,9 @@ string Node::toString() const {
 	stringstream result;
 	auto name = tagName();
 
+	if (!(isLink() || isImage() || isText()))
+		return "";
+
 	if (name != "")
 		result << "<" << name;
 
@@ -86,7 +89,7 @@ string Node::toString() const {
 	}
 
 	if (name != "")
-		result << ">";
+		result << " />";
 
 	TidyBuffer buf = {0};
 
