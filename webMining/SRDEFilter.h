@@ -56,13 +56,13 @@ protected:
 	void SRDE(pNode, bool);
     void buildTagPath(string, pNode, bool);
 	vector<long int> filter(pNode, bool, unordered_map<long int, tTPSRegion> &);
-	vector<size_t> locateRecords(tTPSRegion &, double &);
+	set<size_t> locateRecords(tTPSRegion &);
 	unordered_map<int,int> symbolFrequency(wstring, set<int> &);
 	map<int,int> frequencyThresholds(unordered_map<int,int>);
 	double estimatePeriod(vector<double>);
 	vector<long int> detectStructure(unordered_map<long int, tTPSRegion> &);
 
-	virtual void onDataRecordFound(vector<wstring> &, vector<size_t> &, tTPSRegion &);
+	virtual void onDataRecordFound(vector<wstring> &, set<size_t> &, tTPSRegion &);
 
 	unordered_map<string, int> tagPathMap;
 	wstring tagPathSequence;

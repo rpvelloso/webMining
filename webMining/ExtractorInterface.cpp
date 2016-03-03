@@ -5,6 +5,7 @@
  *      Author: roberto
  */
 
+#include <iostream>
 #include <algorithm>
 #include "ExtractorInterface.h"
 
@@ -41,9 +42,19 @@ void ExtractorInterface::cleanRegion(vector<vector<pNode> > &recs) {
 	}
 
 	size_t l=0;
-	remove_if(recs.begin(), recs.end(), [&l, record](const vector<pNode> &a)->bool{ return !record[l++];});
+	auto recsEnd = remove_if(recs.begin(), recs.end(),
+	[&l, record](const vector<pNode> &a)->bool{
+		return !record[l++];
+	});
+	recs.erase(recsEnd,recs.end());
 
-	l = 0;
-	for (auto r:recs)
-		remove_if(r.begin(), r.end(), [&l, field](const pNode &a)->bool{ return !field[l++]; });
+	for (auto &r:recs) {
+		l = 0;
+		auto rEnd = remove_if(r.begin(), r.end(),
+		[&l, field](const pNode &a)->bool{
+			return !field[l++];
+		});
+		r.erase(rEnd, r.end());
+	}
 }
+

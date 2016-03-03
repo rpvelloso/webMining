@@ -222,23 +222,19 @@ vector<long int> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, t
 }
 
 void SRDEFilter::SRDE(pNode n, bool css) {
-	vector<size_t> recpos;
-	vector<wstring> m;
 	vector<long int> structured;
-	double period;
 	unordered_map<long int, tTPSRegion> regs;
 
 	structured=filter(n,css, regs); // segment page and detects structured regions
 	//structured = tagPathSequenceFilter(n,css);
 
 	for (auto i:structured) {
+		vector<wstring> m;
 		auto &region = regs[i];
 		auto firstNode = nodeSequence.begin()+i;
 		auto lastNode = firstNode + region.len;
 
 		region.nodeSeq.assign(firstNode,lastNode);
-		m.clear();
-		recpos.clear();
 
 		cerr << "TPS: " << endl;
 		for (size_t j=0;j<region.tps.size();j++)
@@ -246,50 +242,58 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		cerr << endl;
 
 		// identify the start position of each record
-		recpos = locateRecords(region,period);
+		auto recpos = locateRecords(region);
 
 		// consider only leaf nodes when performing field alignment
-		auto j = region.nodeSeq.begin();
-		auto t=region.tps.begin();
-		size_t k=0;
-		while (k < region.tps.size()) {
-			bool erase = (!(*j)->isImage() && !(*j)->isLink() && !(*j)->isText());
-			for (size_t w=0;w<recpos.size();w++) {
-				if (recpos[w] == k) {
-					erase=false;
-					break;
-				}
-			}
+		vector<bool> remove(region.tps.size());
+		size_t pos = 0;
 
-			if (erase) {
-				j = region.nodeSeq.erase(j);
-				t = region.tps.erase(t);
-				for (size_t w=0;w<recpos.size();w++) {
-					if (recpos[w] > k) recpos[w]--;
-				}
-			} else {
-				j++;
-				t++;
-				k++;
+		auto nodeSeqEnd = remove_if(region.nodeSeq.begin(), region.nodeSeq.end(),
+			[&remove, recpos, &pos](pNode n)->bool{
+				remove[pos] = !(n->isImage() || n->isLink() || n->isText());
+				remove[pos] = remove[pos] && (recpos.count(pos) == 0);
+				return remove[pos++]; // remove node if not content and not record start
+			});
+
+		pos = 0;
+		auto tpsEnd = remove_if(region.tps.begin(), region.tps.end(),
+			[remove, &pos](wchar_t c)->bool{
+				return remove[pos++];
+			});
+
+		// adjust records start position after removing nodes
+		unordered_map<size_t, size_t> newRecPos;
+		for (auto r:recpos)
+			newRecPos[r] = r;
+
+		for (size_t i = 0; i < remove.size(); ++i) {
+			if (remove[i]) {
+				for (auto rp = upper_bound(recpos.begin(), recpos.end(), i); rp != recpos.end(); ++rp)
+					--newRecPos[*rp];
 			}
 		}
+
+		// commit changes
+		recpos.clear();
+		for (auto r:newRecPos)
+			recpos.insert(r.second);
+
+		region.nodeSeq.erase(nodeSeqEnd, region.nodeSeq.end());
+		region.tps.erase(tpsEnd, region.tps.end());
 
 		// create a sequence for each record found
-		int prev=-1;
 		size_t max_size=0;
-		for (size_t j=0;j<recpos.size();j++) {
-			if (prev==-1) prev=recpos[j];
-			else {
-				if ((recpos[j]-prev) > 0) {
-					m.push_back(region.tps.substr(prev,recpos[j]-prev));
-					max_size = max(recpos[j]-prev,max_size);
-					prev = recpos[j];
+		if (recpos.size() > 1) {
+			auto prev = recpos.begin();
+			for (auto rp = ++(recpos.begin()); rp != recpos.end(); ++rp, ++prev) {
+				if (((*rp)-(*prev)) > 0) {
+					m.push_back(region.tps.substr(*prev,(*rp)-(*prev)));
+					max_size = max((*rp)-(*prev),max_size);
 				}
 			}
-		}
-		if (prev != -1) {
-			if (period > max_size) max_size = period;
-			m.push_back(region.tps.substr(prev,max_size));
+
+			if (*prev < region.tps.size()-1)
+				m.push_back(region.tps.substr(*prev,max_size));
 		}
 
 		if (m.size()) {
@@ -303,11 +307,13 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 	}
 
 	// remove regions with only a single record
-	remove_if(structured.begin(), structured.end(), [&regs](long int i)->bool{
+	auto struEnd = remove_if(structured.begin(), structured.end(), [&regs](long int i)->bool{
 		return regs[i].records.size() < 2;
 	});
+	structured.erase(struEnd, structured.end());
 
 	if (structured.size()) {
+		// compute content score
 		for (auto i:structured) {
 			auto stddev = regs[i].stddev;
 			auto recCount = regs[i].records.size();
@@ -315,10 +321,13 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 
 			regs[i].score = //stddev;
 					((min((double)recCount,(double)recSize) /
-					max((double)recCount,(double)recSize))) * stddev * ((double)regs[i].len / (double)tagPathSequence.size());
+					max((double)recCount,(double)recSize))) *
+					stddev *
+					((double)regs[i].len / (double)tagPathSequence.size());
 					//(double)recCount * (double)recSize * stddev;
 		}
 
+		// k-mean clustering to identify content
 		vector<double> ckmeansScoreInput;
 		ckmeansScoreInput.push_back(0);
 		for (auto i:structured)
@@ -334,7 +343,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			++j;
 		}
 
-		ckmeansScoreInput.clear();
+		/*ckmeansScoreInput.clear();
 		ckmeansScoreInput.push_back(0);
 		for (auto i:structured)
 			ckmeansScoreInput.push_back(regs[i].stddev); // cluster by stddev
@@ -344,15 +353,15 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		for (auto i:structured) {
 			regs[i].content |= (((*j) == 2) || (scoreResult.nClusters < 2));
 			++j;
-		}
+		}*/
 	}
 
 	regions.clear();
 
-	for (auto i=regs.begin();i!=regs.end();i++) {
-		if ((*i).second.records.size() >= 2) {
-			(*i).second.pos = (*i).first;
-			regions.push_back((*i).second);
+	for (auto r:regs) {
+		if (r.second.records.size() > 1) {
+			r.second.pos = r.first;
+			regions.push_back(r.second);
 		}
 	}
 
@@ -361,16 +370,15 @@ void SRDEFilter::SRDE(pNode n, bool css) {
     });
 }
 
-vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
+set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 	wstring s = region.tps;
 	vector<double> signal(s.size());
 	float avg;
-	set<float> candidates;
-	vector<size_t> recpos,ret;
+	set<size_t> recpos,ret;
 	set<int> alphabet;
 	unordered_map<int,int> reencode;
 	double estPeriod,estFreq;
-	double maxCode=numeric_limits<double>::min(),maxScore=0,minCode=numeric_limits<double>::max();
+	double maxScore = 0;
 
 	// reencode signal
 	symbolFrequency(s,alphabet);
@@ -385,45 +393,46 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 
 	avg = mean(signal);
 
+	set<double> candidates;
 	// remove DC & compute signal's std.dev.
 	region.stddev = 0;
 	for (size_t i=0; i < s.size(); ++i) {
 		signal[i] = signal[i] - avg;
 		region.stddev += signal[i]*signal[i];
 		if (signal[i] < 0) candidates.insert(signal[i]);
-		if (signal[i] > maxCode) maxCode = signal[i];
-		if (signal[i] < minCode) minCode = signal[i];
 	}
+
 	region.stddev = sqrt(region.stddev/max((double)1,(double)(s.size()-2)));
 
 	estPeriod = estimatePeriod(signal);
 	estFreq = ((double)signal.size() / estPeriod);
 
-	cout << endl;
-
-	for (auto value = candidates.begin(); value != candidates.end(); value ++ ) {
+	for (auto value:candidates) {
 		double stddev = 0, avgsize = 0;
 
 		recpos.clear();
 		for (size_t i=0; i < s.size(); ++i) {
-			if ((signal[i] == *value))
-				recpos.push_back(i);
+			if ((signal[i] == value))
+				recpos.insert(i);
 		}
 
 		if (recpos.size() > 1) {
-			for (size_t i=1 ; i < recpos.size(); ++i)
-				avgsize += recpos[i] - recpos[i-1];
+			auto prev = recpos.begin();
+			for (auto rp = ++(recpos.begin()); rp != recpos.end(); ++rp, ++prev) {
+				avgsize += (*rp) - (*prev);
+			}
 			avgsize /= (float)(recpos.size()-1);
 
-			for (size_t i=1 ; i < recpos.size(); ++i) {
-				float diff = (float)(recpos[i] - recpos[i-1]) - avgsize;
+			prev = recpos.begin();
+			for (auto rp = ++(recpos.begin()); rp != recpos.end(); ++rp, ++prev) {
+				float diff = (float)((*rp) - (*prev)) - avgsize;
 				stddev += diff * diff;
 			}
 			stddev = sqrt(stddev/max((float)(recpos.size()-2),(float)1));
 
-			auto cv = 1.0 - min(stddev, avgsize)/max(stddev, avgsize);
+			//auto cv = 1.0 - min(stddev, avgsize)/max(stddev, avgsize);
 			double regionCoverage =
-					(double)(recpos.back() - recpos.front()) /
+					(double)(*recpos.rbegin() - *recpos.begin()) /
 					(double)(signal.size());
 
 			double freqRatio =
@@ -434,20 +443,17 @@ vector<size_t> SRDEFilter::locateRecords(tTPSRegion &region, double &period) {
 					min( avgsize, estPeriod )/
 					max( avgsize, estPeriod );
 
-			double tpcRatio;
-			if (maxCode > minCode)
-				tpcRatio = (double)abs(*value)/(maxCode-minCode); // DNR
-			else
-				tpcRatio = 1;
-
 			double score = (regionCoverage+recSizeRatio+freqRatio)/3.0;
-			printf("value=%.2f, cov=%.2f, #=%.2f, size=%.2f, t=%.2f, s=%.4f - %.2f\n",*value,regionCoverage,freqRatio,recSizeRatio,tpcRatio,score,estPeriod);
+			printf("value=%d, cov=%.2f, #=%.2f, size=%.2f, s=%.4f - %.2f\n",int(value+avg),regionCoverage,freqRatio,recSizeRatio,score,estPeriod);
 
-			if (regionCoverage > 0.6 && recSizeRatio > 0.6 && freqRatio > 0.6) {
-			//if (score > maxScore) {
+			double haltScore = 0.75;
+			if (score > maxScore) {
 				maxScore = score;
 				ret = recpos;
-				break;
+				if (regionCoverage > haltScore &&
+					recSizeRatio > haltScore &&
+					freqRatio > haltScore)
+					break;
 			}
 		}
 	}
@@ -553,18 +559,19 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 	return period;
 }
 
-void SRDEFilter::onDataRecordFound(vector<wstring> &m, vector<size_t> &recpos, tTPSRegion &reg) {
+void SRDEFilter::onDataRecordFound(vector<wstring> &m, set<size_t> &recpos, tTPSRegion &reg) {
 	if ((m.size() == 0) || (recpos.size() == 0)) return;// -1;
 
 	int rows=m.size(),cols=m[0].size();
 
-	for (int i=0;i<rows;i++) {
+	auto rp = recpos.begin();
+	for (int i=0;i<rows;i++, ++rp) {
 		vector<pNode> rec;
 
 		cerr << endl;
 		for (int j=0,k=0;j<cols;j++) {
 			if (m[i][j] != 0) {
-				auto node = reg.nodeSeq[recpos[i]+k];
+				auto node = reg.nodeSeq[(*rp)+k];
 				rec.push_back(node);
 
 				auto tagName = node->tagName();
