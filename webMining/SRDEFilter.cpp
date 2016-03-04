@@ -37,6 +37,7 @@
 using namespace std;
 
 SRDEFilter::SRDEFilter(DOM *d) : ExtractorInterface() {
+	cerr << endl << "Processing " << d->getURI() << " ..." << endl;
 	SRDE(d->body(), true);
 }
 
@@ -145,15 +146,14 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	auto symbolCount = symbolFrequency(s,alphabet);
 	auto thresholds = frequencyThresholds(symbolCount);
 	auto threshold = thresholds.begin();
-	threshold++;
-	threshold++;
-	threshold++;
 
-	do {
-		regs.clear();
+	while ((*threshold).first < (*(thresholds.rbegin())).first*0.05)
 		threshold++;
 
+	do {
 		cerr << "threshold: " << (*threshold).first << " / " << (*(thresholds.rbegin())).first << endl;
+
+		regs.clear();
 
 		for (size_t i = 0; i < s.size(); ++i)
 			if (symbolCount[s[i]] <= (*threshold).first)
@@ -219,6 +219,7 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		for (auto &r:regs)
 			r.second.tpsClean = tagPathSequence.substr(r.second.pos, r.second.len);*/
 		ret=detectStructure(regs);
+		++threshold;
 	} while ((ret.size()==0) && (threshold != thresholds.end()));
 
 	return ret;
@@ -410,6 +411,8 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 	estPeriod = estimatePeriod(signal);
 	estFreq = ((double)signal.size() / estPeriod);
 
+	cerr << endl;
+
 	for (auto value:candidates) {
 		double stddev = 0, avgsize = 0;
 
@@ -447,7 +450,7 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 					max( avgsize, estPeriod );
 
 			double score = (regionCoverage+recSizeRatio+freqRatio)/3.0;
-			printf("value=%d, cov=%.2f, #=%.2f, size=%.2f, s=%.4f - %.2f\n",int(value+avg),regionCoverage,freqRatio,recSizeRatio,score,estPeriod);
+			fprintf(stderr, "value=%d, cov=%.2f, #=%.2f, size=%.2f, s=%.4f - %.2f\n",int(value+avg),regionCoverage,freqRatio,recSizeRatio,score,estPeriod);
 
 			double haltScore = 0.75;
 			if (score > maxScore) {
@@ -589,10 +592,8 @@ void SRDEFilter::onDataRecordFound(vector<wstring> &m, set<size_t> &recpos, tTPS
 				rec.push_back(node);
 
 				auto tagName = node->getTagName();
-				if (tagName != "") {
-					cerr << tagName << "[" <<
-							node->toString() << "];";
-				}
+				cerr << "[" << node->toString() << "]; ";
+
 				k++;
 			} else rec.push_back(nullptr);
 		}

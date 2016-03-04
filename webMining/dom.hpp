@@ -30,12 +30,13 @@ using pNode = Node *;
 class DOM {
 friend class Node;
 public:
-	DOM(const std::string filename);
+	DOM(const std::string uri);
 	~DOM();
 	bool isLoaded() const;
 	void printHTML() const;
 	pNode body();
 	//pNode html();
+	string getURI() const;
 	ExtractorInterface* getExtractor() const;
 	void setExtractor(ExtractorInterface* extractor);
 
@@ -50,6 +51,7 @@ public:
 	bool loaded = false;
 	DOM() = delete;
 	unique_ptr<ExtractorInterface> extractor;
+	string uri;
 };
 
 #endif /* DOM_HPP_ */

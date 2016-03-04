@@ -31,7 +31,8 @@
 		traverse(dom, c, ident+2);
 }*/
 
-DOM::DOM(const std::string filename) {
+DOM::DOM(const std::string uri) {
+	this->uri = uri;
 	tdoc = tidyCreate();
 
 	tidyOptSetValue(tdoc, TidyIndentContent, "auto");
@@ -52,7 +53,7 @@ DOM::DOM(const std::string filename) {
 
 	tidySetErrorBuffer(tdoc, &errbuf);
 
-	if (tidyParseFile(tdoc, filename.c_str()) >= 0) {
+	if (tidyParseFile(tdoc, uri.c_str()) >= 0) {
 		tidyCleanAndRepair(tdoc);
 		tidyRunDiagnostics(tdoc);
 		clean();
@@ -116,6 +117,10 @@ static void cleanHelper(TidyNode n, vector<TidyNode> &remove) {
 
 	for (auto c = tidyGetChild(n); c ; c = tidyGetNext(c))
 		cleanHelper(c, remove);
+}
+
+string DOM::getURI() const {
+	return uri;
 }
 
 void DOM::clean() {
