@@ -36,7 +36,7 @@ public:
 	string getAttr(string attrName);
 	pNode child() const;
 	int type() const;
-	string tagName() const;
+	string getTagName() const;
 	bool isImage() const;
 	bool isLink() const;
 	bool isText() const;
@@ -46,6 +46,8 @@ private:
 	TidyNode node;
 	DOM *dom;
 	map<string, string> attrs;
+	string tagName;
+	string value;
 };
 
 #endif /* NODE_HPP_ */

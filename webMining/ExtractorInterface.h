@@ -27,6 +27,7 @@ public:
 	virtual tTPSRegion *getRegion(size_t) = 0;
 	virtual vector<pNode> getRecord(size_t, size_t) = 0;
 	virtual size_t getRegionCount() = 0;
+	virtual void printTagPathSequence() = 0;
 
 	void cleanRegion(vector<vector<pNode> > &);
 };

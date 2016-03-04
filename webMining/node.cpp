@@ -27,6 +27,17 @@ Node::Node(DOM *d, TidyNode n) : node(n), dom(d) {
 				attrs[attrName] = attrValue;
 		}
 	}
+
+	TidyBuffer buf = {0};
+	tidyNodeGetValue(dom->tdoc, node, &buf);
+	if (buf.allocated) {
+		value = (char *)buf.bp;
+		tidyBufFree(&buf);
+	}
+
+	auto name = tidyNodeGetName(node);
+	if (name)
+		tagName = name;
 }
 
 Node::~Node() {};
@@ -37,13 +48,6 @@ pNode Node::next() const {
 		return dom->domNodes[n];
 	else
 		return nullptr;
-}
-
-string Node::getAttr(string attrName) {
-	if (attrs.count(attrName) > 0)
-		return attrs[attrName];
-	else
-		return "";
 }
 
 pNode Node::child() const {
@@ -58,10 +62,13 @@ int Node::type() const {
 	return tidyNodeGetType(node);
 }
 
-string Node::tagName() const {
-	auto name = tidyNodeGetName(node);
-	if (name)
-		return string(name);
+string Node::getTagName() const {
+	return tagName;
+}
+
+string Node::getAttr(string attrName) {
+	if (attrs.count(attrName) > 0)
+		return attrs[attrName];
 	else
 		return "";
 }
@@ -72,33 +79,18 @@ bool Node::isText() const {return tidyNodeIsText(node);}
 
 string Node::toString() const {
 	stringstream result;
-	auto name = tagName();
 
-	if (!(isLink() || isImage() || isText()))
-		return "";
+	if (tagName != "")
+		result << "<" << tagName << " ";
 
-	if (name != "")
-		result << "<" << name;
+	for (auto attr:attrs)
+		result << attr.first << "=" << attr.second << " ";
 
-	for (auto attr = tidyAttrFirst(node); attr; attr = tidyAttrNext(attr)) {
-		if (auto attrName = tidyAttrName(attr)) {
-			result << " " << attrName;
-			if (auto attrValue = tidyAttrValue(attr))
-				result << "=" << attrValue;
-		}
-	}
+	if (tagName != "")
+		result << "/> ";
 
-	if (name != "")
-		result << " />";
-
-	TidyBuffer buf = {0};
-
-	tidyNodeGetValue(dom->tdoc, node, &buf);
-
-	if (buf.allocated) {
-		result << buf.bp;
-		tidyBufFree(&buf);
-	}
+	if (value != "")
+		result << value;
 
 	return result.str();
 }

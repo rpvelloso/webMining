@@ -37,7 +37,7 @@ DOM::DOM(const std::string filename) {
 	tidyOptSetValue(tdoc, TidyIndentContent, "auto");
 	tidyOptSetValue(tdoc, TidySortAttributes, "alpha");
 
-	tidyOptSetInt(tdoc,TidyIndentSpaces,2);
+	tidyOptSetInt(tdoc,TidyIndentSpaces, 2);
 
 	tidyOptSetBool(tdoc, TidyXhtmlOut, yes);
 	tidyOptSetBool(tdoc, TidyMakeClean, yes);
@@ -48,25 +48,26 @@ DOM::DOM(const std::string filename) {
 	tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
 	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
 	tidyOptSetBool(tdoc, TidyHideComments, yes);
-
-	//tidyOptSetBool(tdoc, TidyDropFontTags, yes);
+	tidyOptSetBool(tdoc, TidyForceOutput, yes);
 
 	tidySetErrorBuffer(tdoc, &errbuf);
 
 	if (tidyParseFile(tdoc, filename.c_str()) >= 0) {
 		tidyCleanAndRepair(tdoc);
-		tidyOptSetBool(tdoc, TidyForceOutput, yes);
-		tidySaveBuffer(tdoc, &output);
+		tidyRunDiagnostics(tdoc);
 		clean();
-		loaded = true;
+		tidySaveBuffer(tdoc, &output);
 		mapNodes(tidyGetHtml(tdoc));
+		loaded = true;
 		//traverse(this,tidyGetHtml(tdoc));
 	}
 };
 
 DOM::~DOM() {
-	if (loaded) tidyBufFree(&output);
-	tidyBufFree(&errbuf);
+	if (errbuf.allocated)
+		tidyBufFree(&errbuf);
+	if (output.allocated)
+		tidyBufFree(&output);
 	tidyRelease(tdoc);
 	for (auto n:domNodes)
 		delete n.second;
@@ -85,9 +86,9 @@ pNode DOM::body() {
 	return domNodes[tidyGetBody(tdoc)];
 };
 
-pNode DOM::html() {
+/*pNode DOM::html() {
 	return domNodes[tidyGetHtml(tdoc)];
-};
+};*/
 
 void DOM::mapNodes(TidyNode node) {
 	if (domNodes.count(node) == 0) {

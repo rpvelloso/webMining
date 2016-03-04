@@ -68,10 +68,7 @@ static int lua_api_unloadDOMTree(lua_State *L) {
 
 		if (lua_islightuserdata(L,-1)) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
-			if (checkDOM(L,dom)) {
-				ctx->removeDOM(dom);
-				delete dom;
-			}
+			ctx->removeDOM(dom);
 		}
 	}
 	return 0;
@@ -220,15 +217,26 @@ static int lua_api_DOMTPS(lua_State *L) {
 static int lua_api_printDOM(lua_State *L) {
 	int nargs = lua_gettop(L);
 
-	if (nargs == 2) {
-		if (lua_islightuserdata(L,-2) && lua_isboolean(L,-1)) {
-			DOM *dom = (DOM *)lua_touserdata(L,-2);
-			//bool verbose = lua_toboolean(L,-1);
+	if (nargs == 1) {
+		if (lua_islightuserdata(L,-1)) {
+			DOM *dom = (DOM *)lua_touserdata(L,-1);
 
-			if (checkDOM(L,dom)) {
-				//dom->setVerbose(verbose);
+			if (checkDOM(L,dom))
 				dom->printHTML();
-			}
+		}
+	}
+	return 0;
+}
+
+static int lua_api_printTPS(lua_State *L) {
+	int nargs = lua_gettop(L);
+
+	if (nargs == 1) {
+		if (lua_islightuserdata(L,-1)) {
+			DOM *dom = (DOM *)lua_touserdata(L,-1);
+
+			if (checkDOM(L,dom))
+				dom->getExtractor()->printTagPathSequence();
 		}
 	}
 	return 0;
@@ -292,6 +300,7 @@ LuaContext::LuaContext(const char *inp, int argc, char **argv) {
 		LUA_SET_GLOBAL_CFUNC(state,"getRegionCount",lua_api_getRegionCount);
 		LUA_SET_GLOBAL_CFUNC(state,"DOMTPS",lua_api_DOMTPS);
 		LUA_SET_GLOBAL_CFUNC(state,"printDOM",lua_api_printDOM);
+		LUA_SET_GLOBAL_CFUNC(state,"printTPS",lua_api_printTPS);
 		LUA_SET_GLOBAL_CFUNC(state,"nodeToString",lua_api_nodeToString);
 		s = lua_pcall(state, 0, LUA_MULTRET, 0);
 	} else {

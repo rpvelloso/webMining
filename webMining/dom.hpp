@@ -35,7 +35,7 @@ public:
 	bool isLoaded() const;
 	void printHTML() const;
 	pNode body();
-	pNode html();
+	//pNode html();
 	ExtractorInterface* getExtractor() const;
 	void setExtractor(ExtractorInterface* extractor);
 

@@ -94,7 +94,7 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 	if (n->isText())
 		tagName = "#text";
 	else
-		tagName = n->tagName();
+		tagName = n->getTagName();
 
 	if (tagName != "") {
 		if (css && (tagStyle != "")) s = s + "/" + tagName + tagStyle;
@@ -133,7 +133,7 @@ vector<long int> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion>
 	return structured;
 }
 
-vector<long int> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
+vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
 	set<int> alphabet;
 	wstring s;
 	long int lastRegPos = -1;
@@ -228,7 +228,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 	vector<long int> structured;
 	unordered_map<long int, tTPSRegion> regs;
 
-	structured=filter(n,css, regs); // segment page and detects structured regions
+	structured=segment(n,css, regs); // segment page and detects structured regions
 	//structured = tagPathSequenceFilter(n,css);
 
 	for (auto i:structured) {
@@ -562,8 +562,19 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 	return period;
 }
 
+void SRDEFilter::printTagPathSequence() {
+	unordered_map<int, string> tpcMap;
+
+	for (auto tps:tagPathMap)
+		tpcMap.insert(make_pair(tps.second, tps.first));
+
+	for (auto tpc:tagPathSequence)
+		cout << tpcMap[tpc] << endl;
+}
+
 void SRDEFilter::onDataRecordFound(vector<wstring> &m, set<size_t> &recpos, tTPSRegion &reg) {
-	if ((m.size() == 0) || (recpos.size() == 0)) return;// -1;
+	if ((m.size() == 0) || (recpos.size() == 0))
+		return;
 
 	int rows=m.size(),cols=m[0].size();
 
@@ -577,7 +588,7 @@ void SRDEFilter::onDataRecordFound(vector<wstring> &m, set<size_t> &recpos, tTPS
 				auto node = reg.nodeSeq[(*rp)+k];
 				rec.push_back(node);
 
-				auto tagName = node->tagName();
+				auto tagName = node->getTagName();
 				if (tagName != "") {
 					cerr << tagName << "[" <<
 							node->toString() << "];";

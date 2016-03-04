@@ -23,8 +23,8 @@ void ExtractorInterface::cleanRegion(vector<vector<pNode> > &recs) {
 	if (recs.size() == 0) return;
 	if (recs[0].size() == 0) return;
 
-	vector<bool> record(recs.size(), false);
-	vector<bool> field(recs[0].size(), false);
+	vector<bool> removeRecord(recs.size(), true);
+	vector<bool> removeField(recs[0].size(), true);
 
 	for (size_t i=0;i<recs.size();i++) {
 		for (size_t j=0;j<recs[i].size();j++) {
@@ -35,24 +35,24 @@ void ExtractorInterface::cleanRegion(vector<vector<pNode> > &recs) {
 					node->isText())
 
 			) { // do not erase this node
-				field[j]=true;
-				record[i]=true;
+				removeField[j]=false;
+				removeRecord[i]=false;
 			}
 		}
 	}
 
 	size_t l=0;
 	auto recsEnd = remove_if(recs.begin(), recs.end(),
-	[&l, record](const vector<pNode> &a)->bool{
-		return !record[l++];
+	[&l, removeRecord](const vector<pNode> &a)->bool{
+		return removeRecord[l++];
 	});
 	recs.erase(recsEnd,recs.end());
 
 	for (auto &r:recs) {
 		l = 0;
 		auto rEnd = remove_if(r.begin(), r.end(),
-		[&l, field](const pNode &a)->bool{
-			return !field[l++];
+		[&l, removeField](const pNode &a)->bool{
+			return removeField[l++];
 		});
 		r.erase(rEnd, r.end());
 	}

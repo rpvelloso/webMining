@@ -116,34 +116,6 @@ processTestBed = function(dir)
   local t, popen = {}, io.popen
   
 
-  for filename in popen('ls -a "'..dir..'"'):lines() do
-    --if filename=="dailymotion" then
-    local d, fn, ext = filename:match("(.-)([^\\/]-%.?([^%.\\/]*))$")
-    local output = dir.."/srde/"
-
-    if (fn~="extract_input.pl") and (fn~="srde") and (fn~="drde") and (fn:sub(1,1)~='.') then
-      print(string.format("Loading DOM tree: %s",filename),CRLF)
-      local dom = loadDOMTree(dir.."/"..filename.."/index.html")
-      
-      --print("Extracting records.")
-      local start = os.clock()
-      SRDExtract(dom)
-      print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
-      
-      --print("Outputting results.")
-      displayResults(dom,"srde",output,fn..".html")
-      
-      --print("Plotting graphs.")
-      plotSequences(dom,"file",output..fn..".html")
-    end
-    --end
-  end
-end
-
-processTestBed2 = function(dir)
-  local t, popen = {}, io.popen
-  
-
   for filename in popen('ls -a "'..dir..'"/*.htm*'):lines() do
     local d, fn, ext = filename:match("(.-)([^\\/]-%.?([^%.\\/]*))$")
     local output = d.."srde/"..fn
@@ -161,6 +133,7 @@ processTestBed2 = function(dir)
     
     --print("Plotting graphs.")
     plotSequences(dom,"file",output)
+    unloadDOMTree(dom);
   end
 end
 
@@ -179,25 +152,24 @@ processFile = function(filename)
     print("Plotting graphs.")
     plotSequences(dom,"file","output.html")
     
-    printDOM(dom, true);
+    printDOM(dom)
+    printTPS(dom)
 end
 
 --if #arg > 3 then
---  local d = loadDOMTree(arg[5])
---  printDOM(d,true)
 --  processFile(arg[5])
 --end
 
 --exit()
 
-processTestBed2("datasets/alvarez")
-processTestBed2("datasets/tpsf")
-processTestBed2("datasets/wien")
-processTestBed2("datasets/clustvx")
-processTestBed2("datasets/zhao1")
-processTestBed2("datasets/zhao2")
-processTestBed2("datasets/zhao3")
-processTestBed2("datasets/yamada")
-processTestBed2("datasets/trieschnigg1")
-processTestBed2("datasets/trieschnigg2")
+processTestBed("datasets/alvarez")
+processTestBed("datasets/tpsf")
+processTestBed("datasets/wien")
+processTestBed("datasets/clustvx")
+processTestBed("datasets/zhao1")
+processTestBed("datasets/zhao2")
+processTestBed("datasets/zhao3")
+processTestBed("datasets/yamada")
+processTestBed("datasets/trieschnigg1")
+processTestBed("datasets/trieschnigg2")
 exit()
