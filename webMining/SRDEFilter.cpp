@@ -120,7 +120,7 @@ vector<long int> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion>
 	vector<long int> structured;
 
 	for (auto &r:regs) {
-		r.second.lc = linearRegression(r.second.tps);
+		r.second.lc = linearRegression(r.second.tpsClean);
 
 		cerr << "size: " << r.second.len << " ang.coeff.: " << r.second.lc.a << endl;
 
@@ -186,7 +186,10 @@ vector<long int> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, t
 							symbolFrequency(regs[lastRegPos].tps,palpha);
 							symbolFrequency(r.tps,alpha);
 
-							set_intersection(palpha.begin(),palpha.end(),alpha.begin(),alpha.end(),inserter(intersect,intersect.begin()));
+							set_intersection(
+									palpha.begin(),palpha.end(),
+									alpha.begin(),alpha.end(),
+									inserter(intersect,intersect.begin()));
 
 							if (!intersect.empty()) {
 								regs[lastRegPos].len = regionEnd - regs[lastRegPos].pos + 1;
@@ -211,10 +214,9 @@ vector<long int> SRDEFilter::filter(pNode n, bool css, unordered_map<long int, t
 			regs[0].tps = tagPathSequence;
 		}
 
-		/*buildTagPath("",n,false); // rebuild TPS without CSS to increase periodicity
-		for (auto i=_regions.begin();i!=_regions.end();i++) {
-			(*i).second.tps = tagPathSequence.substr((*i).second.pos,(*i).second.len);
-		}*/
+		buildTagPath("",n,false); // rebuild TPS without CSS to increase periodicity
+		for (auto &r:regs)
+			r.second.tpsClean = tagPathSequence.substr(r.second.pos, r.second.len);
 		ret=detectStructure(regs);
 	} while ((ret.size()==0) && (threshold != thresholds.end()));
 
@@ -237,8 +239,8 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		region.nodeSeq.assign(firstNode,lastNode);
 
 		cerr << "TPS: " << endl;
-		for (size_t j=0;j<region.tps.size();j++)
-			cerr << region.tps[j] << " ";
+		for (auto j:region.tps)
+			cerr << j << " ";
 		cerr << endl;
 
 		// identify the start position of each record
