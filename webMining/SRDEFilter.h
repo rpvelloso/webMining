@@ -33,7 +33,7 @@ using namespace std;
 
 struct tTPSRegion {
 	long int len,pos;
-	wstring tps, tpsClean;
+	wstring tps;
 	vector<pNode> nodeSeq;
 	tLinearCoeff lc;
 	vector<vector<pNode> > records;
