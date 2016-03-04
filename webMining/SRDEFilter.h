@@ -51,11 +51,12 @@ public:
 	tTPSRegion *getRegion(size_t);
 	size_t getRegionCount();
 	vector<pNode> getRecord(size_t, size_t);
+	void printTagPathSequence();
 protected:
 	SRDEFilter() = delete;
 	void SRDE(pNode, bool);
     void buildTagPath(string, pNode, bool);
-	vector<long int> filter(pNode, bool, unordered_map<long int, tTPSRegion> &);
+	vector<long int> segment(pNode, bool, unordered_map<long int, tTPSRegion> &);
 	set<size_t> locateRecords(tTPSRegion &);
 	unordered_map<int,int> symbolFrequency(wstring, set<int> &);
 	map<int,int> frequencyThresholds(unordered_map<int,int>);
