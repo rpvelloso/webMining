@@ -74,7 +74,8 @@ map<int,int> SRDEFilter::frequencyThresholds(unordered_map<int,int> symbolCount)
 void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 	static vector<string> styleAttr = {
 			"style", "class", "color", "bgcolor", "width", "height",
-			"align", "valign", "halign", "colspan", "rowspan"};
+			"align", "valign", "halign", "colspan", "rowspan"
+	};
 
 	string tagStyle;
 
@@ -135,6 +136,87 @@ vector<long int> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion>
 }
 
 vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
+	buildTagPath("",n,css);
+	auto s = tagPathSequence;
+	vector<float> diff(s.size()-1);
+	auto height = s[0];
+	list<tTPSRegion> regions;
+
+	// skyline
+	for (auto &c:s) {
+		if (c > height)
+			height = c;
+		c = height;
+	}
+
+	// 1st diff of skyline
+	for (size_t i = 1; i < s.size(); ++i)
+		diff[i-1] = s[i] - s[i-1];
+
+	// region segmentation
+	size_t start = 0, end = 0;
+	for (size_t i = 0; i < diff.size(); ++i) {
+		if (diff[i] != 0) {
+
+			if ((end - start) > 3) {
+				tTPSRegion r;
+
+				r.pos = start;
+				r.len = end - start + 1;
+				r.tps = tagPathSequence.substr(r.pos,r.len);
+
+				regions.push_back(r);
+			}
+
+			start = end = i+1;
+		} else
+			end = i;
+	}
+
+	// merge regions with common alphabet
+	auto r = ++regions.begin();
+	for (; r != regions.end(); ++r) {
+		set<int> alpha, palpha, intersect;
+		auto prev = r;
+		--prev;
+
+		symbolFrequency(r->tps, alpha);
+		symbolFrequency(prev->tps, palpha);
+		set_intersection(
+				palpha.begin(),palpha.end(),
+				alpha.begin(),alpha.end(),
+				inserter(intersect,intersect.begin()));
+		if (!intersect.empty()) {
+			r->pos = prev->pos;
+			r->len += prev->len;
+			r->tps = tagPathSequence.substr(r->pos,r->len);
+			r = regions.erase(prev);
+		}
+	}
+
+	// correct region boundaries
+	for (auto &r:regions) {
+		set<int> alpha;
+
+		cerr << r.pos << " " << r.len << endl;
+
+		symbolFrequency(r.tps, alpha);
+		while (r.pos > 0 && alpha.count(tagPathSequence[r.pos-1]) > 0)
+			--r.pos;
+
+		while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && alpha.count(tagPathSequence[r.pos+r.len]) > 0)
+			++r.len;
+		r.tps = tagPathSequence.substr(r.pos,r.len);
+	}
+
+	regs.clear();
+	for (auto r:regions)
+		regs[r.pos] = r;
+
+	return detectStructure(regs);
+}
+/*
+vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
 	set<int> alphabet;
 	wstring s;
 	long int lastRegPos = -1;
@@ -147,7 +229,7 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	auto thresholds = frequencyThresholds(symbolCount);
 	auto threshold = thresholds.begin();
 
-	while ((*threshold).first < (*(thresholds.rbegin())).first*0.05)
+	while ((*threshold).first < (*(thresholds.rbegin())).first*0.10)
 		threshold++;
 
 	do {
@@ -215,16 +297,16 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 			regs[0].tps = tagPathSequence;
 		}
 
-		/*buildTagPath("",n,false); // rebuild TPS without CSS to increase periodicity
-		for (auto &r:regs)
-			r.second.tpsClean = tagPathSequence.substr(r.second.pos, r.second.len);*/
+		//buildTagPath("",n,false); // rebuild TPS without CSS to increase periodicity
+		//for (auto &r:regs)
+			//r.second.tpsClean = tagPathSequence.substr(r.second.pos, r.second.len);
 		ret=detectStructure(regs);
 		++threshold;
 	} while ((ret.size()==0) && (threshold != thresholds.end()));
 
 	return ret;
 }
-
+*/
 void SRDEFilter::SRDE(pNode n, bool css) {
 	vector<long int> structured;
 	unordered_map<long int, tTPSRegion> regs;
@@ -323,11 +405,11 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			auto recCount = regs[i].records.size();
 			auto recSize = regs[i].records[0].size();
 
-			regs[i].score = //stddev;
+			regs[i].score = log(//stddev;
 					((min((double)recCount,(double)recSize) /
 					max((double)recCount,(double)recSize))) *
 					stddev *
-					((double)regs[i].len / (double)tagPathSequence.size());
+					((double)regs[i].len / (double)tagPathSequence.size()));
 					//(double)recCount * (double)recSize * stddev;
 		}
 
