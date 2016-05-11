@@ -172,6 +172,15 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		} else
 			end = i;
 	}
+	if (start != end) {
+		tTPSRegion r;
+
+		r.pos = start;
+		r.len = end - start + 1;
+		r.tps = tagPathSequence.substr(r.pos,r.len);
+
+		regions.push_back(r);
+	}
 
 	// merge regions with common alphabet
 	auto r = ++regions.begin();
