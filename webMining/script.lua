@@ -156,13 +156,13 @@ processFile = function(filename)
     printTPS(dom)
 end
 
---[[
+-- [[
 if #arg > 3 then
   processFile(arg[5])
 end
 
 exit()
---]]
+-- ]]
 
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
