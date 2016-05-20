@@ -131,31 +131,34 @@ function rec = findRecords(reg, a, b)
 	plot(1:n,reg,'k.-'); hold on;
 	plot(1:n,(a.*[1:n]) + b,'k--');
 	text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") '\circ']);
+	title("a) região, regressão linear e divisão de registros");
 
 	v = score(reg, period);
 	if length(v) > 1
 		plot(v,reg(v),'ks');
-		legend("Region", "Ang", "Recs");
+		legend("Região", "Ang.", "Reg.");
 		for i=1:length(v)-1
 			rec{i} = reg(v(i):v(i+1)-1);
 		end
 		rec{length(v)} = reg(v(length(v)):length(reg));
 	else
-		legend("Reg","Ang");
+		legend("Região","Ang.");
 	end
 	
 	subplot(3,1,2);
+	plot(xc,'k.-'); hold on;
+	plot(pos,xc(pos),'ks');
+	legend("XCorr","Picos");
+	title("b) Picos de autocorrelação");
+
+	subplot(3,1,3);
 	plot(1:n,t,'k.-'); hold on;
 	fftPos = round(n./pos);
 	maxPos = fftPos(find(t(fftPos) == max(t(fftPos)))(1));
 	plot(fftPos,t(fftPos),'ks');
 	text(maxPos,t(maxPos),['max: freq=' num2str(maxPos,"%d") ', period=' num2str(round(n/maxPos),"%d")]);
 	legend("FFT","XCorr");
-
-	subplot(3,1,3);
-	plot(xc,'k.-'); hold on;
-	plot(pos,xc(pos),'ks');
-	legend("XCorr","Peaks");
+	title("c) FFT, picos de autocorrelação e estimativa de período e quantidade de registros");
 end
 
 function v = score(region, period)
