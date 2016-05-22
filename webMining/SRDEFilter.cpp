@@ -117,7 +117,7 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 }
 
 vector<long int> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion> &regs) {
-	float angCoeffThreshold=0.17633; // 10 degrees
+	float angCoeffThreshold=0.17453; // 10 degrees
 	long int sizeThreshold = (tagPathSequence.size()*3)/100; // % page size
 	vector<long int> structured;
 

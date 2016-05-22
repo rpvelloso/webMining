@@ -97,7 +97,7 @@ function sr = detectStructure(r,s)
 	for i=1:1:n
 		[a,b] = linearRegression(s(r{i}(1):r{i}(2)));
 		r{i}(3:4) = [a, b];
-		if abs(a) < 0.17633 % 10 degrees
+		if abs(a) < 0.17453 % 10 degrees
 			count = count + 1;
 			sr{count} = r{i};
 		end
@@ -131,34 +131,34 @@ function rec = findRecords(reg, a, b)
 	plot(1:n,reg,'k.-'); hold on;
 	plot(1:n,(a.*[1:n]) + b,'k--');
 	text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") '\circ']);
-	title("a) regiÃ£o, regressÃ£o linear e divisÃ£o de registros");
+	title("a) região, regressão linear e divisão de registros");
 
 	v = score(reg, period);
 	if length(v) > 1
 		plot(v,reg(v),'ks');
-		legend("RegiÃ£o", "Ang.", "Reg.");
+		legend("Região", "Ângulo", "Registros");
 		for i=1:length(v)-1
 			rec{i} = reg(v(i):v(i+1)-1);
 		end
 		rec{length(v)} = reg(v(length(v)):length(reg));
 	else
-		legend("RegiÃ£o","Ang.");
+		legend("Região","Ângulo");
 	end
 	
 	subplot(3,1,2);
 	plot(xc,'k.-'); hold on;
 	plot(pos,xc(pos),'ks');
 	legend("XCorr","Picos");
-	title("b) Picos de autocorrelaÃ§Ã£o");
+	title("b) Picos de autocorrelação");
 
 	subplot(3,1,3);
 	plot(1:n,t,'k.-'); hold on;
 	fftPos = round(n./pos);
 	maxPos = fftPos(find(t(fftPos) == max(t(fftPos)))(1));
 	plot(fftPos,t(fftPos),'ks');
-	text(maxPos,t(maxPos),['max: freq=' num2str(maxPos,"%d") ', period=' num2str(round(n/maxPos),"%d")]);
+	text(maxPos,t(maxPos),['max: freq=' num2str(maxPos,"%d") ', período=' num2str(round(n/maxPos),"%d")]);
 	legend("FFT","XCorr");
-	title("c) FFT, picos de autocorrelaÃ§Ã£o e estimativa de perÃ­odo e quantidade de registros");
+	title("c) FFT, picos de autocorrelação e estimativa de período e quantidade de registros");
 end
 
 function v = score(region, period)
