@@ -204,13 +204,15 @@ function drawPlots(s, c, r)
 	legend("tps");
 	
 	figure; % signal and contour
+	subplot(1,2,1);
 	title("Contorno da sequência");
 	plot(s,'k--'); hold;
 	plot(c, 'k.');
 	legend("tps", "contorno");
 	%plot(d.*mean(c), 'ok');
 	
-	figure; % signal and 1st diff of contour
+	subplot(1,2,2);
+	%figure; % signal and 1st diff of contour
 	plot(s,'k--'); hold;
 	plot((d!=0) .* c,'k.');
 	legend("tps", "derivada do contorno");
@@ -232,9 +234,6 @@ function sr = segment(s)
 	drawPlots(s, c, sr);
 	
 	for i=1:1:length(sr)
-		if i==7
-			return;
-		end
 		reg = s(sr{i}(1):sr{i}(2));
 		a = sr{i}(3);
 		b = sr{i}(4);
