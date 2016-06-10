@@ -200,7 +200,7 @@ end
 function drawPlots(s, c, r)
 	d = firstDiff(c);
 	figure; % signal only
-	plot(s,'k--');
+	plot(s,'k.-');
 	legend("tps");
 	
 	figure; % signal and contour
