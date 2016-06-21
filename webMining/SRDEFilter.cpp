@@ -206,13 +206,13 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	// correct region boundaries
 	for (auto &r:regions) {
 		set<int> alpha;
-		//size_t maxTPC, minTPC;
+		size_t maxTPC, minTPC;
 
 		cerr << r.pos << " " << r.len << endl;
 
 		symbolFrequency(r.tps, alpha);
-		//minTPC = *alpha.begin();
-		//maxTPC = *alpha.rbegin();
+		minTPC = *alpha.begin();
+		maxTPC = *alpha.rbegin();
 
 		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC)
 		while (r.pos > 0 && alpha.count(tagPathSequence[r.pos-1]) > 0)
@@ -510,7 +510,7 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 	cerr << endl;
 
 	for (auto value:candidates) {
-		double stddev = 0, avgsize = 0;
+		double stddev = 0, avgsize = 0, avgSizeDiff = 0;
 
 		recpos.clear();
 		for (size_t i=0; i < s.size(); ++i) {
@@ -522,6 +522,7 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 			auto prev = recpos.begin();
 			for (auto rp = ++(recpos.begin()); rp != recpos.end(); ++rp, ++prev) {
 				avgsize += (*rp) - (*prev);
+				avgSizeDiff += abs(((*rp) - (*prev)) - estPeriod);
 			}
 			avgsize /= (float)(recpos.size()-1);
 
@@ -541,9 +542,11 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 					min( (double)recpos.size() ,estFreq) /
 					max( (double)recpos.size() ,estFreq);
 
-			double recSizeRatio =
-					min( avgsize, estPeriod )/
-					max( avgsize, estPeriod );
+			double recSizeRatio = 1 - (
+					min( avgSizeDiff, (double)(signal.size()) )/
+					max( avgSizeDiff, (double)(signal.size()) ));
+					//min( avgsize, estPeriod )/
+					//max( avgsize, estPeriod );
 
 			double score = (regionCoverage+recSizeRatio+freqRatio)/3.0;
 			fprintf(stderr, "value=%d, cov=%.2f, #=%.2f, size=%.2f, s=%.4f - %.2f\n",int(value+avg),regionCoverage,freqRatio,recSizeRatio,score,estPeriod);
