@@ -206,10 +206,15 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	// correct region boundaries
 	for (auto &r:regions) {
 		set<int> alpha;
+		//size_t maxTPC, minTPC;
 
 		cerr << r.pos << " " << r.len << endl;
 
 		symbolFrequency(r.tps, alpha);
+		//minTPC = *alpha.begin();
+		//maxTPC = *alpha.rbegin();
+
+		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC)
 		while (r.pos > 0 && alpha.count(tagPathSequence[r.pos-1]) > 0)
 			--r.pos;
 

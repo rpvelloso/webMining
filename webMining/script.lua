@@ -156,25 +156,27 @@ processFile = function(filename)
     printTPS(dom)
 end
 
--- [[
+--[[
 if #arg > 3 then
   processFile(arg[5])
 end
 
 exit()
--- ]]
+--]]
 
+processTestBed("../../datasets/yamada")
+--[[
+processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
 processTestBed("../../datasets/alvarez")
-processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/wien")
 processTestBed("../../datasets/clustvx")
 processTestBed("../../datasets/zhao1")
 processTestBed("../../datasets/zhao2")
 processTestBed("../../datasets/zhao3")
-processTestBed("../../datasets/yamada")
 processTestBed("../../datasets/trieschnigg1")
 processTestBed("../../datasets/trieschnigg2")
+--]]
 
 exit()
