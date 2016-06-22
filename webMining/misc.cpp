@@ -69,10 +69,10 @@ vector<double> _fft(vector<double> signal, int dir) {
 	fft_exec(obj,inp,oup);
 
 	for (size_t i=0;i<N;i++) {
-		if (dir >= 0)
+		//if (dir >= 0)
 			ret.push_back((oup[i].re*oup[i].re) + (oup[i].im*oup[i].im));
-		else
-			ret.push_back(oup[i].re);
+		//else
+			//ret.push_back(oup[i].re);
 	}
 
 	free(inp);

@@ -12,6 +12,10 @@ displayResults = function(dom,method,dir,filename)
   local regions = getRegionCount(dom,method)
   local outp = io.open(dir..filename,"w")
   
+  outp:write("<pre> timestamp: ");
+  outp:write(os.clock());
+  outp:write("</pre><br/>\n");
+  
   if method=="srde" then
     local tps = DOMTPS(dom)
     if #tps then
@@ -165,7 +169,7 @@ exit()
 --]]
 
 processTestBed("../../datasets/yamada")
---[[
+-- [[
 processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
@@ -177,6 +181,6 @@ processTestBed("../../datasets/zhao2")
 processTestBed("../../datasets/zhao3")
 processTestBed("../../datasets/trieschnigg1")
 processTestBed("../../datasets/trieschnigg2")
---]]
+-- ]]
 
 exit()

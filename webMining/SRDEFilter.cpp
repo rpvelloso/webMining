@@ -189,6 +189,12 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		auto prev = r;
 		--prev;
 
+		// avoid merging regions too far apart
+		/*
+		if ((r->pos - (prev->pos+prev->len-1)) > 5)
+			continue;
+		*/
+
 		symbolFrequency(r->tps, alpha);
 		symbolFrequency(prev->tps, palpha);
 		set_intersection(
@@ -196,6 +202,7 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 				alpha.begin(),alpha.end(),
 				inserter(intersect,intersect.begin()));
 		if (!intersect.empty()) {
+		//if (intersect.size() >= 0.3*palpha.size()) {
 			r->pos = prev->pos;
 			r->len += prev->len;
 			r->tps = tagPathSequence.substr(r->pos,r->len);
@@ -414,17 +421,27 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 
 	if (structured.size()) {
 		// compute content score
+		float tpsSize = tagPathSequence.size();
+		float tpsCenter = (tpsSize - 1) / 2;
+		float maxDistance = tpsSize / 2;
+
 		for (auto i:structured) {
 			auto stddev = regs[i].stddev;
 			auto recCount = regs[i].records.size();
 			auto recSize = regs[i].records[0].size();
+			float regionCenter = regs[i].pos + (regs[i].len/2);
 
-			regs[i].score = log(//stddev;
+			/*regs[i].score = log(//stddev;
 					((min((double)recCount,(double)recSize) /
 					max((double)recCount,(double)recSize))) *
 					stddev *
 					((double)regs[i].len / (double)tagPathSequence.size()));
 					//(double)recCount * (double)recSize * stddev;
+			 */
+
+			float positionScore = 1-(abs(tpsCenter - regionCenter)/maxDistance);
+			float sizeScore = regs[i].len/tpsSize;
+			regs[i].score = (positionScore + sizeScore)/2;
 		}
 
 		// k-mean clustering to identify content
@@ -507,7 +524,7 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 	estPeriod = estimatePeriod(signal);
 	estFreq = ((double)signal.size() / estPeriod);
 
-	cerr << endl;
+	cerr << "period: " << estPeriod << ", freq: " << estFreq << endl;
 
 	for (auto value:candidates) {
 		double stddev = 0, avgsize = 0, avgSizeDiff = 0;
@@ -642,8 +659,13 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 	auto xcorr = autoCorrelation(signal);
 
 	multimap<double, size_t> candidatePeriods;
+	bool considerCandidate = false;
 	for (size_t i=0;i<N;i++) {
-		candidatePeriods.insert(make_pair(xcorr[i],i));
+		if (i > 0 && xcorr[i] > xcorr[i-1])
+			considerCandidate = true;
+
+		if (considerCandidate)
+			candidatePeriods.insert(make_pair(xcorr[i],i));
 	}
 
 	double period = ceil((double)N/(double)(*(candidatePeriods.begin())).second);
