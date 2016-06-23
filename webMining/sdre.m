@@ -81,8 +81,8 @@ function mr = mergeRegions(r, s)
 	n = length(s);
 	for i=1:1:length(mr)
 		alpha = unique(s(mr{i}(1):mr{i}(2)));
-		%while (mr{i}(1) > 1) && (length(intersect(s(mr{i}(1)-1),alpha)) > 0)
-		while (mr{i}(1) > 1) && (s(mr{i}(1)-1) <= max(alpha)) && (s(mr{i}(1)-1) >= min(alpha))
+		%while (mr{i}(1) > 1) && (s(mr{i}(1)-1) <= max(alpha)) && (s(mr{i}(1)-1) >= min(alpha))
+		while (mr{i}(1) > 1) && (length(intersect(s(mr{i}(1)-1),alpha)) > 0)
 			mr{i}(1) = mr{i}(1) - 1;
 		end
 		
@@ -107,12 +107,12 @@ end
 
 function t = transform(sig)
 	size = length(sig);
-	lowpass(1:size) = 1/size;
+	%lowpass(1:size) = 1/size;
 	%lowpass(ceil(size/8):size)=0;
 	
-	sig = real(ifft(fft(sig).*lowpass));
+	%sig = real(ifft(fft(sig).*lowpass));
 	
-	sig = sig .* welchwin(length(sig),"periodic")';
+	%sig = sig .* welchwin(length(sig),"periodic")';
 	t=abs(fft(sig)).^2;
 end
 
