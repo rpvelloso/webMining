@@ -648,7 +648,7 @@ vector<pNode> SRDEFilter::getRecord(size_t dr, size_t rec) {
 
 double SRDEFilter::estimatePeriod(vector<double> signal) {
 	size_t N = (signal.size() + (signal.size()%2));
-	double maxPeak=-INFINITY;
+	double maxPeak=-numeric_limits<double>::infinity();
 
 	if (signal.size() != N) { // repeat last sample when signal size is odd
 		signal.resize(N);
@@ -656,6 +656,17 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 	}
 
 	auto spectrum = fft(signal);
+
+	double freq = 1;
+	double power = spectrum[1];
+	for (size_t i = 1; i < spectrum.size()/2; ++i) {
+		if (spectrum[i] > power) {
+			freq = i;
+			power = spectrum[i];
+		}
+	}
+	return (double)(N)/(double)(freq);
+
 	auto xcorr = autoCorrelation(signal);
 
 	multimap<double, size_t> candidatePeriods;
