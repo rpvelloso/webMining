@@ -60,7 +60,7 @@ protected:
 	set<size_t> locateRecords(tTPSRegion &);
 	unordered_map<int,int> symbolFrequency(wstring, set<int> &);
 	map<int,int> frequencyThresholds(unordered_map<int,int>);
-	double estimatePeriod(vector<double>);
+	pair<double,double> estimatePeriod(vector<double>);
 	vector<long int> detectStructure(unordered_map<long int, tTPSRegion> &);
 
 	virtual void onDataRecordFound(vector<wstring> &, set<size_t> &, tTPSRegion &);

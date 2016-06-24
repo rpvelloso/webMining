@@ -17,6 +17,7 @@
     along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
 #include <string>
 #include <vector>
 #include <tidy.h>
@@ -101,5 +102,10 @@ vector<double> fct(vector<double> signal) {
 	}
 	auto ft = _fft(sig4n, 1, false);
 	ft.resize(signal.size());
+
+	for (size_t i = 0; i < ft.size()-3; ++i)
+		ft[i] = abs(ft[i]) + abs(ft[i+2]);
+
+	ft.resize(signal.size() - 2);
 	return ft;
 }

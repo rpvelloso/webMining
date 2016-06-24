@@ -221,12 +221,17 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		minTPC = *alpha.begin();
 		maxTPC = *alpha.rbegin();
 
+		// pad left
 		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC)
-		while (r.pos > 0 && alpha.count(tagPathSequence[r.pos-1]) > 0)
+		while (r.pos > 0 && alpha.count(tagPathSequence[r.pos-1]) > 0) {
 			--r.pos;
+			++r.len;
+		}
 
+		// pad right
 		while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && alpha.count(tagPathSequence[r.pos+r.len]) > 0)
 			++r.len;
+
 		r.tps = tagPathSequence.substr(r.pos,r.len);
 	}
 
@@ -521,10 +526,11 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 
 	region.stddev = sqrt(region.stddev/max((double)1,(double)(s.size()-2)));
 
-	estPeriod = estimatePeriod(signal);
+	auto p = estimatePeriod(signal);
+	estPeriod = p.first;
 	estFreq = ((double)signal.size() / estPeriod);
 
-	cerr << "period: " << estPeriod << ", freq: " << estFreq << endl;
+	cerr << "period: " << estPeriod << "(" << ((double)100.0*p.second) << "%)" << ", freq: " << estFreq << endl;
 
 	for (auto value:candidates) {
 		double stddev = 0, avgsize = 0, avgSizeDiff = 0;
@@ -646,9 +652,9 @@ vector<pNode> SRDEFilter::getRecord(size_t dr, size_t rec) {
 
 #define NUM_PEAKS 15
 
-double SRDEFilter::estimatePeriod(vector<double> signal) {
+pair<double,double> SRDEFilter::estimatePeriod(vector<double> signal) {
 	size_t N = (signal.size() + (signal.size()%2));
-	double maxPeak=-numeric_limits<double>::infinity();
+	//double maxPeak=-numeric_limits<double>::infinity();
 
 	if (signal.size() != N) { // repeat last sample when signal size is odd
 		signal.resize(N);
@@ -659,16 +665,17 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 	auto spectrum = fct(signal);
 
 	double freq = 1;
-	double power = spectrum[1];
-	for (size_t i = 1; i < spectrum.size()/2; ++i) {
+	double power = spectrum[1], secondPower = spectrum[1];
+	for (size_t i = 1; i < spectrum.size()/4; ++i) {
 		if (spectrum[i] > power) {
+			secondPower = power;
 			freq = (double)(i)/2.0;
 			power = spectrum[i];
 		}
 	}
-	return (double)(N)/(double)(freq);
+	return make_pair((double)(N)/(double)(freq), ((double)1.0 - (secondPower/power)) /* period confidence */);
 
-	auto xcorr = autoCorrelation(signal);
+	/*auto xcorr = autoCorrelation(signal);
 
 	multimap<double, size_t> candidatePeriods;
 	bool considerCandidate = false;
@@ -695,7 +702,7 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 		}
 	}
 
-	return period;
+	return period;*/
 }
 
 void SRDEFilter::printTagPathSequence() {

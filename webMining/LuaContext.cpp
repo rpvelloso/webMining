@@ -257,6 +257,8 @@ static int lua_api_nodeToString(lua_State *L) {
 	return 0;
 }
 
+LUALIB_API int (luaopen_lsqlite3)(lua_State *);
+
 }
 
 void LuaContext::insertDOM(DOM *d) {
@@ -283,6 +285,9 @@ LuaContext::LuaContext(const char *inp, int argc, char **argv) {
 	int s = luaL_loadfile(state, inp);
 
 	if (!s) {
+
+		luaopen_lsqlite3(state);
+		lua_setglobal(state,"sqlite3");
 
 		lua_createtable(state,argc,0);
 		for (int i=0;i<argc;i++) {
