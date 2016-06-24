@@ -47,7 +47,7 @@ string stringTok(string &s, string d) {
 }
 
 // returns power spectrum of signal
-vector<double> _fft(vector<double> signal, int dir) {
+vector<double> _fft(vector<double> signal, int dir, bool psd = true) {
 	size_t N = (signal.size() + (signal.size()%2));
 	vector<double> ret;
 
@@ -69,10 +69,10 @@ vector<double> _fft(vector<double> signal, int dir) {
 	fft_exec(obj,inp,oup);
 
 	for (size_t i=0;i<N;i++) {
-		//if (dir >= 0)
+		if (psd)
 			ret.push_back((oup[i].re*oup[i].re) + (oup[i].im*oup[i].im));
-		//else
-			//ret.push_back(oup[i].re);
+		else
+			ret.push_back(oup[i].re);
 	}
 
 	free(inp);
@@ -90,4 +90,16 @@ vector<double> autoCorrelation(vector<double> signal) {
 	}
 	signal.resize(2*N); // zero pad
 	return _fft(_fft(signal,1),-1);
+}
+
+vector<double> fct(vector<double> signal) {
+	vector<double> sig4n(signal.size()*4,0);
+
+	for (size_t i = 0; i < signal.size(); ++i) {
+		sig4n[(i*2)+1] = signal[i];
+		sig4n[(signal.size()*4)-(i*2)-1] = signal[i];
+	}
+	auto ft = _fft(sig4n, 1, false);
+	ft.resize(signal.size());
+	return ft;
 }

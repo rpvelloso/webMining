@@ -35,7 +35,8 @@ using namespace std;
 
 #define CRLF "\n"
 
-extern vector<double> _fft(vector<double>, int);
+extern vector<double> _fft(vector<double>, int, bool);
+extern vector<double> fct(vector<double>);
 extern vector<double> autoCorrelation(vector<double>);
 
 #define fft(X) _fft(X,1)

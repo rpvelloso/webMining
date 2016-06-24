@@ -655,13 +655,14 @@ double SRDEFilter::estimatePeriod(vector<double> signal) {
 		signal[N-1]=signal[N-2];
 	}
 
-	auto spectrum = fft(signal);
+	//auto spectrum = fft(signal);
+	auto spectrum = fct(signal);
 
 	double freq = 1;
 	double power = spectrum[1];
 	for (size_t i = 1; i < spectrum.size()/2; ++i) {
 		if (spectrum[i] > power) {
-			freq = i;
+			freq = (double)(i)/2.0;
 			power = spectrum[i];
 		}
 	}
