@@ -104,7 +104,7 @@ vector<double> fct(vector<double> signal) {
 	ft.resize(signal.size());
 
 	for (size_t i = 0; i < ft.size()-3; ++i)
-		ft[i] = abs(ft[i]) + abs(ft[i+2]);
+		ft[i] = abs(ft[i] - ft[i+2]);
 
 	ft.resize(signal.size() - 2);
 	return ft;
