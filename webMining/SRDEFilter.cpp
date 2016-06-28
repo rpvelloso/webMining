@@ -213,13 +213,13 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	// correct region boundaries
 	for (auto &r:regions) {
 		set<int> alpha;
-		size_t maxTPC, minTPC;
+		//size_t maxTPC, minTPC;
 
 		cerr << r.pos << " " << r.len << endl;
 
 		symbolFrequency(r.tps, alpha);
-		minTPC = *alpha.begin();
-		maxTPC = *alpha.rbegin();
+		/*minTPC = *alpha.begin();
+		maxTPC = *alpha.rbegin();*/
 
 		// pad left
 		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC)
@@ -431,9 +431,9 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		float maxDistance = tpsSize / 2;
 
 		for (auto i:structured) {
-			auto stddev = regs[i].stddev;
+			/*auto stddev = regs[i].stddev;
 			auto recCount = regs[i].records.size();
-			auto recSize = regs[i].records[0].size();
+			auto recSize = regs[i].records[0].size();*/
 			float regionCenter = regs[i].pos + (regs[i].len/2);
 
 			/*regs[i].score = log(//stddev;
