@@ -158,7 +158,7 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	for (size_t i = 0; i < diff.size(); ++i) {
 		if (diff[i] != 0) {
 
-			if ((end - start) > 3) {
+			if ((end - start + 1) > 3) {
 				tTPSRegion r;
 
 				r.pos = start;
@@ -203,8 +203,8 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 				inserter(intersect,intersect.begin()));
 		if (!intersect.empty()) {
 		//if (intersect.size() >= 0.3*palpha.size()) {
+			r->len += r->pos-prev->pos;
 			r->pos = prev->pos;
-			r->len += prev->len;
 			r->tps = tagPathSequence.substr(r->pos,r->len);
 			r = regions.erase(prev);
 		}
