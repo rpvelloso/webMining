@@ -1,5 +1,5 @@
 CRLF = "\n"
-gnuplot = "c:\\Progra~1\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
 --gnuplot = "/usr/bin/gnuplot"
 
 term = {}
@@ -160,17 +160,14 @@ processFile = function(filename)
     printTPS(dom)
 end
 
---[[
-if #arg > 3 then
+if #arg > 4 then
   processFile(arg[5])
+  exit()
 end
 
-exit()
---]]
-
+processTestBed("../../datasets/yamada")
 processTestBed("../../datasets/zhao3")
 -- [[
-processTestBed("../../datasets/yamada")
 processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
