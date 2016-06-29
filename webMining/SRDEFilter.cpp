@@ -185,7 +185,7 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	// merge regions with common alphabet
 	auto r = ++regions.begin();
 	for (; r != regions.end(); ++r) {
-		set<int> alpha, palpha, intersect;
+		set<int> alpha, palpha, intersect, setUnion;
 		auto prev = r;
 		--prev;
 
@@ -201,8 +201,13 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 				palpha.begin(),palpha.end(),
 				alpha.begin(),alpha.end(),
 				inserter(intersect,intersect.begin()));
-		if (!intersect.empty()) {
-		//if (intersect.size() >= 0.3*palpha.size()) {
+
+		set_union(
+				palpha.begin(),palpha.end(),
+				alpha.begin(),alpha.end(),
+				inserter(setUnion,setUnion.begin()));
+		//if (!intersect.empty()) {
+		if (((double)intersect.size()/(double)setUnion.size()) > 0.40) {
 			r->len += r->pos-prev->pos;
 			r->pos = prev->pos;
 			r->tps = tagPathSequence.substr(r->pos,r->len);
@@ -222,15 +227,17 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		maxTPC = *alpha.rbegin();*/
 
 		// pad left
-		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC)
+		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC) {
 		while (r.pos > 0 && alpha.count(tagPathSequence[r.pos-1]) > 0) {
 			--r.pos;
 			++r.len;
 		}
 
 		// pad right
-		while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && alpha.count(tagPathSequence[r.pos+r.len]) > 0)
+		//while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && tagPathSequence[r.pos+r.len] >= minTPC && tagPathSequence[r.pos+r.len] <= maxTPC) {
+		while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && alpha.count(tagPathSequence[r.pos+r.len]) > 0) {
 			++r.len;
+		}
 
 		r.tps = tagPathSequence.substr(r.pos,r.len);
 	}
