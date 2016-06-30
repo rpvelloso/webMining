@@ -413,19 +413,21 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 				m.push_back(region.tps.substr(*prev,max_size));
 		}
 
-		if (m.size()) {
+		if (m.size() > 1 && m[0].size() > 1) {
 			// align the records (one alternative to 'center star' algorithm is ClustalW)
 			//align(m);
+			cerr << "1-RxC = " << m.size() << " " << m[0].size() << endl;
 			region.score = centerStar(m);
+			cerr << "2-RxC = " << m.size() << " " << m[0].size() << endl;
 
 			// and extracts them
 			onDataRecordFound(m,recpos,region);
 		}
 	}
 
-	// remove regions with only a single record
+	// remove regions with only a single record or single column
 	auto struEnd = remove_if(structured.begin(), structured.end(), [&regs](long int i)->bool{
-		return regs[i].records.size() < 2;
+		return (regs[i].records.size() < 2) || (regs[i].records[0].size() < 2);
 	});
 	structured.erase(struEnd, structured.end());
 
@@ -492,8 +494,15 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		}
 	}
 
-    sort(regions.begin(),regions.end(),[](auto &a, auto &b) {
-    	return (a.score > b.score);
+    sort(regions.begin(),regions.end(),[](tTPSRegion &a, tTPSRegion &b) {
+    	if (a.content == b.content)
+    		return (a.score > b.score);
+    	else {
+    		if (a.content)
+    			return true;
+    		else
+    			return false;
+    	}
     });
 }
 
