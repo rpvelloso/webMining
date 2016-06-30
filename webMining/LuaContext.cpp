@@ -151,7 +151,7 @@ static int lua_api_getDataRegion(lua_State *L) {
 						lua_pushboolean(L,tpsreg->content);
 						lua_settable(L,-3);
 						lua_pushstring(L,"pos");
-						lua_pushnumber(L,tpsreg->pos);
+						lua_pushnumber(L,tpsreg->getStartPos());
 						lua_settable(L,-3);
 					}
 				}

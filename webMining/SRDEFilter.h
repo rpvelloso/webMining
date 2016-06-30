@@ -32,7 +32,6 @@
 using namespace std;
 
 struct tTPSRegion {
-	long int len,pos;
 	wstring tps;
 	vector<pNode> nodeSeq;
 	tLinearCoeff lc;
@@ -40,6 +39,33 @@ struct tTPSRegion {
 	double stddev=0;
 	double score=0;
 	bool content=false;
+	long int size() {
+		return endPos - startPos + 1;
+	}
+
+	long int getEndPos() const {
+		return endPos;
+	}
+
+	void setEndPos(long int endPos) {
+		this->endPos = endPos;
+	}
+
+	long int getStartPos() const {
+		return startPos;
+	}
+
+	void setStartPos(long int startPos) {
+		this->startPos = startPos;
+	}
+	void shiftStartPos(long int shift) {
+		startPos += shift;
+	}
+	void shiftEndPos(long int shift) {
+		endPos += shift;
+	}
+private:
+	long int startPos,endPos;
 };
 
 class SRDEFilter : public ExtractorInterface {

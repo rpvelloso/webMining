@@ -124,11 +124,11 @@ vector<long int> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion>
 	for (auto &r:regs) {
 		r.second.lc = linearRegression(r.second.tps);
 
-		cerr << "size: " << r.second.len << " ang.coeff.: " << r.second.lc.a << endl;
+		cerr << "size: " << r.second.size() << " ang.coeff.: " << r.second.lc.a << endl;
 
 		if (
 			(abs(r.second.lc.a) < angCoeffThreshold) && // test for structure
-			(r.second.len >= sizeThreshold) // test for size
+			(r.second.size() >= sizeThreshold) // test for size
 			)
 			structured.push_back(r.first);
 	}
@@ -161,9 +161,9 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 			if ((end - start + 1) > 3) {
 				tTPSRegion r;
 
-				r.pos = start;
-				r.len = end - start + 1;
-				r.tps = tagPathSequence.substr(r.pos,r.len);
+				r.setStartPos(start);
+				r.setEndPos(end);
+				r.tps = tagPathSequence.substr(r.getStartPos(),r.size());
 
 				regions.push_back(r);
 			}
@@ -175,9 +175,9 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 	if (start != end) {
 		tTPSRegion r;
 
-		r.pos = start;
-		r.len = end - start + 1;
-		r.tps = tagPathSequence.substr(r.pos,r.len);
+		r.setStartPos(start);
+		r.setEndPos(end);
+		r.tps = tagPathSequence.substr(r.getStartPos(),r.size());
 
 		regions.push_back(r);
 	}
@@ -208,9 +208,8 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 				inserter(setUnion,setUnion.begin()));
 		//if (!intersect.empty()) {
 		if (((double)intersect.size()/(double)setUnion.size()) > 0.40) {
-			r->len += r->pos-prev->pos;
-			r->pos = prev->pos;
-			r->tps = tagPathSequence.substr(r->pos,r->len);
+			r->setStartPos(prev->getStartPos());
+			r->tps = tagPathSequence.substr(r->getStartPos(),r->size());
 			r = regions.erase(prev);
 		}
 	}
@@ -220,7 +219,7 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		set<int> alpha;
 		//size_t maxTPC, minTPC;
 
-		cerr << r.pos << " " << r.len << endl;
+		cerr << r.getStartPos() << " " << r.size() << endl;
 
 		symbolFrequency(r.tps, alpha);
 		/*minTPC = *alpha.begin();
@@ -228,23 +227,22 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 
 		// pad left
 		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC) {
-		while (r.pos > 0 && alpha.count(tagPathSequence[r.pos-1]) > 0) {
-			--r.pos;
-			++r.len;
+		while (r.getStartPos() > 0 && alpha.count(tagPathSequence[r.getStartPos()-1]) > 0) {
+			r.shiftStartPos(-1);
 		}
 
 		// pad right
 		//while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && tagPathSequence[r.pos+r.len] >= minTPC && tagPathSequence[r.pos+r.len] <= maxTPC) {
-		while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && alpha.count(tagPathSequence[r.pos+r.len]) > 0) {
-			++r.len;
+		while ((static_cast<size_t>(r.getEndPos()) < tagPathSequence.size()-1) && alpha.count(tagPathSequence[r.getEndPos()+1]) > 0) {
+			r.shiftEndPos(+1);
 		}
 
-		r.tps = tagPathSequence.substr(r.pos,r.len);
+		r.tps = tagPathSequence.substr(r.getStartPos(),r.size());
 	}
 
 	regs.clear();
 	for (auto r:regions)
-		regs[r.pos] = r;
+		regs[r.getStartPos()] = r;
 
 	return detectStructure(regs);
 }
@@ -351,7 +349,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		vector<wstring> m;
 		auto &region = regs[i];
 		auto firstNode = nodeSequence.begin()+i;
-		auto lastNode = firstNode + region.len;
+		auto lastNode = firstNode + region.size();
 
 		region.nodeSeq.assign(firstNode,lastNode);
 
@@ -441,7 +439,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			/*auto stddev = regs[i].stddev;
 			auto recCount = regs[i].records.size();
 			auto recSize = regs[i].records[0].size();*/
-			float regionCenter = regs[i].pos + (regs[i].len/2);
+			float regionCenter = regs[i].getStartPos() + (regs[i].size()/2);
 
 			/*regs[i].score = log(//stddev;
 					((min((double)recCount,(double)recSize) /
@@ -452,7 +450,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			 */
 
 			float positionScore = 1-(abs(tpsCenter - regionCenter)/maxDistance);
-			float sizeScore = regs[i].len/tpsSize;
+			float sizeScore = regs[i].size()/tpsSize;
 			regs[i].score = (positionScore + sizeScore)/2;
 		}
 
@@ -468,7 +466,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 			regs[i].content = (((*j) == 2) || (scoreResult.nClusters < 2));
 
 			// restore the original region's tps
-			regs[i].tps = tagPathSequence.substr(i,regs[i].len);
+			regs[i].tps = tagPathSequence.substr(i,regs[i].size());
 			++j;
 		}
 
@@ -489,7 +487,7 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 
 	for (auto r:regs) {
 		if (r.second.records.size() > 1) {
-			r.second.pos = r.first;
+			r.second.setStartPos(r.first);
 			regions.push_back(r.second);
 		}
 	}
