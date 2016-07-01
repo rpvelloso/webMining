@@ -135,54 +135,28 @@ vector<long int> SRDEFilter::detectStructure(unordered_map<long int, tTPSRegion>
 	return structured;
 }
 
-vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
-	buildTagPath("",n,css);
-	auto s = tagPathSequence;
-	vector<float> diff(s.size()-1);
-	auto height = s[0];
-	list<tTPSRegion> regions;
-
-	// skyline
-	for (auto &c:s) {
-		if (c > height)
-			height = c;
-		c = height;
-	}
-
-	// 1st diff of skyline
-	for (size_t i = 1; i < s.size(); ++i)
-		diff[i-1] = s[i] - s[i-1];
-
-	// region segmentation
+list<pair<size_t,size_t> > SRDEFilter::segment_difference(const vector<double> &diff) {
+	list<pair<size_t,size_t> > ret;
 	size_t start = 0, end = 0;
+
 	for (size_t i = 0; i < diff.size(); ++i) {
 		if (diff[i] != 0) {
-
-			if ((end - start + 1) > 3) {
-				tTPSRegion r;
-
-				r.setStartPos(start);
-				r.setEndPos(end);
-				r.tps = tagPathSequence.substr(r.getStartPos(),r.size());
-
-				regions.push_back(r);
-			}
+			if ((end - start + 1) > 3)
+				ret.push_back(make_pair(start,end));
 
 			start = end = i+1;
 		} else
 			end = i;
 	}
-	if (start != end) {
-		tTPSRegion r;
 
-		r.setStartPos(start);
-		r.setEndPos(end);
-		r.tps = tagPathSequence.substr(r.getStartPos(),r.size());
+	if (start != end)
+		ret.push_back(make_pair(start,end));
 
-		regions.push_back(r);
-	}
+	return ret;
+}
 
-	// merge regions with common alphabet
+void SRDEFilter::merge_regions(list<pair<size_t,size_t> > &regions) {
+// merge regions with common alphabet
 	auto r = ++regions.begin();
 	for (; r != regions.end(); ++r) {
 		set<int> alpha, palpha, intersect, setUnion;
@@ -194,9 +168,10 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		if ((r->pos - (prev->pos+prev->len-1)) > 5)
 			continue;
 		*/
-
-		symbolFrequency(r->tps, alpha);
-		symbolFrequency(prev->tps, palpha);
+		auto tps = tagPathSequence.substr((*r).first,(*r).second - (*r).first + 1);
+		auto ptps = tagPathSequence.substr((*prev).first,(*prev).second - (*prev).first + 1);
+		symbolFrequency(tps, alpha);
+		symbolFrequency(ptps, palpha);
 		set_intersection(
 				palpha.begin(),palpha.end(),
 				alpha.begin(),alpha.end(),
@@ -207,19 +182,64 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 				alpha.begin(),alpha.end(),
 				inserter(setUnion,setUnion.begin()));
 		//if (!intersect.empty()) {
-		if (((double)intersect.size()/(double)setUnion.size()) > 0.40) {
-			r->setStartPos(prev->getStartPos());
-			r->tps = tagPathSequence.substr(r->getStartPos(),r->size());
-			r = regions.erase(prev);
+		if (((double)intersect.size()/(double)setUnion.size()) > 0.30) {
+			(*r).first = (*prev).first;
+			regions.erase(prev);
 		}
+	}
+}
+
+vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, tTPSRegion> &regs) {
+	buildTagPath("",n,css);
+	auto s = tagPathSequence;
+	list<tTPSRegion> regions;
+
+	// contour
+	s = contour(s);
+
+	// 1st difference of contour
+	auto diff = difference(s);
+
+	// region segmentation
+	auto segs = segment_difference(diff);
+
+	merge_regions(segs);
+
+	for (auto i = segs.begin(); i != segs.end();) {
+		auto seg = *i;
+		auto tps = tagPathSequence.substr(seg.first, seg.second-seg.first+1);
+		reverse(tps.begin(), tps.end());
+		auto c = contour(tps);
+		auto d = difference(c);
+		auto ss = segment_difference(d);
+		if (ss.size() > 1) {
+			reverse(ss.begin(), ss.end());
+			for (auto j:ss) {
+				j.first = (tps.size()-1-j.first) + seg.first;
+				j.second = (tps.size()-1-j.second) + seg.first;
+				swap(j.first,j.second);
+				segs.insert(i,j);
+			}
+			i = segs.erase(i);
+		} else
+			++i;
+	}
+
+	merge_regions(segs);
+
+	for (auto seg:segs) {
+		tTPSRegion r;
+
+		r.setStartPos(seg.first);
+		r.setEndPos(seg.second);
+		r.tps = tagPathSequence.substr(r.getStartPos(),r.size());
+		regions.push_back(r);
 	}
 
 	// correct region boundaries
 	for (auto &r:regions) {
 		set<int> alpha;
 		//size_t maxTPC, minTPC;
-
-		cerr << r.getStartPos() << " " << r.size() << endl;
 
 		symbolFrequency(r.tps, alpha);
 		/*minTPC = *alpha.begin();

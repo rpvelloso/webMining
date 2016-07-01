@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include <vector>
 #include <string>
+#include <list>
 #include "ExtractorInterface.h"
 #include "node.hpp"
 #include "misc.h"
@@ -88,8 +89,9 @@ protected:
 	map<int,int> frequencyThresholds(unordered_map<int,int>);
 	pair<double,double> estimatePeriod(vector<double>);
 	vector<long int> detectStructure(unordered_map<long int, tTPSRegion> &);
-
 	virtual void onDataRecordFound(vector<wstring> &, set<size_t> &, tTPSRegion &);
+	list<pair<size_t,size_t> > segment_difference(const vector<double> &);
+	void merge_regions(list<pair<size_t,size_t> > &);
 
 	unordered_map<string, int> tagPathMap;
 	wstring tagPathSequence;

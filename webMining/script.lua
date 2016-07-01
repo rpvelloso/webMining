@@ -166,14 +166,15 @@ if #arg > 4 then
 end
 
 processTestBed("../../datasets/yamada")
-processTestBed("../../datasets/zhao3")
+--exit()
 -- [[
+processTestBed("../../datasets/zhao3")
+processTestBed("../../datasets/clustvx")
 processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
 processTestBed("../../datasets/alvarez")
 processTestBed("../../datasets/wien")
-processTestBed("../../datasets/clustvx")
 processTestBed("../../datasets/zhao1")
 processTestBed("../../datasets/zhao2")
 processTestBed("../../datasets/trieschnigg1")

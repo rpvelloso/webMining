@@ -314,4 +314,26 @@ void align(vector<T> &ss) {
 	}
 }
 
+template<typename T>
+T contour(T s) {
+	auto height = s[0];
+
+	for (auto &c:s) {
+		if (c > height)
+			height = c;
+		c = height;
+	}
+	return s;
+}
+
+template<typename T>
+vector<double> difference(T s) {
+	vector<double> d(s.size()-1);
+
+	for (size_t i = 1; i < s.size(); ++i)
+		d[i-1] = s[i] - s[i-1];
+
+	return d;
+}
+
 #endif /* MISC_H_ */
