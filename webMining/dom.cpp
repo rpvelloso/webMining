@@ -40,7 +40,10 @@ DOM::DOM(const std::string uri) {
 
 	tidyOptSetInt(tdoc,TidyIndentSpaces, 2);
 
-	tidyOptSetBool(tdoc, TidyXhtmlOut, yes);
+	tidyOptSetInt(tdoc, TidyMergeDivs, no);
+	tidyOptSetInt(tdoc, TidyMergeSpans, no);
+
+	tidyOptSetBool(tdoc, TidyHtmlOut, yes);
 	tidyOptSetBool(tdoc, TidyMakeClean, yes);
 	tidyOptSetBool(tdoc, TidyJoinClasses, yes);
 	tidyOptSetBool(tdoc, TidyJoinStyles, yes);
@@ -48,8 +51,10 @@ DOM::DOM(const std::string uri) {
 	tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
 	tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
 	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
+	tidyOptSetBool(tdoc, TidyFixComments, yes);
 	tidyOptSetBool(tdoc, TidyHideComments, yes);
 	tidyOptSetBool(tdoc, TidyForceOutput, yes);
+	tidyOptSetBool(tdoc, TidySkipNested, yes);
 
 	tidySetErrorBuffer(tdoc, &errbuf);
 
