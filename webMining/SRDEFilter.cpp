@@ -181,8 +181,8 @@ void SRDEFilter::merge_regions(list<pair<size_t,size_t> > &regions) {
 				palpha.begin(),palpha.end(),
 				alpha.begin(),alpha.end(),
 				inserter(setUnion,setUnion.begin()));
-		//if (!intersect.empty()) {
-		if (((double)intersect.size()/(double)setUnion.size()) > 0.30) {
+		if (!intersect.empty()) {
+		//if (((double)intersect.size()/(double)setUnion.size()) > 0.05) {
 			(*r).first = (*prev).first;
 			regions.erase(prev);
 		}
@@ -246,13 +246,13 @@ vector<long int> SRDEFilter::segment(pNode n, bool css, unordered_map<long int, 
 		maxTPC = *alpha.rbegin();*/
 
 		// pad left
-		//while (r.pos > 0 && tagPathSequence[r.pos-1] >= minTPC && tagPathSequence[r.pos-1] <= maxTPC) {
+		//while (r.getStartPos() > 0 && tagPathSequence[r.getStartPos()-1] >= minTPC && tagPathSequence[r.getStartPos()-1] <= maxTPC) {
 		while (r.getStartPos() > 0 && alpha.count(tagPathSequence[r.getStartPos()-1]) > 0) {
 			r.shiftStartPos(-1);
 		}
 
 		// pad right
-		//while ((static_cast<size_t>(r.pos+r.len-1) < tagPathSequence.size()-1) && tagPathSequence[r.pos+r.len] >= minTPC && tagPathSequence[r.pos+r.len] <= maxTPC) {
+		//while ((static_cast<size_t>(r.getEndPos()) < tagPathSequence.size()-1) && tagPathSequence[r.getEndPos()+1] >= minTPC && tagPathSequence[r.getEndPos()+1] <= maxTPC) {
 		while ((static_cast<size_t>(r.getEndPos()) < tagPathSequence.size()-1) && alpha.count(tagPathSequence[r.getEndPos()+1]) > 0) {
 			r.shiftEndPos(+1);
 		}
