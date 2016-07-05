@@ -56,7 +56,7 @@ displayResults = function(dom,method,dir,filename)
     
     if dr["tps"] then
       outp:write("<img src='",filename,".region",i,term[term["default"]],"' /><br />",CRLF)
-      outp:write(string.format("offset: %d, size: %d, angle: %.2f, score: %.2f<br/>",dr.pos,#dr.tps,math.atan(math.abs(dr["a"]))*180/math.pi,dr["score"]),CRLF)
+      outp:write(string.format("interval: [%d; %d], size: %d, angle: %.2f, score: %.2f<br/>",dr.pos,dr.pos+#dr.tps-1,#dr.tps,math.atan(math.abs(dr["a"]))*180/math.pi,dr["score"]),CRLF)
       local t = dr.tps
       if #t then
         outp:write("<textarea>",CRLF)
@@ -165,11 +165,11 @@ if #arg > 4 then
   exit()
 end
 
-processTestBed("../../datasets/yamada")
+processTestBed("../../datasets/clustvx")
 --exit()
+processTestBed("../../datasets/yamada")
 -- [[
 processTestBed("../../datasets/zhao3")
-processTestBed("../../datasets/clustvx")
 processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
