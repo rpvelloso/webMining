@@ -40,8 +40,8 @@ DOM::DOM(const std::string uri) {
 
 	tidyOptSetInt(tdoc,TidyIndentSpaces, 2);
 
-	tidyOptSetInt(tdoc, TidyMergeDivs, no);
-	tidyOptSetInt(tdoc, TidyMergeSpans, no);
+	tidyOptSetInt(tdoc, TidyMergeDivs, yes);
+	tidyOptSetInt(tdoc, TidyMergeSpans, yes);
 
 	tidyOptSetBool(tdoc, TidyHtmlOut, yes);
 	tidyOptSetBool(tdoc, TidyMakeClean, yes);

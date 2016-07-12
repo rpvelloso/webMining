@@ -33,18 +33,29 @@ string &trim(string &s) {
 	return s;
 }
 
-string stringTok(string &s, string d) {
-	string tok="";
-	unsigned int i=0;
+string stringTok(string &inp, const string &delim) {
+	size_t startPos = inp.find_first_not_of(delim);
+	size_t endPos = inp.find_first_of(delim, startPos);
 
-	while ((d.find(s[i++])!=string::npos) && (i<s.size()));
-	for (--i;i<s.size();i++) {
-		if (d.find(s[i])==string::npos) tok = tok + s[i];
-		else break;
+	string token;
+
+	if (startPos != string::npos) {
+		if (endPos != string::npos)
+			token = inp.substr(startPos, endPos - startPos);
+		else
+			token = inp.substr(startPos);
 	}
-	while ((d.find(s[i++])!=string::npos) && (i<s.size()));
-	s.erase(0,--i);
-	return tok;
+
+	if (endPos != string::npos) {
+		startPos = inp.find_first_not_of(delim, endPos);
+		if (startPos != string::npos)
+			inp = inp.substr(startPos);
+		else
+			inp = "";
+	} else
+		inp = "";
+
+	return token;
 }
 
 // returns power spectrum of signal

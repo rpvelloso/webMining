@@ -43,7 +43,7 @@ extern vector<double> autoCorrelation(vector<double>);
 #define ifft(X) _fft(X,-1)
 
 string &trim(string &);
-string stringTok(string &, string);
+string stringTok(string &, const string &);
 
 template<typename T>
 float mean(T s) {

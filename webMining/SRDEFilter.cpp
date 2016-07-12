@@ -87,6 +87,10 @@ void SRDEFilter::buildTagPath(string s, pNode n, bool css) {
 
 	for (auto attrName:styleAttr) {
 		auto attrValue = n->getAttr(attrName);
+
+		if (attrName == "class") // consider only tag's first class
+			attrValue = stringTok(attrValue," \r\n\t");
+
 		if (attrValue != "")
 			tagStyle = tagStyle + " " + attrName + "=" + attrValue;
 	}
@@ -458,9 +462,9 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 		float maxDistance = tpsSize / 2;
 
 		for (auto i:structured) {
-			/*auto stddev = regs[i].stddev;
-			auto recCount = regs[i].records.size();
-			auto recSize = regs[i].records[0].size();*/
+			float recCount = regs[i].records.size();
+			float recSize = regs[i].records[0].size();
+			/*auto stddev = regs[i].stddev;*/
 			float regionCenter = regs[i].getStartPos() + (regs[i].size()/2);
 
 			/*regs[i].score = log(//stddev;
@@ -473,7 +477,9 @@ void SRDEFilter::SRDE(pNode n, bool css) {
 
 			float positionScore = 1-(abs(tpsCenter - regionCenter)/maxDistance);
 			float sizeScore = regs[i].size()/tpsSize;
-			regs[i].score = (positionScore + sizeScore)/2;
+			float recScore = min(recCount,recSize) / max(recCount,recSize);
+
+			regs[i].score = (positionScore + sizeScore + recScore)/3;
 		}
 
 		// k-mean clustering to identify content
@@ -543,8 +549,8 @@ set<size_t> SRDEFilter::locateRecords(tTPSRegion &region) {
 
 		if (reencode.count(c) == 0)
 			reencode[c]=reencode.size()+1;
-		//signal[i]=reencode[s[i]];
-		signal[i]=c;
+		signal[i]=reencode[c];
+		//signal[i]=c;
 	}
 
 	avg = mean(signal);
