@@ -13,41 +13,35 @@
     along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LuaContext.h"
-
 #include <iostream>
 #include <fstream>
-#include "dom.hpp"
-#include "node.hpp"
-#include "SRDEFilter.h"
-
-using namespace std;
+#include "DOM.hpp"
+#include "Node.hpp"
+#include "DSRE.hpp"
+#include "Context.hpp"
 
 extern "C" {
 
-bool checkDOM(lua_State *L, DOM *d) {
-	LuaContext *ctx;
-
+Context *context(lua_State *L) {
 	lua_getglobal(L,"context");
-	ctx = (LuaContext *)lua_touserdata(L,-1);
+	auto ctx = (Context *)lua_touserdata(L,-1);
 	lua_pop(L,1);
-	return ctx->checkDOM(d);
+	return ctx;
+}
+
+bool checkDOM(lua_State *L, DOM *d) {
+	return context(L)->checkDOM(d);
 }
 
 static int lua_api_loadDOMTree(lua_State *L) {
 	int nargs = lua_gettop(L);
-	LuaContext *ctx;
 	DOM *dom;
 
 	if (nargs == 1) {
-		lua_getglobal(L,"context");
-		ctx = (LuaContext *)lua_touserdata(L,-1);
-		lua_pop(L,1);
-
 		if (lua_isstring(L,-1)) {
 			dom = new DOM(lua_tostring(L,-1));
 			if (dom->isLoaded()) {
-				ctx->insertDOM(dom);
+				context(L)->insertDOM(dom);
 				lua_pushlightuserdata(L,dom);
 				return 1;
 			} else
@@ -59,16 +53,11 @@ static int lua_api_loadDOMTree(lua_State *L) {
 
 static int lua_api_unloadDOMTree(lua_State *L) {
 	int nargs = lua_gettop(L);
-	LuaContext *ctx;
 
 	if (nargs == 1) {
-		lua_getglobal(L,"context");
-		ctx = (LuaContext *)lua_touserdata(L,-1);
-		lua_pop(L,1);
-
 		if (lua_islightuserdata(L,-1)) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
-			ctx->removeDOM(dom);
+			context(L)->removeDOM(dom);
 		}
 	}
 	return 0;
@@ -81,7 +70,7 @@ static int lua_api_SRDExtract(lua_State *L) {
 		if (lua_islightuserdata(L,-1)) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
 			if (checkDOM(L,dom))
-				dom->setExtractor(new SRDEFilter(dom));
+				context(L)->dsre.Extract(dom);
 		}
 	}
 	return 0;
@@ -92,11 +81,9 @@ static int lua_api_getRegionCount(lua_State *L) {
 
 	if (nargs == 2) {
 		DOM *dom = (DOM *)lua_touserdata(L,-2);
-		string methodstr = lua_tostring(L,-1);
-		ExtractorInterface *method;
+		std::string methodstr = lua_tostring(L,-1);
 
-		method = dom->getExtractor();
-		lua_pushnumber(L,method->getRegionCount());
+		lua_pushnumber(L,context(L)->dsre.regionCount());
 		return 1;
 	}
 	return 0;
@@ -108,64 +95,63 @@ static int lua_api_getDataRegion(lua_State *L) {
 	if (nargs == 3) {
 		if (lua_islightuserdata(L,-3) && lua_isstring(L,-2) && lua_isnumber(L,-1)) {
 			DOM *dom = (DOM *)lua_touserdata(L,-3);
-			string methodstr = lua_tostring(L,-2);
+			std::string methodstr = lua_tostring(L,-2);
+			size_t dtr_no = lua_tonumber(L,-1);
 
-			if (checkDOM(L,dom) && ((methodstr == "mdr") || (methodstr == "drde") || (methodstr == "srde"))) {
-				int dtr_no = lua_tonumber(L,-1);
-				int rec_no=0;
-				vector<pNode> rec;
-				ExtractorInterface *method;
-				tTPSRegion *tpsreg;
+			if (checkDOM(L,dom) &&
+				(dtr_no < context(L)->dsre.regionCount()) &&
+				((methodstr == "mdr") || (methodstr == "drde") || (methodstr == "srde"))) {
 
-				method = dom->getExtractor();
+				auto tpsreg = context(L)->dsre.getDataRegion(dtr_no);
 
 				// main table returned
 				lua_createtable(L,0,0);
 
 				// tps data of this data region
 				if ((methodstr == "drde") || (methodstr == "srde")) {
-					tpsreg = method->getRegion(dtr_no);
-					if (tpsreg && tpsreg->tps.size()) {
+
+					if (tpsreg.getTps().size()) {
 						lua_pushstring(L,"tps");
-						lua_createtable(L,tpsreg->tps.size(),0);
-						for (size_t i=0;i<tpsreg->tps.size();i++) {
+						lua_createtable(L,tpsreg.getTps().size(),0);
+						for (size_t i=0;i<tpsreg.getTps().size();i++) {
 							lua_pushnumber(L,i+1);
-							lua_pushnumber(L,tpsreg->tps[i]);
+							lua_pushnumber(L,tpsreg.getTps()[i]);
 							lua_settable(L,-3);
 						}
 						lua_settable(L,-3);
 
 						lua_pushstring(L,"a");
-						lua_pushnumber(L,tpsreg->lc.a);
+						lua_pushnumber(L,tpsreg.getLinearRegression().a);
 						lua_settable(L,-3);
 						lua_pushstring(L,"b");
-						lua_pushnumber(L,tpsreg->lc.b);
+						lua_pushnumber(L,tpsreg.getLinearRegression().b);
 						lua_settable(L,-3);
 						lua_pushstring(L,"e");
-						lua_pushnumber(L,tpsreg->lc.e);
+						lua_pushnumber(L,tpsreg.getLinearRegression().e);
 						lua_settable(L,-3);
 						lua_pushstring(L,"score");
-						lua_pushnumber(L,tpsreg->score);
+						lua_pushnumber(L,tpsreg.getScore());
 						lua_settable(L,-3);
 						lua_pushstring(L,"content");
-						lua_pushboolean(L,tpsreg->content);
+						lua_pushboolean(L,tpsreg.isContent());
 						lua_settable(L,-3);
 						lua_pushstring(L,"pos");
-						lua_pushnumber(L,tpsreg->getStartPos());
+						lua_pushnumber(L,tpsreg.getStartPos());
 						lua_settable(L,-3);
 					}
 				}
 
 				// no. of cols of table "records"
 				lua_pushstring(L,"cols");
-				lua_pushnumber(L,method->getRecord(dtr_no,0).size());
+				lua_pushnumber(L,tpsreg.recordSize());
 				lua_settable(L,-3);
 
 				// bidimensional table containing the records
 				lua_pushstring(L,"records");
 				lua_createtable(L,0,0);
-				while ((rec = method->getRecord(dtr_no,rec_no++)).size()) {
-					lua_pushnumber(L,rec_no);
+				for (size_t rec_no = 0; rec_no < tpsreg.recordCount(); ++rec_no) {
+					Record rec = tpsreg.getRecord(rec_no);
+					lua_pushnumber(L,rec_no+1);
 					lua_createtable(L,rec.size(),0);
 					for (size_t i=0;i<rec.size();i++) {
 						lua_pushnumber(L,i+1);
@@ -181,7 +167,7 @@ static int lua_api_getDataRegion(lua_State *L) {
 
 				// no. of rows of table "records"
 				lua_pushstring(L,"rows");
-				lua_pushnumber(L,rec_no-1);
+				lua_pushnumber(L,tpsreg.recordCount());
 				lua_settable(L,-3);
 
 				return 1;
@@ -199,7 +185,7 @@ static int lua_api_DOMTPS(lua_State *L) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
 
 			if (checkDOM(L,dom)) {
-				wstring tps = dom->getExtractor()->getTagPathSequence(-1);
+				std::wstring tps = context(L)->dsre.getTps();
 
 				lua_createtable(L,tps.size(),0);
 				for (size_t i=0;i<tps.size();i++) {
@@ -236,7 +222,7 @@ static int lua_api_printTPS(lua_State *L) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
 
 			if (checkDOM(L,dom))
-				dom->getExtractor()->printTagPathSequence();
+				context(L)->dsre.printTagPathSequence();
 		}
 	}
 	return 0;
@@ -261,28 +247,28 @@ LUALIB_API int (luaopen_lsqlite3)(lua_State *);
 
 }
 
-void LuaContext::insertDOM(DOM *d) {
+void Context::insertDOM(DOM *d) {
 	if (d)
 		domSet.insert(d);
 }
 
-void LuaContext::removeDOM(DOM *d) {
+void Context::removeDOM(DOM *d) {
 	if (checkDOM(d)) {
 		domSet.erase(d);
 		delete d;
 	}
 }
 
-bool LuaContext::checkDOM(DOM *d) const {
+bool Context::checkDOM(DOM *d) const {
 	return domSet.count(d) > 0;
 }
 
-LuaContext::LuaContext(const char *inp, int argc, char **argv) {
+Context::Context(const std::string &inp, int argc, char **argv) {
 	state = luaL_newstate();
 
 	luaL_openlibs(state);
 
-	int s = luaL_loadfile(state, inp);
+	int s = luaL_loadfile(state, inp.c_str());
 
 	if (!s) {
 
@@ -309,13 +295,13 @@ LuaContext::LuaContext(const char *inp, int argc, char **argv) {
 		LUA_SET_GLOBAL_CFUNC(state,"nodeToString",lua_api_nodeToString);
 		s = lua_pcall(state, 0, LUA_MULTRET, 0);
 	} else {
-		cout << "Lua error: " << lua_tostring(state, -1) << endl;
+		std::cout << "Lua error: " << lua_tostring(state, -1) << std::endl;
 		lua_pop(state, 1);
 	}
 	lua_close(state);
 }
 
-LuaContext::~LuaContext() {
+Context::~Context() {
 	for (auto i=domSet.begin();i!=domSet.end();i++) {
 		delete (*i);
 	}

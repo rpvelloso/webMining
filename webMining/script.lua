@@ -166,7 +166,7 @@ if #arg > 4 then
 end
 
 processTestBed("../../datasets/clustvx")
---exit()
+exit()
 processTestBed("../../datasets/yamada")
 -- [[
 processTestBed("../../datasets/zhao3")
