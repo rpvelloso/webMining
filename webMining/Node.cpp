@@ -19,6 +19,7 @@
 #include <tidy.h>
 #include "Node.hpp"
 #include "DOM.hpp"
+#include <iostream>
 
 void Node::luaBinding(sol::state &lua) {
 	lua.new_usertype<Node>("Node",
@@ -46,7 +47,8 @@ Node::Node(DOM *d, TidyNode n) : node(n), dom(d) {
 		tagName = name;
 }
 
-Node::~Node() {};
+Node::~Node() {
+};
 
 pNode Node::next() const {
 	auto n = tidyGetNext(node);

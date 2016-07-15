@@ -22,8 +22,8 @@
 #include <unistd.h>
 #include "DOM.hpp"
 #include "DSRE.hpp"
-//#include "Context.hpp"
-#include "sol.hpp"
+#include "Context.hpp"
+//#include "sol.hpp"
 
 
 using namespace std;
@@ -66,43 +66,11 @@ int main(int argc, char *argv[])
 	}
 
 	if (script != "") {
-		sol::state lua;
-
-		lua.open_libraries(sol::lib::base);
-
-		Node::luaBinding(lua);
-		DOM::luaBinding(lua);
-		DSREDataRegion::luaBinding(lua);
-		DSRE::luaBinding(lua);
-
-		std::string sc =
-				"dom = DOM.new(\"../../datasets/tpsf/americanas.html\")\n"
-				"if dom:isLoaded() then\n"
-				"  print(\"carregou DOM\\n\")\n"
-				"  dsre = DSRE.new()\n"
-				"  dsre:extract(dom)\n"
-				"  print(\"Total de regioes: \",dsre:regionCount(),\"\\n\")\n"
-				"  for i=1,dsre:regionCount() do\n"
-				"    dr = dsre:getDataRegion(i-1)\n"
-				"    print(\"Regiao \",i,\": \",dr:recordCount(),\", \",dr:recordSize(),\"\\n\")\n"
-				"  end\n"
-				"  dr = dsre:getDataRegion(0)\n"
-				"  rec = dr:getRecord(0)\n"
-				"  for i=1,dr:recordSize() do\n"
-				"    node = rec[i]\n"
-				"    print(node:toString(),\"\\n\")\n"
-				"  end\n"
-				"--  dom:printHTML()\n"
-				"end\n";
-
-		std::cout << sc << std::endl;
-		lua.script(sc);
-
-		/*try {
+		try {
 			Context context(script, argc, argv);
 		} catch (std::exception &e) {
 			std::cout << e.what() << std::endl;
-		}*/
+		}
 	} else
 		printUsage(argv[0]);
 

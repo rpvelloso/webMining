@@ -264,41 +264,44 @@ bool Context::checkDOM(DOM *d) const {
 }
 
 Context::Context(const std::string &inp, int argc, char **argv) {
-	state = luaL_newstate();
+	sol::state lua;
 
-	luaL_openlibs(state);
+	lua.open_libraries();
 
-	int s = luaL_loadfile(state, inp.c_str());
+	Node::luaBinding(lua);
+	DOM::luaBinding(lua);
+	DSREDataRegion::luaBinding(lua);
+	DSRE::luaBinding(lua);
 
-	if (!s) {
+	auto script = lua.load_file(inp);
 
-		luaopen_lsqlite3(state);
-		lua_setglobal(state,"sqlite3");
+	if (script.status() == sol::load_status::ok) {
+		luaopen_lsqlite3(lua.lua_state());
+		lua_setglobal(lua.lua_state(),"sqlite3");
 
-		lua_createtable(state,argc,0);
+		lua_createtable(lua.lua_state(),argc,0);
 		for (int i=0;i<argc;i++) {
-			lua_pushnumber(state,i+1);
-			lua_pushstring(state,argv[i]);
-			lua_settable(state,-3);
+			lua_pushnumber(lua.lua_state(),i+1);
+			lua_pushstring(lua.lua_state(),argv[i]);
+			lua_settable(lua.lua_state(),-3);
 		}
-		lua_setglobal(state,"arg");
+		lua_setglobal(lua.lua_state(),"arg");
 
-		LUA_SET_GLOBAL_LUDATA(state,"context",this);
-		LUA_SET_GLOBAL_CFUNC(state,"loadDOMTree",lua_api_loadDOMTree);
-		LUA_SET_GLOBAL_CFUNC(state,"unloadDOMTree",lua_api_unloadDOMTree);
-		LUA_SET_GLOBAL_CFUNC(state,"SRDExtract",lua_api_SRDExtract);
-		LUA_SET_GLOBAL_CFUNC(state,"getDataRegion",lua_api_getDataRegion);
-		LUA_SET_GLOBAL_CFUNC(state,"getRegionCount",lua_api_getRegionCount);
-		LUA_SET_GLOBAL_CFUNC(state,"DOMTPS",lua_api_DOMTPS);
-		LUA_SET_GLOBAL_CFUNC(state,"printDOM",lua_api_printDOM);
-		LUA_SET_GLOBAL_CFUNC(state,"printTPS",lua_api_printTPS);
-		LUA_SET_GLOBAL_CFUNC(state,"nodeToString",lua_api_nodeToString);
-		s = lua_pcall(state, 0, LUA_MULTRET, 0);
+		LUA_SET_GLOBAL_LUDATA(lua.lua_state(),"context",this);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"loadDOMTree",lua_api_loadDOMTree);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"unloadDOMTree",lua_api_unloadDOMTree);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"SRDExtract",lua_api_SRDExtract);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"getDataRegion",lua_api_getDataRegion);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"getRegionCount",lua_api_getRegionCount);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"DOMTPS",lua_api_DOMTPS);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"printDOM",lua_api_printDOM);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"printTPS",lua_api_printTPS);
+		LUA_SET_GLOBAL_CFUNC(lua.lua_state(),"nodeToString",lua_api_nodeToString);
+		script();
 	} else {
-		std::cout << "Lua error: " << lua_tostring(state, -1) << std::endl;
-		lua_pop(state, 1);
+		std::cout << "Lua error: " << lua_tostring(lua.lua_state(), -1) << std::endl;
+		lua_pop(lua.lua_state(), 1);
 	}
-	lua_close(state);
 }
 
 Context::~Context() {
@@ -307,4 +310,3 @@ Context::~Context() {
 	}
 	domSet.clear();
 }
-

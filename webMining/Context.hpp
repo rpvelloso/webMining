@@ -20,6 +20,7 @@
 #include <lua.hpp>
 #include "DSRE.hpp"
 #include "DOM.hpp"
+#include "sol.hpp"
 
 #define LUA_SET_GLOBAL_NUMBER(L,name,value) \
 	do { \
@@ -56,7 +57,7 @@ public:
 protected:
 	Context() = delete;
 	std::unordered_set<DOM *> domSet;
-	lua_State *state;
+	sol::state lua;
 };
 
 #endif /* CONTEXT_HPP_ */
