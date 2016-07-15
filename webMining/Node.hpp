@@ -19,6 +19,7 @@
 #include <string>
 #include <map>
 #include "tidy.h"
+#include "sol.hpp"
 
 class Node;
 using pNode = Node *;
@@ -39,6 +40,7 @@ public:
 	bool isLink() const;
 	bool isText() const;
 	std::string toString() const;
+	static void luaBinding(sol::state &lua);
 private:
 	Node() = delete;
 	TidyNode node;

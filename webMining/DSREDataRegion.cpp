@@ -9,6 +9,22 @@
 #include "DSREDataRegion.h"
 #include "util.hpp"
 
+void DSREDataRegion::luaBinding(sol::state &lua) {
+	lua.new_usertype<DSREDataRegion>("DSREDataRegion",
+		"getRecord",&DSREDataRegion::getRecord,
+		"recordCount",&DSREDataRegion::recordCount,
+		"recordSize",&DSREDataRegion::recordSize,
+		"size",&DSREDataRegion::size,
+		"getEndPos",&DSREDataRegion::getEndPos,
+		"getStartPos",&DSREDataRegion::getStartPos,
+		"getTps",&DSREDataRegion::getTps,
+		"getLinearRegression",&DSREDataRegion::getLinearRegression,
+		"isStructured",&DSREDataRegion::isStructured,
+		"getScore",&DSREDataRegion::getScore,
+		"isContent",&DSREDataRegion::isContent
+	);
+}
+
 DSREDataRegion::DSREDataRegion() {
 }
 

@@ -70,38 +70,10 @@ int main(int argc, char *argv[])
 
 		lua.open_libraries(sol::lib::base);
 
-		lua.new_usertype<DOM>("DOM",
-				sol::constructors<sol::types<const std::string>>(),
-				"isLoaded", &DOM::isLoaded,
-				"printHTML", &DOM::printHTML,
-				"getURI", DOM::getURI
-				);
-		lua.new_usertype<Node>("Node",
-				"toString",&Node::toString
-				);
-
-		lua.new_usertype<DSRE>("DSRE",
-				"extract",&DSRE::extract,
-				"clear",&DSRE::clear,
-				"getTps",&DSRE::getTps,
-				"printTps",&DSRE::printTps,
-				"regionCount",&DSRE::regionCount,
-				"getDataRegion",&DSRE::getDataRegion
-				);
-
-		lua.new_usertype<DSREDataRegion>("DSREDataRegion",
-				"getRecord",&DSREDataRegion::getRecord,
-				"recordCount",&DSREDataRegion::recordCount,
-				"recordSize",&DSREDataRegion::recordSize,
-				"size",&DSREDataRegion::size,
-				"getEndPos",&DSREDataRegion::getEndPos,
-				"getStartPos",&DSREDataRegion::getStartPos,
-				"getTps",&DSREDataRegion::getTps,
-				"getLinearRegression",&DSREDataRegion::getLinearRegression,
-				"isStructured",&DSREDataRegion::isStructured,
-				"getScore",&DSREDataRegion::getScore,
-				"isContent",&DSREDataRegion::isContent
-		);
+		Node::luaBinding(lua);
+		DOM::luaBinding(lua);
+		DSREDataRegion::luaBinding(lua);
+		DSRE::luaBinding(lua);
 
 		std::string sc =
 				"dom = DOM.new(\"../../datasets/tpsf/americanas.html\")\n"

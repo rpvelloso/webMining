@@ -31,6 +31,15 @@
 		traverse(dom, c, ident+2);
 }*/
 
+void DOM::luaBinding(sol::state &lua) {
+	lua.new_usertype<DOM>("DOM",
+		sol::constructors<sol::types<const std::string>>(),
+		"isLoaded", &DOM::isLoaded,
+		"printHTML", &DOM::printHTML,
+		"getURI", DOM::getURI
+	);
+}
+
 DOM::DOM(const std::string uri) {
 	this->uri = uri;
 	tdoc = tidyCreate();

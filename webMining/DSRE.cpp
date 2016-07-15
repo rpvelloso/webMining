@@ -9,6 +9,17 @@
 #include "DSRE.hpp"
 #include "util.hpp"
 
+void DSRE::luaBinding(sol::state &lua) {
+	lua.new_usertype<DSRE>("DSRE",
+		"extract",&DSRE::extract,
+		"clear",&DSRE::clear,
+		"getTps",&DSRE::getTps,
+		"printTps",&DSRE::printTps,
+		"regionCount",&DSRE::regionCount,
+		"getDataRegion",&DSRE::getDataRegion
+	);
+}
+
 DSRE::DSRE() {
 }
 
@@ -94,7 +105,7 @@ void DSRE::extract(pDOM dom) {
 			std::cerr << "2-RxC = " << m.size() << " " << m[0].size() << std::endl;
 
 			// and extracts them
-			onDataRecordFound(m,recpos,i);
+			extractRecords(m,recpos,i);
 		}
 	}
 
@@ -233,7 +244,7 @@ void DSRE::buildTagPath(std::string s, pNode n, bool css) {
 	}
 }
 
-std::list<std::pair<size_t,size_t> > DSRE::segment_difference(const std::vector<double> &diff) {
+std::list<std::pair<size_t,size_t> > DSRE::segmentDifference(const std::vector<double> &diff) {
 	std::list<std::pair<size_t,size_t> > ret;
 	size_t start = 0, end = 0;
 
@@ -270,7 +281,7 @@ std::unordered_map<int,int> DSRE::symbolFrequency(std::wstring s, std::set<int> 
 	return symbolCount;
 }
 
-void DSRE::merge_regions(std::list<std::pair<size_t,size_t> > &regions) {
+void DSRE::mergeRegions(std::list<std::pair<size_t,size_t> > &regions) {
 // merge regions with common alphabet
 	auto r = ++regions.begin();
 	for (; r != regions.end(); ++r) {
@@ -315,9 +326,9 @@ void DSRE::segment(pNode n, bool css) {
 	auto diff = difference(s);
 
 	// region segmentation
-	auto segs = segment_difference(diff);
+	auto segs = segmentDifference(diff);
 
-	merge_regions(segs);
+	mergeRegions(segs);
 
 	for (auto i = segs.begin(); i != segs.end();) {
 		auto seg = *i;
@@ -325,7 +336,7 @@ void DSRE::segment(pNode n, bool css) {
 		std::reverse(tps.begin(), tps.end());
 		auto c = contour(tps);
 		auto d = difference(c);
-		auto ss = segment_difference(d);
+		auto ss = segmentDifference(d);
 		if (ss.size() > 1) {
 			std::reverse(ss.begin(), ss.end());
 			for (auto j:ss) {
@@ -339,7 +350,7 @@ void DSRE::segment(pNode n, bool css) {
 			++i;
 	}
 
-	merge_regions(segs);
+	mergeRegions(segs);
 
 	for (auto seg:segs) {
 		DSREDataRegion r;
@@ -545,7 +556,7 @@ double DSRE::estimatePeriod(std::vector<double> signal) {
 	return period;*/
 }
 
-void DSRE::onDataRecordFound(std::vector<std::wstring> &m, std::set<size_t> &recpos, size_t regNum) {
+void DSRE::extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos, size_t regNum) {
 	if ((m.size() == 0) || (recpos.size() == 0))
 		return;
 
@@ -575,11 +586,11 @@ void DSRE::onDataRecordFound(std::vector<std::wstring> &m, std::set<size_t> &rec
 	std::cerr << std::endl;
 }
 
-std::wstring DSRE::getTps() {
+std::wstring DSRE::getTps() const noexcept {
 	return tagPathSequence;
 }
 
-void DSRE::printTps() {
+void DSRE::printTps() const {
 	std::unordered_map<int, std::string> tpcMap;
 
 	for (auto tps:tagPathMap)

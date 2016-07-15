@@ -13,6 +13,7 @@
 #include "Node.hpp"
 #include "DataRegion.hpp"
 #include "util.hpp"
+#include "sol.hpp"
 
 class DSREDataRegion : public DataRegion {
 public:
@@ -37,14 +38,14 @@ public:
 	const LinearRegression& getLinearRegression() const;
 	void detectStructure();
 	bool isStructured() const;
-	void setStructured(bool structured = false);
+	void setStructured(bool structured);
 	double getScore() const;
 	void setScore(double score);
 	bool isContent() const;
-	void setContent(bool content = false);
+	void setContent(bool content);
 	double getStdDev() const;
-	void setStdDev(double stddev = 0);
-
+	void setStdDev(double stddev);
+	static void luaBinding(sol::state &lua);
 private:
 	std::wstring tps;
 	std::vector<pNode> nodeSequence;

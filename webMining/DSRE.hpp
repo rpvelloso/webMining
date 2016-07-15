@@ -16,15 +16,18 @@
 
 #include "Extractor.hpp"
 #include "DSREDataRegion.h"
+#include "sol.hpp"
 
 class DSRE: public Extractor<DSREDataRegion> {
 public:
 	DSRE();
 	virtual ~DSRE();
-	void extract(pDOM dom);
-	void clear();
-	std::wstring getTps();
-	void printTps();
+	void extract(pDOM dom) override;
+	void clear() override;
+	std::wstring getTps() const noexcept;
+	void printTps() const;
+
+	static void luaBinding(sol::state &lua);
 private:
 	void buildTagPath(std::string s, pNode n, bool css);
 
@@ -33,10 +36,10 @@ private:
 	std::set<size_t> locateRecords(size_t regNum);
 	double estimatePeriod(std::vector<double> signal);
 
-	std::list<std::pair<size_t,size_t> > segment_difference(const std::vector<double> &);
-	void merge_regions(std::list<std::pair<size_t,size_t> > &);
+	std::list<std::pair<size_t,size_t> > segmentDifference(const std::vector<double> &);
+	void mergeRegions(std::list<std::pair<size_t,size_t> > &);
 	std::unordered_map<int,int> symbolFrequency(std::wstring, std::set<int> &);
-	void onDataRecordFound(std::vector<std::wstring> &m, std::set<size_t> &recpos, size_t regNum);
+	void extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos, size_t regNum);
 
 	std::unordered_map<std::string, int> tagPathMap;
 	std::wstring tagPathSequence;

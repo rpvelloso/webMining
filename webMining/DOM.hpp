@@ -22,6 +22,7 @@
 #include <memory>
 #include <tidy.h>
 #include <tidybuffio.h>
+#include "sol.hpp"
 
 class Node;
 using pNode = Node *;
@@ -36,7 +37,7 @@ public:
 	pNode body();
 	//pNode html();
 	std::string getURI() const;
-
+	static void luaBinding(sol::state &lua);
  private:
 	void mapNodes(TidyNode node);
 	std::unordered_map<TidyNode, pNode> domNodes;

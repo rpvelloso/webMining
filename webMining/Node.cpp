@@ -20,6 +20,12 @@
 #include "Node.hpp"
 #include "DOM.hpp"
 
+void Node::luaBinding(sol::state &lua) {
+	lua.new_usertype<Node>("Node",
+		"toString",&Node::toString
+	);
+}
+
 Node::Node(DOM *d, TidyNode n) : node(n), dom(d) {
 	for (auto attr = tidyAttrFirst(node); attr; attr = tidyAttrNext(attr)) {
 		if (auto attrName = tidyAttrName(attr)) {
