@@ -268,14 +268,14 @@ Context::Context(const std::string &inp, int argc, char **argv) {
 
 	lua.open_libraries();
 
-	Node::luaBinding(lua);
-	DOM::luaBinding(lua);
-	DSREDataRegion::luaBinding(lua);
-	DSRE::luaBinding(lua);
-
 	auto script = lua.load_file(inp);
 
 	if (script.status() == sol::load_status::ok) {
+		Node::luaBinding(lua);
+		DOM::luaBinding(lua);
+		DSREDataRegion::luaBinding(lua);
+		DSRE::luaBinding(lua);
+
 		luaopen_lsqlite3(lua.lua_state());
 		lua_setglobal(lua.lua_state(),"sqlite3");
 
