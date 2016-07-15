@@ -18,9 +18,9 @@ DataRegion::~DataRegion() {
 	// TODO Auto-generated destructor stub
 }
 
-const std::vector<pNode> &DataRegion::getRecord(size_t pos) const {
+const Record DataRegion::getRecord(size_t pos) const {
 	if (pos < records.size())
-		return records.at(pos);
+		return records[pos];
 
 	throw new std::out_of_range("record not found");
 }

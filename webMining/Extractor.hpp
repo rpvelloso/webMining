@@ -18,7 +18,7 @@ class Extractor {
 public:
 	Extractor() {};
 	virtual ~Extractor() {};
-	virtual void Extract(pDOM dom) = 0;
+	virtual void extract(pDOM dom) = 0;
 	virtual void clear() = 0;
 	size_t regionCount() const noexcept {
 		return dataRegions.size();

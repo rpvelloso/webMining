@@ -17,7 +17,7 @@ class DataRegion {
 public:
 	DataRegion();
 	virtual ~DataRegion();
-	const std::vector<pNode> &getRecord(size_t pos) const;
+	const Record getRecord(size_t pos) const;
 	void addRecord(const std::vector<pNode> &r);
 	size_t recordCount() const noexcept;
 	size_t recordSize() const noexcept;

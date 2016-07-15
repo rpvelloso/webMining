@@ -21,10 +21,10 @@ class DSRE: public Extractor<DSREDataRegion> {
 public:
 	DSRE();
 	virtual ~DSRE();
-	void Extract(pDOM dom);
+	void extract(pDOM dom);
 	void clear();
 	std::wstring getTps();
-	void printTagPathSequence();
+	void printTps();
 private:
 	void buildTagPath(std::string s, pNode n, bool css);
 

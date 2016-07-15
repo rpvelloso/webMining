@@ -61,7 +61,7 @@ DOM::DOM(const std::string uri) {
 	if (tidyParseFile(tdoc, uri.c_str()) >= 0) {
 		tidyCleanAndRepair(tdoc);
 		tidyRunDiagnostics(tdoc);
-		clean();
+		clear();
 		tidySaveBuffer(tdoc, &output);
 		mapNodes(tidyGetHtml(tdoc));
 		loaded = true;
@@ -128,7 +128,7 @@ std::string DOM::getURI() const {
 	return uri;
 }
 
-void DOM::clean() {
+void DOM::clear() {
 	std::vector<TidyNode> remove;
 
 	cleanHelper(tidyGetHtml(tdoc), remove);

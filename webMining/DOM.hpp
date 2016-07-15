@@ -40,7 +40,7 @@ public:
  private:
 	void mapNodes(TidyNode node);
 	std::unordered_map<TidyNode, pNode> domNodes;
-	void clean();
+	void clear();
 
 	TidyDoc tdoc;
 	TidyBuffer output = {0};

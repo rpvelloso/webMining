@@ -10,15 +10,12 @@
 #include "util.hpp"
 
 DSRE::DSRE() {
-	// TODO Auto-generated constructor stub
-
 }
 
 DSRE::~DSRE() {
-	// TODO Auto-generated destructor stub
 }
 
-void DSRE::Extract(pDOM dom) {
+void DSRE::extract(pDOM dom) {
 	clear();
 	std::cerr << std::endl << "Processing " << dom->getURI() << " ..." << std::endl;
 
@@ -582,7 +579,7 @@ std::wstring DSRE::getTps() {
 	return tagPathSequence;
 }
 
-void DSRE::printTagPathSequence() {
+void DSRE::printTps() {
 	std::unordered_map<int, std::string> tpcMap;
 
 	for (auto tps:tagPathMap)

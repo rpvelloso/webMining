@@ -70,7 +70,7 @@ static int lua_api_SRDExtract(lua_State *L) {
 		if (lua_islightuserdata(L,-1)) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
 			if (checkDOM(L,dom))
-				context(L)->dsre.Extract(dom);
+				context(L)->dsre.extract(dom);
 		}
 	}
 	return 0;
@@ -222,7 +222,7 @@ static int lua_api_printTPS(lua_State *L) {
 			DOM *dom = (DOM *)lua_touserdata(L,-1);
 
 			if (checkDOM(L,dom))
-				context(L)->dsre.printTagPathSequence();
+				context(L)->dsre.printTps();
 		}
 	}
 	return 0;

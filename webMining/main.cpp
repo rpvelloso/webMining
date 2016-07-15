@@ -20,7 +20,10 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include "LuaContext.h"
+#include "DOM.hpp"
+#include "DSRE.hpp"
+//#include "Context.hpp"
+#include "sol.hpp"
 
 
 using namespace std;
@@ -37,16 +40,14 @@ void printUsage(char *p)
 int main(int argc, char *argv[])
 {
 	int opt,dbg=0;
-	string inp="",outp="";
-	fstream inputFile;
-	filebuf outputFile;
+	string script;
 
 	while ((opt = getopt(argc, argv, "i:d:h")) != -1) {
 		switch (opt) {
 		case 'i':
 			if (!optarg)
 				printUsage(argv[0]);
-			inp = optarg;
+			script = optarg;
 			break;
 		case 'd':
 			if (optarg && string(optarg) == "ebug") dbg=1;
@@ -64,9 +65,73 @@ int main(int argc, char *argv[])
 		cerr.rdbuf(NULL);
 	}
 
-	if (inp != "")
-		delete (new LuaContext(inp.c_str(), argc, argv));
-	else
+	if (script != "") {
+		sol::state lua;
+
+		lua.open_libraries(sol::lib::base);
+
+		lua.new_usertype<DOM>("DOM",
+				sol::constructors<sol::types<const std::string>>(),
+				"isLoaded", &DOM::isLoaded,
+				"printHTML", &DOM::printHTML,
+				"getURI", DOM::getURI
+				);
+		lua.new_usertype<Node>("Node",
+				"toString",&Node::toString
+				);
+
+		lua.new_usertype<DSRE>("DSRE",
+				"extract",&DSRE::extract,
+				"clear",&DSRE::clear,
+				"getTps",&DSRE::getTps,
+				"printTps",&DSRE::printTps,
+				"regionCount",&DSRE::regionCount,
+				"getDataRegion",&DSRE::getDataRegion
+				);
+
+		lua.new_usertype<DSREDataRegion>("DSREDataRegion",
+				"getRecord",&DSREDataRegion::getRecord,
+				"recordCount",&DSREDataRegion::recordCount,
+				"recordSize",&DSREDataRegion::recordSize,
+				"size",&DSREDataRegion::size,
+				"getEndPos",&DSREDataRegion::getEndPos,
+				"getStartPos",&DSREDataRegion::getStartPos,
+				"getTps",&DSREDataRegion::getTps,
+				"getLinearRegression",&DSREDataRegion::getLinearRegression,
+				"isStructured",&DSREDataRegion::isStructured,
+				"getScore",&DSREDataRegion::getScore,
+				"isContent",&DSREDataRegion::isContent
+		);
+
+		std::string sc =
+				"dom = DOM.new(\"../../datasets/tpsf/americanas.html\")\n"
+				"if dom:isLoaded() then\n"
+				"  print(\"carregou DOM\\n\")\n"
+				"  dsre = DSRE.new()\n"
+				"  dsre:extract(dom)\n"
+				"  print(\"Total de regioes: \",dsre:regionCount(),\"\\n\")\n"
+				"  for i=1,dsre:regionCount() do\n"
+				"    dr = dsre:getDataRegion(i-1)\n"
+				"    print(\"Regiao \",i,\": \",dr:recordCount(),\", \",dr:recordSize(),\"\\n\")\n"
+				"  end\n"
+				"  dr = dsre:getDataRegion(0)\n"
+				"  rec = dr:getRecord(0)\n"
+				"  for i=1,dr:recordSize() do\n"
+				"    node = rec[i]\n"
+				"    print(node:toString(),\"\\n\")\n"
+				"  end\n"
+				"--  dom:printHTML()\n"
+				"end\n";
+
+		std::cout << sc << std::endl;
+		lua.script(sc);
+
+		/*try {
+			Context context(script, argc, argv);
+		} catch (std::exception &e) {
+			std::cout << e.what() << std::endl;
+		}*/
+	} else
 		printUsage(argv[0]);
 
 	cout.flush();
