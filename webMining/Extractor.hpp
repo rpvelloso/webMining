@@ -1,16 +1,14 @@
 /*
  * Extractor.h
  *
- *  Created on: 13 de jul de 2016
- *      Author: rvelloso
+ *  Created on: 15 de jul de 2016
+ *      Author: roberto
  */
 
 #ifndef EXTRACTOR_HPP_
 #define EXTRACTOR_HPP_
 
 #include <vector>
-
-#include "DataRegion.hpp"
 #include "DOM.hpp"
 
 template <typename DataRegionType>
