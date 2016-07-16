@@ -6,7 +6,7 @@
  */
 
 #include <algorithm>
-#include "DSREDataRegion.h"
+#include "DSREDataRegion.hpp"
 #include "util.hpp"
 
 void DSREDataRegion::luaBinding(sol::state &lua) {
@@ -23,6 +23,13 @@ void DSREDataRegion::luaBinding(sol::state &lua) {
 		"getScore",&DSREDataRegion::getScore,
 		"isContent",&DSREDataRegion::isContent
 	);
+
+	lua.new_usertype<LinearRegression>("LinearRegression",
+		"a",&LinearRegression::a,
+		"b",&LinearRegression::b,
+		"e",&LinearRegression::e
+	);
+
 }
 
 DSREDataRegion::DSREDataRegion() {
@@ -101,7 +108,7 @@ void DSREDataRegion::setTps(const std::wstring& tps) {
 	this->tps = tps;
 }
 
-const LinearRegression& DSREDataRegion::getLinearRegression() const {
+LinearRegression DSREDataRegion::getLinearRegression() const noexcept {
 	return linearRegression;
 }
 

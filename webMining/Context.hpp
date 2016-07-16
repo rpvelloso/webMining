@@ -22,41 +22,12 @@
 #include "DOM.hpp"
 #include "sol.hpp"
 
-#define LUA_SET_GLOBAL_NUMBER(L,name,value) \
-	do { \
-		lua_pushnumber(L,value); \
-		lua_setglobal(L,name); \
-		} while (0)
-
-#define LUA_SET_GLOBAL_STRING(L,name,value) \
-	do { \
-		lua_pushstring(L,value.c_str()); \
-		lua_setglobal(L,name); \
-		} while (0)
-
-#define LUA_SET_GLOBAL_LUDATA(L,name,value) \
-	do { \
-		lua_pushlightuserdata(L,value); \
-		lua_setglobal(L,name); \
-		} while (0)
-
-#define LUA_SET_GLOBAL_CFUNC(L,name,value) \
-	do { \
-		lua_pushcfunction(L,value); \
-		lua_setglobal(L,name); \
-		} while (0)
-
 class Context {
 public:
 	Context(const std::string &, int argc, char **argv);
 	virtual ~Context();
-	void insertDOM(DOM *);
-	void removeDOM(DOM *);
-	bool checkDOM(DOM *) const;
-	DSRE dsre;
 protected:
 	Context() = delete;
-	std::unordered_set<DOM *> domSet;
 	sol::state lua;
 };
 

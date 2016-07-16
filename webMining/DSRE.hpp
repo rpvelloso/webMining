@@ -14,11 +14,11 @@
 #include <list>
 #include <set>
 
-#include "Extractor.hpp"
-#include "DSREDataRegion.h"
+#include "DSREDataRegion.hpp"
 #include "sol.hpp"
+#include "StructuredExtractor.hpp"
 
-class DSRE: public Extractor<DSREDataRegion> {
+class DSRE: public StructuredExtractor<DSREDataRegion> {
 public:
 	DSRE();
 	virtual ~DSRE();

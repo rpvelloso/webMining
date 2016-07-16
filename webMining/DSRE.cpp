@@ -582,7 +582,7 @@ void DSRE::extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos
 		}
 		region.addRecord(rec);
 	}
-	dataRegions[regNum].clean();
+	dataRegions[regNum].clear();
 	std::cerr << std::endl;
 }
 
