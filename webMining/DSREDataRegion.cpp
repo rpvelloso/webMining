@@ -9,6 +9,8 @@
 #include "DSREDataRegion.hpp"
 #include "util.hpp"
 
+//TODO: expose FFT, DCT & Autocorrelation for each data region
+
 void DSREDataRegion::luaBinding(sol::state &lua) {
 	lua.new_usertype<DSREDataRegion>("DSREDataRegion",
 		"getRecord",&DSREDataRegion::getRecord,

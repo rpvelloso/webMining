@@ -184,5 +184,3 @@ processTestBed("../../datasets/zhao2")
 processTestBed("../../datasets/trieschnigg1")
 processTestBed("../../datasets/trieschnigg2")
 -- ]]
-
-exit()
