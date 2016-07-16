@@ -27,26 +27,12 @@ LUALIB_API int (luaopen_lsqlite3)(lua_State *);
 }
 
 Context::Context(const std::string &inp, int argc, char **argv) {
-	sol::state lua;
-
 	lua.open_libraries();
 
 	auto script = lua.load_file(inp);
 
 	if (script.status() == sol::load_status::ok) {
-		Node::luaBinding(lua);
-		DOM::luaBinding(lua);
-		DSREDataRegion::luaBinding(lua);
-		DSRE::luaBinding(lua);
-
-		luaopen_lsqlite3(lua.lua_state());
-		lua_setglobal(lua.lua_state(),"sqlite3");
-
-		lua.create_named_table("args");
-		for (int i = 0; i < argc; ++i) {
-			lua["args"][i+1] = std::string(argv[i]);
-		}
-
+		bind(argc, argv);
 		script();
 	}
 
@@ -57,4 +43,19 @@ Context::Context(const std::string &inp, int argc, char **argv) {
 }
 
 Context::~Context() {
+}
+
+void Context::bind(int argc, char **argv) {
+	Node::luaBinding(lua);
+	DOM::luaBinding(lua);
+	DSREDataRegion::luaBinding(lua);
+	DSRE::luaBinding(lua);
+
+	luaopen_lsqlite3(lua.lua_state());
+	lua_setglobal(lua.lua_state(),"sqlite3");
+
+	lua.create_named_table("args");
+	for (int i = 0; i < argc; ++i) {
+		lua["args"][i+1] = std::string(argv[i]);
+	}
 }

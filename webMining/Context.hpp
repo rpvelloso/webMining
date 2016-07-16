@@ -27,6 +27,7 @@ public:
 	Context(const std::string &, int argc, char **argv);
 	virtual ~Context();
 protected:
+	void bind(int argc, char **argv);
 	Context() = delete;
 	sol::state lua;
 };
