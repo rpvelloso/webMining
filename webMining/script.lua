@@ -1,5 +1,5 @@
 CRLF = "\n"
-gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "c:\\Progra~1\\gnuplot\\bin\\gnuplot.exe"
 --gnuplot = "/usr/bin/gnuplot"
 
 term = {}
@@ -7,9 +7,9 @@ term["png"] = ".png"
 term["postscript"]=".ps"
 term["default"]="png"
 
-displayResults = function(dom,method,dir,filename) 
+displayResults = function(dsre,method,dir,filename) 
   local j=0
-  local regions = getRegionCount(dom,method)
+  local regions = dsre:regionCount()
   local outp = io.open(dir..filename,"w")
   
   outp:write("<pre> timestamp: ");
@@ -17,7 +17,7 @@ displayResults = function(dom,method,dir,filename)
   outp:write("</pre><br/>\n");
   
   if method=="srde" then
-    local tps = DOMTPS(dom)
+    local tps = dsre:getTps()
     if #tps then
       outp:write("<style>table {border-collapse: collapse;} table, td, th {border: 1px solid black;}</style>")
       outp:write("<font face=courier><img src='",filename,".tps",term[term["default"]],"' /><br />",CRLF)
@@ -30,22 +30,25 @@ displayResults = function(dom,method,dir,filename)
     end
   end
   for i=1,regions do
-    local dr = getDataRegion(dom,method,i-1)
-    if dr["content"] then
+    local dr = dsre:getDataRegion(i-1)
+    if dr:isContent() then
       outp:write("<font color=red><b>*** Content detected ***</b></font><br>",CRLF)
     end
-    outp:write("<table><tr><th> region ",i,"</th><th> rows ",dr.rows,"</th><th> cols ",dr.cols,"</th></tr></table>",CRLF)
+    local rows = dr:recordCount()
+    local cols = dr:recordSize()
+    outp:write("<table><tr><th> region ",i,"</th><th> rows ",rows,"</th><th> cols ",cols,"</th></tr></table>",CRLF)
     
-    if (dr.rows > 0) and (dr["records"]) then 
+    if (rows > 0) and (cols > 0) then 
       outp:write("<table>",CRLF)
-      print(dr.rows)
-      for r=1,dr.rows do
+      print(rows)
+      for r=1,rows do
         outp:write("<tr>")
-        for c=1,dr.cols do
-          if type(dr.records[r][c])=="string" then
-            outp:write("<td>",dr.records[r][c],"</td>")
+        local record = dr:getRecord(r-1)
+        for c=1,cols do
+          if record[c] then
+            outp:write("<td>",record[c]:toString(),"</td>")
           else
-            outp:write("<td>[",type(dr.records[r][c]),"]</td>")
+            outp:write("<td>[filler]</td>")
           end
         end
         outp:write("</tr>",CRLF)
@@ -54,20 +57,18 @@ displayResults = function(dom,method,dir,filename)
       outp:write("</table><br />",CRLF)
     end
     
-    if dr["tps"] then
+    local tps = dr:getTps()
+    local linReg = dr:getLinearRegression()
+    if #tps then
       outp:write("<img src='",filename,".region",i,term[term["default"]],"' /><br />",CRLF)
-      outp:write(string.format("interval: [%d; %d], size: %d, angle: %.2f, score: %.2f<br/>",dr.pos,dr.pos+#dr.tps-1,#dr.tps,math.atan(math.abs(dr["a"]))*180/math.pi,dr["score"]),CRLF)
-      local t = dr.tps
-      if #t then
-        outp:write("<textarea>",CRLF)
-        outp:write(t[1])
-        for k=2,#t do
-          outp:write(",",t[k])
-        end
-        outp:write("</textarea><br />",CRLF)
+      outp:write(string.format("interval: [%d; %d], size: %d, angle: %.2f, score: %.2f<br/>",dr:getStartPos(),dr:getEndPos(),dr:size(),math.atan(math.abs(linReg.a))*180/math.pi,dr:getScore()),CRLF)
+      outp:write("<textarea>",CRLF)
+      outp:write(tps[1])
+      for k=2,#tps do
+        outp:write(",",tps[k])
       end
+      outp:write("</textarea><br />",CRLF)
     end
-    
     outp:write(CRLF)
   end
   outp:write(regions," regions, ",j," records.",CRLF)
@@ -75,10 +76,10 @@ displayResults = function(dom,method,dir,filename)
   outp:close()
 end
 
-plotSequences = function(dom,output,filename)
+plotSequences = function(dsre,output,filename)
   local method = "srde"
-  local regions = getRegionCount(dom,method)
-  local tps = DOMTPS(dom)
+  local regions = dsre:regionCount()
+  local tps = dsre:getTps()
 
   f = io.open(filename..".plot.txt","w")
   if output == "file" then
@@ -98,14 +99,16 @@ plotSequences = function(dom,output,filename)
   f:write("e",CRLF)
 
   for i=1,regions do
-    local dr = getDataRegion(dom,method,i-1)
-    if dr["tps"] then
+    local dr = dsre:getDataRegion(i-1)
+    local linReg = dr:getLinearRegression()
+    tps = dr:getTps()
+    if #tps then
       f:write("set output \"",filename,".region",i,term[term["default"]],"\"",CRLF)
       f:write("set autoscale fix",CRLF)
       f:write("set style line 1 lc rgb \'#0060ad\' lt 1 lw 1 pt 7 ps 0.5",CRLF)
-      f:write("plot ",dr.a,"*x+",dr.b," with lines title 'Linear regression','-' with linespoints ls 1 title \'Region ",i,"\'",CRLF)
-      for j=1,#dr.tps do
-        f:write(j-1,"\t",dr.tps[j],CRLF)
+      f:write("plot ",linReg.a,"*x+",linReg.b," with lines title 'Linear regression','-' with linespoints ls 1 title \'Region ",i,"\'",CRLF)
+      for j=1,#tps do
+        f:write(j-1,"\t",tps[j],CRLF)
       end
       f:write("e",CRLF)
     end
@@ -125,48 +128,49 @@ processTestBed = function(dir)
     local output = d.."srde/"..fn
     
     print(string.format("Loading DOM tree: %s",filename),CRLF)
-    local dom = loadDOMTree(filename)
+    local dom = DOM.new(filename)
+    local dsre = DSRE.new()
     
     --print("Extracting records.")
     local start = os.clock()
-    SRDExtract(dom)
+    dsre:extract(dom)
     print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
     
     --print("Outputting results.")
-    displayResults(dom,"srde",d.."srde/",fn)
+    displayResults(dsre,"srde",d.."srde/",fn)
     
     --print("Plotting graphs.")
-    plotSequences(dom,"file",output)
-    unloadDOMTree(dom);
+    plotSequences(dsre,"file",output)
   end
 end
 
 processFile = function(filename)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
-    local dom = loadDOMTree(filename)
+    local dom = DOM.new(filename)
+    local dsre = DSRE.new()
     
     print("Extracting records.")
     local start = os.clock()
-    SRDExtract(dom)
+    dsre:extract(dom)
     print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
     
     print("Outputting results.")
-    displayResults(dom,"srde","./","output.html")
+    displayResults(dsre,"srde","./","output.html")
     
     print("Plotting graphs.")
-    plotSequences(dom,"file","output.html")
+    plotSequences(dsre,"file","output.html")
     
-    printDOM(dom)
-    printTPS(dom)
+    dom:printHTML()
+    dsre:printTps()
 end
 
-if #arg > 4 then
-  processFile(arg[5])
-  exit()
+if #args > 4 then
+  processFile(args[5])
+  do return end
 end
 
 processTestBed("../../datasets/clustvx")
-exit()
+--do return end
 processTestBed("../../datasets/yamada")
 -- [[
 processTestBed("../../datasets/zhao3")
