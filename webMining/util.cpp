@@ -79,9 +79,5 @@ std::vector<double> fct(std::vector<double> signal) {
 	auto ft = _fft(sig4n, 1, false);
 	ft.resize(signal.size());
 
-	for (size_t i = 0; i < ft.size()-3; ++i)
-		ft[i] = abs(ft[i] - ft[i+2]);
-
-	ft.resize(signal.size() - 2);
 	return ft;
 }

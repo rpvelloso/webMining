@@ -13,6 +13,9 @@
 #include <iostream>
 #include "Ckmeans.1d.dp.h"
 
+#define fft(X) _fft(X,1)
+#define ifft(X) _fft(X,-1,false)
+
 struct LinearRegression {
 	/* y = a*x + b; e = sum of squared error */
 	double a,b,e;
@@ -20,6 +23,7 @@ struct LinearRegression {
 
 std::string stringTok(std::string &inp, const std::string &delim);
 std::vector<double> fct(std::vector<double> signal);
+std::vector<double> _fft(std::vector<double>, int, bool = true);
 
 template<typename T>
 T contour(T s) {

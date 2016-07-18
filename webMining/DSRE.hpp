@@ -18,6 +18,40 @@
 #include "sol.hpp"
 #include "StructuredExtractor.hpp"
 
+enum class PeriodEstimator {
+	DFT = 0,
+	DCT = 1,
+	ModifiedDCT = 2
+};
+
+class PeriodEstimatorStrategy {
+public:
+	PeriodEstimatorStrategy() {};
+	virtual ~PeriodEstimatorStrategy() {};
+	virtual double estimate(std::vector<double> signal) = 0;
+};
+
+class DFTPeriodEstimator : public PeriodEstimatorStrategy {
+public:
+	DFTPeriodEstimator() {};
+	~DFTPeriodEstimator() {};
+	double estimate(std::vector<double> signal) override;
+};
+
+class DCTPeriodEstimator : public PeriodEstimatorStrategy {
+public:
+	DCTPeriodEstimator() {};
+	~DCTPeriodEstimator() {};
+	double estimate(std::vector<double> signal) override;
+};
+
+class ModifiedDCTPeriodEstimator : public PeriodEstimatorStrategy {
+public:
+	ModifiedDCTPeriodEstimator() {};
+	~ModifiedDCTPeriodEstimator() {};
+	double estimate(std::vector<double> signal) override;
+};
+
 class DSRE: public StructuredExtractor<DSREDataRegion> {
 public:
 	DSRE();
@@ -26,6 +60,7 @@ public:
 	void clear() override;
 	std::wstring getTps() const noexcept;
 	void printTps() const;
+	void setPeriodEstimator(PeriodEstimator);
 
 	static void luaBinding(sol::state &lua);
 private:
@@ -34,7 +69,7 @@ private:
 	void segment(pNode n, bool css);
 	std::vector<size_t> detectStructure();
 	std::set<size_t> locateRecords(size_t regNum);
-	double estimatePeriod(std::vector<double> signal);
+	double estimatePeriod(const std::vector<double> &signal);
 
 	std::list<std::pair<size_t,size_t> > segmentDifference(const std::vector<double> &);
 	void mergeRegions(std::list<std::pair<size_t,size_t> > &);
@@ -44,6 +79,8 @@ private:
 	std::unordered_map<std::string, int> tagPathMap;
 	std::wstring tagPathSequence;
 	std::vector<pNode> nodeSequence;
+	std::unique_ptr<PeriodEstimatorStrategy> periodEstimatorPtr;
+	PeriodEstimator periodEstimator;
 };
 
 #endif /* DSRE_HPP_ */

@@ -1,13 +1,130 @@
 CRLF = "\n"
-gnuplot = "c:\\Progra~1\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
 --gnuplot = "/usr/bin/gnuplot"
 
 term = {}
 term["png"] = ".png"
 term["postscript"]=".ps"
-term["default"]="png"
+term["svg"]=".svg"
+term["default"]="svg"
 
-displayResults = function(dsre,method,dir,filename) 
+initSQLite = function()
+  db = sqlite3.open("dsre.db")
+  --[[
+  --]]
+  -- [[
+  db:exec("\
+    drop table document;\
+    drop table region;\
+    drop table period;\
+    create table document (id integer primary key, uri varchar unique);\
+    create table region (id integer primary key, document integer not null, beginpos integer, endpos integer, tps varchar, unique(document, beginpos, endpos), foreign key(document) references document(id));\
+    create table period (id integer primary key, region integer not null, type integer, value float, unique(region, type), foreign key(region) references region(id));\
+    ");
+  print(db:errmsg());
+  --]]
+  db:exec("pragma foreign_keys = '1';");
+  return db
+end
+
+tps2String = function(tps)
+  ret = ''
+  if #tps > 0 then
+    ret = ret..tps[1]
+    if #tps > 1 then
+      for i=2,#tps do
+        ret = ret..','..tps[i] 
+      end
+    end
+  end
+  return ret
+end
+
+insertDocument = function(uri)
+  stmt = db:prepare([[
+  insert into document (uri) values (:uri);
+  ]])
+  stmt:bind_values(uri)
+  stmt:step("insert into document (uri) values ('" .. uri .. "');")
+  err = stmt:finalize()
+  if err == sqlite3.OK then
+    return db:last_insert_rowid()
+  elseif db:errcode() == sqlite3.CONSTRAINT then
+    for id in db:urows("select id from document where uri = '" .. uri .. "';") do
+      return id
+    end
+  end
+  print("SQLITE error code " .. db:errcode() .. ": '" .. db:errmsg() .. "'")
+  os.exit()
+end
+
+updateRegion = function(id, tps)
+  stmt = db:prepare([[
+    update region set tps = :tps where id = :id
+  ]])
+  stmt:bind_values(tps, id)
+  stmt:step()
+  err = stmt:finalize()
+  if err ~= sqlite3.OK then
+    print("SQLITE error code " .. db:errcode() .. ": '" .. db:errmsg() .. "'")
+    os.exit()
+  end
+end
+
+insertRegion = function(values)
+  stmt = db:prepare([[
+    insert into region (document, beginpos, endpos, tps) 
+    values (:document, :beginpos, :endpos, :tps);
+  ]])
+  stmt:bind_names(values)
+  stmt:step()
+  err = stmt:finalize()
+  if err == sqlite3.OK then
+    return db:last_insert_rowid()
+  elseif db:errcode() == sqlite3.CONSTRAINT then
+    for id in db:urows("select id from region where document = "..values["document"].." and beginpos = "..values["beginpos"].." and endpos = "..values["endpos"]..";") do
+      updateRegion(id, values["tps"])
+      return id
+    end
+  end
+  print("SQLITE error code " .. db:errcode() .. ": '" .. db:errmsg() .. "'")
+  os.exit()
+end
+
+updatePeriod = function(id, value)
+  stmt = db:prepare([[
+    update period set value = :value where id = :id
+  ]])
+  stmt:bind_values(value, id)
+  stmt:step()
+  err = stmt:finalize()
+  if err ~= sqlite3.OK then
+    print("SQLITE error code " .. db:errcode() .. ": '" .. db:errmsg() .. "'")
+    os.exit()
+  end
+end
+
+insertPeriod = function(values)
+  stmt = db:prepare([[
+    insert into period (region, type, value)
+    values (:region, :type, :value)
+  ]])
+  stmt:bind_names(values)
+  stmt:step()
+  err = stmt:finalize()
+  if err == sqlite3.OK then
+    return db:last_insert_rowid()
+  elseif db:errcode() == sqlite3.CONSTRAINT then
+    for id in db:urows("select id from period where region = "..values["region"].." and type = "..values["type"]..";") do
+      updatePeriod(id, values["value"])
+      return id
+    end
+  end
+  print("SQLITE error code " .. db:errcode() .. ": '" .. db:errmsg() .. "'")
+  os.exit()
+end
+
+displayResults = function(dsre,dir,filename) 
   local j=0
   local regions = dsre:regionCount()
   local outp = io.open(dir..filename,"w")
@@ -16,18 +133,16 @@ displayResults = function(dsre,method,dir,filename)
   outp:write(os.clock());
   outp:write("</pre><br/>\n");
   
-  if method=="srde" then
-    local tps = dsre:getTps()
-    if #tps then
-      outp:write("<style>table {border-collapse: collapse;} table, td, th {border: 1px solid black;}</style>")
-      outp:write("<font face=courier><img src='",filename,".tps",term[term["default"]],"' /><br />",CRLF)
-      outp:write("<textarea>",CRLF)
-      outp:write(tps[1])
-      for k=2,#tps do
-        outp:write(",",tps[k])
-      end
-      outp:write("</textarea><br />")
+  local tps = dsre:getTps()
+  if #tps then
+    outp:write("<style>table {border-collapse: collapse;} table, td, th {border: 1px solid black;}</style>")
+    outp:write("<font face=courier><img src='",filename,".tps",term[term["default"]],"' /><br />",CRLF)
+    outp:write("<textarea>",CRLF)
+    outp:write(tps[1])
+    for k=2,#tps do
+      outp:write(",",tps[k])
     end
+    outp:write("</textarea><br />")
   end
   for i=1,regions do
     local dr = dsre:getDataRegion(i-1)
@@ -77,7 +192,6 @@ displayResults = function(dsre,method,dir,filename)
 end
 
 plotSequences = function(dsre,output,filename)
-  local method = "srde"
   local regions = dsre:regionCount()
   local tps = dsre:getTps()
 
@@ -119,9 +233,30 @@ plotSequences = function(dsre,output,filename)
   os.execute(gnuplot.." "..filename..".plot.txt")
 end
 
-processTestBed = function(dir)
+save = function(dom, dsre)
+  local regionCount = dsre:regionCount()
+  local docID = insertDocument(dom:getURI())
+  for r=1,regionCount do
+    local dr = dsre:getDataRegion(r-1)
+    
+    local drID = insertRegion{
+      document = docID, 
+      beginpos = dr:getStartPos(), 
+      endpos = dr:getEndPos(), 
+      tps = tps2String(dr:getTps())
+    }
+    
+    local perID = insertPeriod{
+      region = drID, 
+      type = dr:getPeriodEstimator(), 
+      value = dr:getEstPeriod()
+    }
+  end
+end
+
+processTestBed = function(dir, generateOutput)
   local t, popen = {}, io.popen
-  
+  generateOutput = generateOutput or 1
 
   for filename in popen('ls -a "'..dir..'"/*.htm*'):lines() do
     local d, fn, ext = filename:match("(.-)([^\\/]-%.?([^%.\\/]*))$")
@@ -136,11 +271,14 @@ processTestBed = function(dir)
     dsre:extract(dom)
     print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
     
-    --print("Outputting results.")
-    displayResults(dsre,"srde",d.."srde/",fn)
-    
-    --print("Plotting graphs.")
-    plotSequences(dsre,"file",output)
+    if generateOutput == 1 then
+      --print("Outputting results.")
+      displayResults(dsre,d.."srde/",fn)
+      
+      --print("Plotting graphs.")
+      plotSequences(dsre,"file",output)
+    end
+    save(dom,dsre)
   end
 end
 
@@ -151,11 +289,12 @@ processFile = function(filename)
     
     print("Extracting records.")
     local start = os.clock()
+    dsre:setPeriodEstimator(0)
     dsre:extract(dom)
     print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
     
     print("Outputting results.")
-    displayResults(dsre,"srde","./","output.html")
+    displayResults(dsre,"./","output.html")
     
     print("Plotting graphs.")
     plotSequences(dsre,"file","output.html")
@@ -164,13 +303,15 @@ processFile = function(filename)
     dsre:printTps()
 end
 
+db = initSQLite()
+
 if #args > 4 then
   processFile(args[5])
   do return end
 end
 
-processTestBed("../../datasets/clustvx")
---do return end
+processTestBed("../../datasets/clustvx",0)
+do return end
 processTestBed("../../datasets/yamada")
 -- [[
 processTestBed("../../datasets/zhao3")

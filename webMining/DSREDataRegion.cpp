@@ -23,7 +23,10 @@ void DSREDataRegion::luaBinding(sol::state &lua) {
 		"getLinearRegression",&DSREDataRegion::getLinearRegression,
 		"isStructured",&DSREDataRegion::isStructured,
 		"getScore",&DSREDataRegion::getScore,
-		"isContent",&DSREDataRegion::isContent
+		"isContent",&DSREDataRegion::isContent,
+		"getEstPeriod",&DSREDataRegion::getEstPeriod,
+		"getPeriodEstimator",&DSREDataRegion::getPeriodEstimator
+
 	);
 
 	lua.new_usertype<LinearRegression>("LinearRegression",
@@ -148,4 +151,20 @@ double DSREDataRegion::getStdDev() const {
 
 void DSREDataRegion::setStdDev(double stddev) {
 	this->stdDev = stddev;
+}
+
+double DSREDataRegion::getEstPeriod() const {
+	return estPeriod;
+}
+
+void DSREDataRegion::setEstPeriod(double estPeriod) {
+	this->estPeriod = estPeriod;
+}
+
+PeriodEstimator DSREDataRegion::getPeriodEstimator() const {
+	return periodEstimator;
+}
+
+void DSREDataRegion::setPeriodEstimator(PeriodEstimator periodEstimator) {
+	this->periodEstimator = periodEstimator;
 }

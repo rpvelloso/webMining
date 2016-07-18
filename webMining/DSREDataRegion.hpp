@@ -15,6 +15,8 @@
 #include "sol.hpp"
 #include "StructuredDataRegion.hpp"
 
+enum class PeriodEstimator;
+
 class DSREDataRegion : public StructuredDataRegion {
 public:
 	DSREDataRegion();
@@ -45,7 +47,13 @@ public:
 	void setContent(bool content);
 	double getStdDev() const;
 	void setStdDev(double stddev);
+	double getEstPeriod() const;
+	void setEstPeriod(double estPeriod);
+	PeriodEstimator getPeriodEstimator() const;
+	void setPeriodEstimator(PeriodEstimator periodEstimator);
+
 	static void luaBinding(sol::state &lua);
+
 private:
 	std::wstring tps;
 	std::vector<pNode> nodeSequence;
@@ -55,6 +63,8 @@ private:
 	bool content = false;
 	double score = 0;
 	double stdDev = 0;
+	double estPeriod = 0;
+	PeriodEstimator periodEstimator;
 };
 
 #endif /* DSREDATAREGION_HPP_ */
