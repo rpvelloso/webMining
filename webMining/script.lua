@@ -50,6 +50,7 @@ queryDB = function()
     p0.type = 0 and p1.type = 1 and p2.type = 2 and 
     not (abs(p0.value - p1.value) < 2 and abs(p0.value - p2.value)< 2);
   ]]) do
+  --select d.uri, p0.region, p0.value value0, p1.value value1, p2.value value2, max(abs(p0.value - p1.value),abs(p0.value-p2.value),abs(p1.value-p2.value)) maxdiff from document d, region r, period p0, period p1, period p2 where d.id=r.document and r.id = p0.region and p0.region = p1.region and p0.region = p2.region and p0.type = 0 and p1.type = 1 and p2.type = 2 and not (abs(p0.value - p1.value) < 2 and abs(p0.value - p2.value)< 2) order by maxdiff desc;
     print(string.format("%s;%d;%.2f;%.2f;%.2f",r.uri,r.region,r.value0,r.value1,r.value2))
   end
   print("URI;REGION;BEGIN;END;TYPE;VALUE")
