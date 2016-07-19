@@ -1,5 +1,5 @@
 CRLF = "\n"
-gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "c:\\Progra~1\\gnuplot\\bin\\gnuplot.exe"
 --gnuplot = "/usr/bin/gnuplot"
 
 term = {}
@@ -11,12 +11,12 @@ term["default"]="svg"
 initSQLite = function()
   db = sqlite3.open("dsre.db")
   --[[
-  --]]
-  -- [[
-  db:exec("\
     drop table document;\
     drop table region;\
     drop table period;\
+  --]]
+  --[[
+  db:exec("\
     create table document (id integer primary key, uri varchar unique);\
     create table region (id integer primary key, document integer not null, beginpos integer, endpos integer, tps varchar, unique(document, beginpos, endpos), foreign key(document) references document(id));\
     create table period (id integer primary key, region integer not null, type integer, value float, unique(region, type), foreign key(region) references region(id));\
@@ -38,6 +38,29 @@ tps2String = function(tps)
     end
   end
   return ret
+end
+
+queryDB = function()
+  print("URI;REGION;FFT;DCT;MDCT")
+  for r in db:nrows([[
+    select d.uri, p0.region, p0.value value0, p1.value value1, p2.value value2 
+    from document d, region r, period p0, period p1, period p2 
+    where 
+    d.id = r.document and r.id = p0.region and p0.region = p1.region and p0.region = p2.region and 
+    p0.type = 0 and p1.type = 1 and p2.type = 2 and 
+    not (abs(p0.value - p1.value) < 2 and abs(p0.value - p2.value)< 2);
+  ]]) do
+    print(string.format("%s;%d;%.2f;%.2f;%.2f",r.uri,r.region,r.value0,r.value1,r.value2))
+  end
+  print("URI;REGION;BEGIN;END;TYPE;VALUE")
+  for r in db:nrows([[
+    select d.uri, r.id region, r.beginpos, r.endpos, p.type, p.value 
+    from document d, region r, period p
+    where d.id = r.document and r.id = p.region
+    order by d.uri, r.beginpos, p.type;
+  ]]) do
+    print(string.format("%s;%d;%d;%d;%d;%.2f",r.uri,r.region,r.beginpos,r.endpos,r.type,r.value))
+  end
 end
 
 insertDocument = function(uri)
@@ -233,7 +256,7 @@ plotSequences = function(dsre,output,filename)
   os.execute(gnuplot.." "..filename..".plot.txt")
 end
 
-save = function(dom, dsre)
+saveDB = function(dom, dsre)
   local regionCount = dsre:regionCount()
   local docID = insertDocument(dom:getURI())
   for r=1,regionCount do
@@ -256,7 +279,7 @@ end
 
 processTestBed = function(dir, generateOutput)
   local t, popen = {}, io.popen
-  generateOutput = generateOutput or 1
+  generateOutput = generateOutput or 0
 
   for filename in popen('ls -a "'..dir..'"/*.htm*'):lines() do
     local d, fn, ext = filename:match("(.-)([^\\/]-%.?([^%.\\/]*))$")
@@ -265,6 +288,7 @@ processTestBed = function(dir, generateOutput)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom = DOM.new(filename)
     local dsre = DSRE.new()
+    dsre:setPeriodEstimator(0)
     
     --print("Extracting records.")
     local start = os.clock()
@@ -278,7 +302,7 @@ processTestBed = function(dir, generateOutput)
       --print("Plotting graphs.")
       plotSequences(dsre,"file",output)
     end
-    save(dom,dsre)
+    saveDB(dom,dsre)
   end
 end
 
@@ -304,14 +328,16 @@ processFile = function(filename)
 end
 
 db = initSQLite()
+--queryDB()
+--do return end
 
 if #args > 4 then
   processFile(args[5])
   do return end
 end
 
-processTestBed("../../datasets/clustvx",0)
-do return end
+processTestBed("../../datasets/clustvx")
+--do return end
 processTestBed("../../datasets/yamada")
 -- [[
 processTestBed("../../datasets/zhao3")
