@@ -212,14 +212,33 @@ LinearRegression computeLinearRegression(T s) {
 }
 
 template<typename T>
-float mean(T s) {
+double mean(T s) {
 
-	float total=0;
+	double total=0;
 
-	for (size_t i=0;i<s.size();i++) {
-		total += s[i];
+	for (auto i:s) {
+		total += i;
 	}
-	return total/(float)s.size();
+	return total/(double)s.size();
+}
+
+template<typename T>
+double variance(T s) {
+	auto m = mean(s);
+
+	double var = 0;
+	for (auto i:s) {
+		auto dev = i - m;
+		dev *= dev;
+		var += dev;
+	}
+	var /= (double)s.size();
+	return var;
+}
+
+template<typename T>
+double stddev(T s) {
+	return sqrt(variance(s));
 }
 
 #endif /* UTIL_HPP_ */

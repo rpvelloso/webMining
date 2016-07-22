@@ -6,6 +6,7 @@
  */
 
 #include <algorithm>
+#include <iomanip>
 #include "DSRE.hpp"
 #include "util.hpp"
 
@@ -414,6 +415,83 @@ std::vector<size_t> DSRE::detectStructure() {
 std::set<size_t> DSRE::locateRecords(size_t regNum) {
 	auto &region = dataRegions[regNum];
 	std::wstring s = region.getTps();
+	auto n = s.size();
+	struct result {
+		std::set<size_t> pos;
+		double score = std::numeric_limits<double>::min();
+		wchar_t tpc = 0;
+	} res;
+
+	std::vector<double> signal(s.begin(), s.end());
+	auto dc = mean(signal);
+
+	for (auto &i:signal)
+		i -= dc;
+
+	auto spectrum = fft(signal);
+	double totalPower = 0;
+	std::for_each(spectrum.begin(), spectrum.end(),[&totalPower](auto p){
+		totalPower += p;
+	});
+
+	std::unordered_map<int,double> score;
+
+	for (auto symbol:s) {
+		if (score.count(symbol) == 0) {
+			score[symbol] = std::numeric_limits<double>::min();
+			size_t pos = 0;
+			std::vector<size_t> recpos;// = {0};
+			while ((pos = s.find(symbol,pos)) != std::string::npos)
+				recpos.emplace_back(pos++);
+			recpos.emplace_back(s.size()-1);
+			auto rpEnd = std::unique(recpos.begin(), recpos.end());
+			recpos.resize(std::distance(recpos.begin(), rpEnd));
+
+			if (recpos.size() > 2) {
+				auto recsize = difference(recpos);
+				std::sort(recsize.begin(), recsize.end());
+				auto m = mean(recsize);
+				auto sd = stddev(recsize);
+				auto cv = sd/m;
+				auto firstPos = recpos.begin();
+				auto lastPos = recpos.end()-1;
+				if (s[*firstPos] != symbol)
+					++firstPos;
+				if (s[*lastPos] == symbol)
+					++lastPos;
+				if (std::distance(firstPos, lastPos) > 1 && cv < 0.4) {
+					double power = std::numeric_limits<double>::min();
+					std::for_each(spectrum.begin() + int(n/m)-3, spectrum.begin() + int(n/m)+3,[&power](auto p){
+						if (p > power)
+							power = p;
+					});
+					auto relativePower = power/totalPower;
+					score[symbol] = relativePower;
+					if (relativePower > res.score) {
+						res.score = relativePower;
+						res.tpc = symbol;
+						res.pos.clear();
+						res.pos.insert(firstPos, lastPos);
+					}
+				}
+			}
+		}
+	}
+
+	std::vector<std::pair<int, double>> sc(score.begin(), score.end());
+	std::sort(sc.begin(), sc.end(), [](const auto &a, const auto &b)->bool{
+		return a.second > b.second;
+	});
+	for (auto i:sc)
+		std::cerr << i.first << " = " << std::setprecision(2) << i.second << std::endl;
+
+	return res.pos;
+}
+
+/*
+std::set<size_t> DSRE::locateRecords(size_t regNum) {
+	auto &region = dataRegions[regNum];
+	std::wstring s = region.getTps();
 	std::vector<double> signal(s.size());
 	float avg;
 	std::set<size_t> recpos,ret;
@@ -440,7 +518,8 @@ std::set<size_t> DSRE::locateRecords(size_t regNum) {
 	for (size_t i=0; i < s.size(); ++i) {
 		signal[i] = signal[i] - avg;
 		stddev += signal[i]*signal[i];
-		if (signal[i] < 0) candidates.insert(signal[i]);
+		//if (signal[i] < 0)
+			candidates.insert(signal[i]);
 	}
 
 	region.setStdDev(sqrt(stddev/std::max((double)1,(double)(s.size()-2))));
@@ -448,6 +527,9 @@ std::set<size_t> DSRE::locateRecords(size_t regNum) {
 	auto estPeriod = estimatePeriod(signal);
 	region.setEstPeriod(estPeriod);
 	region.setPeriodEstimator(periodEstimator);
+
+	if (estPeriod == 0)
+		return ret;
 
 	auto estFreq = ((double)signal.size() / estPeriod);
 
@@ -507,75 +589,7 @@ std::set<size_t> DSRE::locateRecords(size_t regNum) {
 
 	return ret.size()?ret:recpos;
 }
-
-double DFTPeriodEstimator::estimate(std::vector<double> signal) {
-	size_t N = (signal.size() + (signal.size()%2));
-
-	if (signal.size() != N) { // repeat last sample when signal size is odd
-		signal.resize(N);
-		signal[N-1]=signal[N-2];
-	}
-
-	auto spectrum = fft(signal);
-
-	double freq = 1;
-	double power = spectrum[1];
-	for (size_t i = 1; i < spectrum.size()/2; ++i) {
-		if (spectrum[i] > power) {
-			freq = (double)(i);
-			power = spectrum[i];
-		}
-	}
-	return (double)(N)/(double)(freq);
-}
-
-double DCTPeriodEstimator::estimate(std::vector<double> signal) {
-	size_t N = (signal.size() + (signal.size()%2));
-
-	if (signal.size() != N) {
-		signal.resize(N);
-		signal[N-1]=signal[N-2];
-	}
-
-	auto spectrum = fct(signal);
-
-	double freq = 1;
-	double power = abs(spectrum[1]);
-	for (size_t i = 1; i < spectrum.size()/4; ++i) {
-		if (abs(spectrum[i]) > power) {
-			freq = (double)(i)/2.0;
-			power = abs(spectrum[i]);
-		}
-	}
-	return (double)(N)/(double)(freq);
-}
-
-double ModifiedDCTPeriodEstimator::estimate(std::vector<double> signal) {
-	size_t N = (signal.size() + (signal.size()%2));
-
-	if (signal.size() != N) { // repeat last sample when signal size is odd
-		signal.resize(N);
-		signal[N-1]=signal[N-2];
-	}
-
-	auto spectrum = fct(signal);
-
-	for (size_t i = 0; i < spectrum.size()-3; ++i)
-		spectrum[i] = abs(spectrum[i] - spectrum[i+2]);
-
-	spectrum.resize(signal.size() - 2);
-
-
-	double freq = 1;
-	double power = spectrum[1];
-	for (size_t i = 1; i < spectrum.size()/4; ++i) {
-		if (spectrum[i] > power) {
-			freq = (double)(i)/2.0;
-			power = spectrum[i];
-		}
-	}
-	return (double)(N)/(double)(freq);
-}
+*/
 
 double DSRE::estimatePeriod(const std::vector<double> &signal) {
 	return periodEstimatorPtr->estimate(signal);
@@ -593,6 +607,10 @@ void DSRE::setPeriodEstimator(PeriodEstimator strategy) {
 		break;
 	case PeriodEstimator::DFT:
 		periodEstimatorPtr.reset(new DFTPeriodEstimator());
+		periodEstimator = strategy;
+		break;
+	case PeriodEstimator::StdDev3:
+		periodEstimatorPtr.reset(new StdDev3PeriodEstimator());
 		periodEstimator = strategy;
 		break;
 	}
@@ -642,4 +660,95 @@ void DSRE::printTps() const {
 		std::cout << tpcMap[tpc] << std::endl;
 }
 
+double DFTPeriodEstimator::estimate(std::vector<double> signal) {
+	size_t N = (signal.size() + (signal.size()%2));
 
+	if (signal.size() != N) { // repeat last sample when signal size is odd
+		signal.resize(N);
+		signal[N-1]=signal[N-2];
+	}
+
+	auto spectrum = fft(signal);
+
+	double freq = 1;
+	double power = spectrum[1];
+	for (size_t i = 1; i < spectrum.size()/2; ++i) {
+		if (spectrum[i] > power) {
+			freq = (double)(i);
+			power = spectrum[i];
+		}
+	}
+	return (double)(N)/(double)(freq);
+}
+
+double DCTPeriodEstimator::estimate(std::vector<double> signal) {
+	size_t N = (signal.size() + (signal.size()%2));
+
+	if (signal.size() != N) {
+		signal.resize(N);
+		signal[N-1]=signal[N-2];
+	}
+
+	auto spectrum = fct(signal);
+
+	double freq = 1;
+	double power = spectrum[1];
+	for (size_t i = 1; i < spectrum.size()/4; ++i) {
+		if (spectrum[i] > power) {
+			freq = (double)(i)/2.0;
+			power = spectrum[i];
+		}
+	}
+	return (double)(N)/(double)(freq);
+}
+
+double ModifiedDCTPeriodEstimator::estimate(std::vector<double> signal) {
+	size_t N = (signal.size() + (signal.size()%2));
+
+	if (signal.size() != N) { // repeat last sample when signal size is odd
+		signal.resize(N);
+		signal[N-1]=signal[N-2];
+	}
+
+	auto spectrum = fct(signal);
+
+	for (size_t i = 0; i < spectrum.size()-3; ++i)
+		spectrum[i] = abs(spectrum[i] - spectrum[i+2]);
+
+	spectrum.resize(signal.size() - 2);
+
+
+	double freq = 1;
+	double power = spectrum[1];
+	for (size_t i = 1; i < spectrum.size()/4; ++i) {
+		if (spectrum[i] > power) {
+			freq = (double)(i)/2.0;
+			power = spectrum[i];
+		}
+	}
+	return (double)(N)/(double)(freq);
+}
+
+double StdDev3PeriodEstimator::estimate(std::vector<double> signal) {
+	size_t N = (signal.size() + (signal.size()%2));
+
+	if (signal.size() != N) { // repeat last sample when signal size is odd
+		signal.resize(N);
+		signal[N-1]=signal[N-2];
+	}
+
+	auto spectrum = fct(signal);
+	auto std3 = stddev(spectrum)*4;
+
+	double freq = 0;
+	for (size_t i = 1; i < spectrum.size()/4; ++i) {
+		if (abs(spectrum[i]) > std3) {
+			freq = (double)(i)/2.0;
+			break;
+		}
+	}
+	if (freq != 0)
+		return (double)(N)/(double)(freq);
+	else
+		return 0;
+}

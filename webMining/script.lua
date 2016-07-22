@@ -1,5 +1,5 @@
 CRLF = "\n"
-gnuplot = "c:\\Progra~1\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
 --gnuplot = "/usr/bin/gnuplot"
 
 term = {}
@@ -10,20 +10,25 @@ term["default"]="svg"
 
 initSQLite = function()
   db = sqlite3.open("dsre.db")
+  db:exec("pragma foreign_keys = '1';");
   --[[
-    drop table document;\
-    drop table region;\
     drop table period;\
+    drop table region;\
+    drop table document;\
   --]]
   --[[
   db:exec("\
     create table document (id integer primary key, uri varchar unique);\
     create table region (id integer primary key, document integer not null, beginpos integer, endpos integer, tps varchar, unique(document, beginpos, endpos), foreign key(document) references document(id));\
-    create table period (id integer primary key, region integer not null, type integer, value float, unique(region, type), foreign key(region) references region(id));\
+    create table period (id integer primary key, region integer not null, type integer, value float, count integer, unique(region, type), foreign key(region) references region(id));\
     ");
   print(db:errmsg());
   --]]
-  db:exec("pragma foreign_keys = '1';");
+  db:exec([[
+    delete from period;
+    delete from region;
+    delete from document;
+  ]]);
   return db
 end
 
@@ -115,11 +120,11 @@ insertRegion = function(values)
   os.exit()
 end
 
-updatePeriod = function(id, value)
+updatePeriod = function(id, value, count)
   stmt = db:prepare([[
-    update period set value = :value where id = :id
+    update period set value = :value, count = :count where id = :id
   ]])
-  stmt:bind_values(value, id)
+  stmt:bind_values(value, count, id)
   stmt:step()
   err = stmt:finalize()
   if err ~= sqlite3.OK then
@@ -130,8 +135,8 @@ end
 
 insertPeriod = function(values)
   stmt = db:prepare([[
-    insert into period (region, type, value)
-    values (:region, :type, :value)
+    insert into period (region, type, value, count)
+    values (:region, :type, :value, :count)
   ]])
   stmt:bind_names(values)
   stmt:step()
@@ -140,7 +145,7 @@ insertPeriod = function(values)
     return db:last_insert_rowid()
   elseif db:errcode() == sqlite3.CONSTRAINT then
     for id in db:urows("select id from period where region = "..values["region"].." and type = "..values["type"]..";") do
-      updatePeriod(id, values["value"])
+      updatePeriod(id, values["value"], values["count"])
       return id
     end
   end
@@ -273,14 +278,15 @@ saveDB = function(dom, dsre)
     local perID = insertPeriod{
       region = drID, 
       type = dr:getPeriodEstimator(), 
-      value = dr:getEstPeriod()
+      value = dr:getEstPeriod(),
+      count = dr:recordCount()
     }
   end
 end
 
 processTestBed = function(dir, generateOutput)
   local t, popen = {}, io.popen
-  generateOutput = generateOutput or 0
+  generateOutput = generateOutput or 1
 
   for filename in popen('ls -a "'..dir..'"/*.htm*'):lines() do
     local d, fn, ext = filename:match("(.-)([^\\/]-%.?([^%.\\/]*))$")
@@ -289,7 +295,7 @@ processTestBed = function(dir, generateOutput)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom = DOM.new(filename)
     local dsre = DSRE.new()
-    dsre:setPeriodEstimator(0)
+    --dsre:setPeriodEstimator(1)
     
     --print("Extracting records.")
     local start = os.clock()
@@ -338,11 +344,11 @@ if #args > 4 then
 end
 
 processTestBed("../../datasets/clustvx")
+processTestBed("../../datasets/tpsf")
 --do return end
 processTestBed("../../datasets/yamada")
 -- [[
 processTestBed("../../datasets/zhao3")
-processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
 processTestBed("../../datasets/alvarez")

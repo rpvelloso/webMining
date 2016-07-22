@@ -21,7 +21,8 @@
 enum class PeriodEstimator {
 	DFT = 0,
 	DCT = 1,
-	ModifiedDCT = 2
+	ModifiedDCT = 2,
+	StdDev3 = 3
 };
 
 class PeriodEstimatorStrategy {
@@ -49,6 +50,13 @@ class ModifiedDCTPeriodEstimator : public PeriodEstimatorStrategy {
 public:
 	ModifiedDCTPeriodEstimator() {};
 	~ModifiedDCTPeriodEstimator() {};
+	double estimate(std::vector<double> signal) override;
+};
+
+class StdDev3PeriodEstimator : public PeriodEstimatorStrategy {
+public:
+	StdDev3PeriodEstimator() {};
+	~StdDev3PeriodEstimator() {};
 	double estimate(std::vector<double> signal) override;
 };
 
