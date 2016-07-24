@@ -9,9 +9,9 @@
 #define DATAREGION_HPP_
 
 class DataRegion {
-public:
-	DataRegion();
-	virtual ~DataRegion();
+ public:
+  DataRegion();
+  virtual ~DataRegion();
 };
 
 #endif /* DATAREGION_HPP_ */

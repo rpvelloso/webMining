@@ -9,64 +9,91 @@
 #define TPSEXTRACTOR_HPP_
 
 #include "StructuredExtractor.hpp"
+#include "Node.hpp"
+#include "../base/util.hpp"
 
+// TODO: refactor. Use composition to add TPS functionality to extractor classes instead of inhertance
 template<typename DataRegionType>
-class TPSExtractor: public StructuredExtractor<DataRegionType> {
-public:
-	TPSExtractor() {};
-	virtual ~TPSExtractor() {};
-protected:
-	void buildTagPath(std::string s, pNode n, bool css) {
-		static std::vector<std::string> styleAttr = {
-				"style", "class", "color", "bgcolor", "width", "height",
-				"align", "valign", "halign", "colspan", "rowspan"
-		};
+class TPSExtractor : public StructuredExtractor<DataRegionType> {
+ public:
+  TPSExtractor() {
+  }
+  virtual ~TPSExtractor() {
+  }
+  std::wstring getTps() const noexcept {
+    return tagPathSequence;
+  }
 
-		std::string tagStyle;
+  void printTps() const {
+    std::unordered_map<int, std::string> tpcMap;
 
-		if (s == "") {
-			tagPathMap.clear();
-			tagPathSequence.clear();
-			nodeSequence.clear();
-		}
+    for (auto tps : tagPathMap)
+      tpcMap.insert(make_pair(tps.second, tps.first));
 
-		for (auto attrName:styleAttr) {
-			auto attrValue = n->getAttr(attrName);
+    for (auto tpc : tagPathSequence)
+      std::cout << tpcMap[tpc] << std::endl;
+  }
+  virtual void extract(pDOM dom) = 0;
+  virtual void cleanup() {
+    StructuredExtractor < DataRegionType > ::cleanup();
+    tagPathMap.clear();
+    tagPathSequence.clear();
+    nodeSequence.clear();
+  }
+ protected:
+  void buildTagPath(std::string s, pNode n, bool css) {
+    static std::vector<std::string> styleAttr = { "style", "class", "color",
+        "bgcolor", "width", "height", "align", "valign", "halign", "colspan",
+        "rowspan" };
 
-			if (attrName == "class") // consider only tag's first class
-				attrValue = stringTok(attrValue," \r\n\t");
+    std::string tagStyle;
 
-			if (attrValue != "")
-				tagStyle = tagStyle + " " + attrName + "=" + attrValue;
-		}
+    if (s == "") {
+      tagPathMap.clear();
+      tagPathSequence.clear();
+      nodeSequence.clear();
+    }
 
-		std::string tagName;
+    for (auto attrName : styleAttr) {
+      auto attrValue = n->getAttr(attrName);
 
-		if (n->isText())
-			tagName = "#text";
-		else
-			tagName = n->getTagName();
+      if (attrName == "class")  // consider only tag's first class
+        attrValue = stringTok(attrValue, " \r\n\t");
 
-		if (tagName != "") {
-			if (css && (tagStyle != "")) s = s + "/" + tagName + tagStyle;
-			else s = s + "/" + tagName;
+      if (attrValue != "")
+        tagStyle = tagStyle + " " + attrName + "=" + attrValue;
+    }
 
-			if (tagPathMap.count(s) == 0)
-				tagPathMap[s] = tagPathMap.size()+1;
+    std::string tagName;
 
-			tagPathSequence = tagPathSequence + wchar_t(tagPathMap[s]);
-			nodeSequence.push_back(n);
+    if (n->isText())
+      tagName = "#text";
+    else
+      tagName = n->getTagName();
 
-			for (auto child = n->child(); child != nullptr; child = child->next())
-				buildTagPath(s,child,css);
-		} else {
-			std::cout << "empty tagName!!! : " << n->toString() << std::endl;
-			//terminate();
-		}
-	};
-	std::unordered_map<std::string, int> tagPathMap;
-	std::wstring tagPathSequence;
-	std::vector<pNode> nodeSequence;
+    if (tagName != "") {
+      if (css && (tagStyle != ""))
+        s = s + "/" + tagName + tagStyle;
+      else
+        s = s + "/" + tagName;
+
+      if (tagPathMap.count(s) == 0)
+        tagPathMap[s] = tagPathMap.size() + 1;
+
+      tagPathSequence = tagPathSequence + wchar_t(tagPathMap[s]);
+      nodeSequence.push_back(n);
+
+      for (auto child = n->child(); child != nullptr; child = child->next())
+        buildTagPath(s, child, css);
+    } else {
+      std::cout << "empty tagName!!! : " << n->toString() << std::endl;
+      //terminate();
+    }
+  }
+  ;
+  std::unordered_map<std::string, int> tagPathMap;
+  std::wstring tagPathSequence;
+  std::vector<pNode> nodeSequence;
 };
 
 #endif /* TPSEXTRACTOR_HPP_ */

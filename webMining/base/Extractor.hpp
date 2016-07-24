@@ -11,27 +11,31 @@
 #include <vector>
 #include "DOM.hpp"
 
-template <typename DataRegionType>
+template<typename DataRegionType>
 class Extractor {
-public:
-	Extractor() {};
-	virtual ~Extractor() {};
-	virtual void extract(pDOM dom) = 0;
-	virtual void clear() = 0;
-	size_t regionCount() const noexcept {
-		return dataRegions.size();
-	};
-	DataRegionType getDataRegion(size_t pos) const {
-		if (pos < dataRegions.size())
-			return dataRegions[pos];
+ public:
+  Extractor() {
+  }
+  virtual ~Extractor() {
+  }
+  virtual void extract(pDOM dom) = 0;
+  virtual void cleanup() {
+    dataRegions.clear();
+  }
+  size_t regionCount() const noexcept {
+    return dataRegions.size();
+  }
+  DataRegionType getDataRegion(size_t pos) const {
+    if (pos < dataRegions.size())
+      return dataRegions[pos];
 
-		throw new std::out_of_range("data region not found");
-	};
-	void addDataRegion(const DataRegionType &dr) {
-		dataRegions.emplace_back(dr);
-	};
-protected:
-	std::vector<DataRegionType> dataRegions;
+    throw new std::out_of_range("data region not found");
+  }
+  void addDataRegion(const DataRegionType &dr) {
+    dataRegions.emplace_back(dr);
+  }
+ protected:
+  std::vector<DataRegionType> dataRegions;
 };
 
 #endif /* EXTRACTOR_HPP_ */

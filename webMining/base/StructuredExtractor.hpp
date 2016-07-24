@@ -10,13 +10,14 @@
 
 #include "Extractor.hpp"
 
-template <typename DataRegionType>
+template<typename DataRegionType>
 class StructuredExtractor : public Extractor<DataRegionType> {
-public:
-	StructuredExtractor() {};
-	virtual ~StructuredExtractor() {};
-	virtual void extract(pDOM dom) = 0;
-	virtual void clear() = 0;
+ public:
+  StructuredExtractor() {
+  }
+  virtual ~StructuredExtractor() {
+  }
+  virtual void extract(pDOM dom) = 0;
 };
 
 #endif /* STRUCTUREDEXTRACTOR_HPP_ */

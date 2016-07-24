@@ -1,5 +1,5 @@
 CRLF = "\n"
-gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "c:\\Progra~1\\gnuplot\\bin\\gnuplot.exe"
 --gnuplot = "/usr/bin/gnuplot"
 
 term = {}
@@ -317,10 +317,11 @@ processFile = function(filename)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom = DOM.new(filename)
     local dsre = DSRE.new()
+    --local dsre = CVSRE.new()
     
     print("Extracting records.")
     local start = os.clock()
-    dsre:setPeriodEstimator(0)
+    --dsre:setPeriodEstimator(0)
     dsre:extract(dom)
     print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
     
@@ -330,8 +331,8 @@ processFile = function(filename)
     print("Plotting graphs.")
     plotSequences(dsre,"file","output.html")
     
-    dom:printHTML()
-    dsre:printTps()
+    --dom:printHTML()
+    --dsre:printTps()
 end
 
 db = initSQLite()
