@@ -1,25 +1,28 @@
 /*
  Copyright 2011 Roberto Panerai Velloso.
- This file is part of libsockets.
- libsockets is free software: you can redistribute it and/or modify
+ This file is part of webMining.
+ webMining is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- libsockets is distributed in the hope that it will be useful,
+ webMining is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  You should have received a copy of the GNU General Public License
- along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
+ along with webMining.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <fstream>
-#include "DOM.hpp"
-#include "Node.hpp"
 #include "Context.hpp"
-#include "../DSRE/DSRE.hpp"
+
+#include <lua.h>
+#include <luaconf.h>
+#include <iostream>
+#include <string>
+
 #include "../CVSRE/CVSRE.hpp"
+#include "../DSRE/DSRE.hpp"
+#include "DOM.hpp"
 
 extern "C" {
 
@@ -39,7 +42,7 @@ Context::Context(const std::string &inp, int argc, char **argv) {
 
   if (script.status() != sol::load_status::ok) {
     std::cout << "Lua error: " << lua_tostring(lua.lua_state(), -1)
-              << std::endl;
+        << std::endl;
     lua_pop(lua.lua_state(), 1);
   }
 }
@@ -48,8 +51,7 @@ Context::~Context() {
 }
 
 void Context::bind(int argc, char **argv) {
-  Node::luaBinding(lua);
-  DOM::luaBinding(lua);
+  DOM::luaBinding (lua);
   DSRE::luaBinding(lua);
   CVSRE::luaBinding(lua);
 

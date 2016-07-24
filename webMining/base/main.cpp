@@ -1,27 +1,28 @@
 /*
  Copyright 2011 Roberto Panerai Velloso.
-
- This file is part of libsockets.
-
- libsockets is free software: you can redistribute it and/or modify
+ This file is part of webMining.
+ webMining is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
-
- libsockets is distributed in the hope that it will be useful,
+ webMining is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
  You should have received a copy of the GNU General Public License
- along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
+ along with webMining.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <getopt.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cwchar>
+#include <exception>
 #include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include "DOM.hpp"
+#include <string>
+
 #include "Context.hpp"
+
 //#include "sol.hpp"
 
 using namespace std;
@@ -59,7 +60,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (!dbg) {
-    fclose(stderr);
+    fclose (stderr);
     cerr.rdbuf(NULL);
   }
 

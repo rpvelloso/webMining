@@ -1,23 +1,27 @@
 /*
  Copyright 2011 Roberto Panerai Velloso.
- This file is part of libsockets.
- libsockets is free software: you can redistribute it and/or modify
+ This file is part of webMining.
+ webMining is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- libsockets is distributed in the hope that it will be useful,
+ webMining is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  You should have received a copy of the GNU General Public License
- along with libsockets.  If not, see <http://www.gnu.org/licenses/>.
+ along with webMining.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <algorithm>
 #include "DOM.hpp"
+
+#include <tidyenum.h>
+#include <tidyplatform.h>
+#include <iostream>
+#include <utility>
+#include <vector>
+#include <unordered_set>
+
 #include "Node.hpp"
 
 /*static void traverse(DOM *dom, TidyNode node, size_t ident = 0) {
@@ -32,10 +36,9 @@
  }*/
 
 void DOM::luaBinding(sol::state &lua) {
-  lua.new_usertype<DOM>("DOM",
-                        sol::constructors<sol::types<const std::string>>(),
-                        "isLoaded", &DOM::isLoaded, "printHTML",
-                        &DOM::printHTML, "getURI", DOM::getURI);
+  lua.new_usertype < DOM
+      > ("DOM", sol::constructors<sol::types<const std::string>>(), "isLoaded", &DOM::isLoaded, "printHTML", &DOM::printHTML, "getURI", DOM::getURI);
+  Node::luaBinding(lua);
 }
 
 DOM::DOM(const std::string uri) {
@@ -66,7 +69,7 @@ DOM::DOM(const std::string uri) {
   tidySetErrorBuffer(tdoc, &errbuf);
 
   if (tidyParseFile(tdoc, uri.c_str()) >= 0) {
-    tidyCleanAndRepair(tdoc);
+    tidyCleanAndRepair (tdoc);
     tidyRunDiagnostics(tdoc);
     clear();
     tidySaveBuffer(tdoc, &output);
@@ -79,10 +82,10 @@ DOM::DOM(const std::string uri) {
 
 DOM::~DOM() {
   if (errbuf.allocated)
-    tidyBufFree(&errbuf);
+    tidyBufFree (&errbuf);
   if (output.allocated)
-    tidyBufFree(&output);
-  tidyRelease(tdoc);
+    tidyBufFree (&output);
+  tidyRelease (tdoc);
   for (auto n : domNodes)
     delete n.second;
 }
@@ -139,7 +142,7 @@ std::string DOM::getURI() const {
 }
 
 void DOM::clear() {
-  std::vector<TidyNode> remove;
+  std::vector < TidyNode > remove;
 
   cleanHelper(tidyGetHtml(tdoc), remove);
 

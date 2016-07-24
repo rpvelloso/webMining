@@ -1,41 +1,34 @@
 /*
- * DSREDataRegion.cpp
- *
- *  Created on: 13 de jul de 2016
- *      Author: rvelloso
+ Copyright 2011 Roberto Panerai Velloso.
+ This file is part of webMining.
+ webMining is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ webMining is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License
+ along with webMining.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include "DSREDataRegion.hpp"
-#include "../base/util.hpp"
+
+#include <algorithm>
+#include <iterator>
+#include <string>
 
 //TODO: expose FFT, DCT & Autocorrelation for each data region
 
 void DSREDataRegion::luaBinding(sol::state &lua) {
-  lua.new_usertype<DSREDataRegion>("DSREDataRegion", "getRecord",
-                                   &DSREDataRegion::getRecord, "recordCount",
-                                   &DSREDataRegion::recordCount, "recordSize",
-                                   &DSREDataRegion::recordSize, "size",
-                                   &DSREDataRegion::size, "getEndPos",
-                                   &DSREDataRegion::getEndPos, "getStartPos",
-                                   &DSREDataRegion::getStartPos, "getTps",
-                                   &DSREDataRegion::getTps,
-                                   "getLinearRegression",
-                                   &DSREDataRegion::getLinearRegression,
-                                   "isStructured",
-                                   &DSREDataRegion::isStructured, "getScore",
-                                   &DSREDataRegion::getScore, "isContent",
-                                   &DSREDataRegion::isContent, "getEstPeriod",
-                                   &DSREDataRegion::getEstPeriod,
-                                   "getPeriodEstimator",
-                                   &DSREDataRegion::getPeriodEstimator
+  lua.new_usertype < DSREDataRegion
+      > ("DSREDataRegion", "getRecord", &DSREDataRegion::getRecord, "recordCount", &DSREDataRegion::recordCount, "recordSize", &DSREDataRegion::recordSize, "size", &DSREDataRegion::size, "getEndPos", &DSREDataRegion::getEndPos, "getStartPos", &DSREDataRegion::getStartPos, "getTps", &DSREDataRegion::getTps, "getLinearRegression", &DSREDataRegion::getLinearRegression, "isStructured", &DSREDataRegion::isStructured, "getScore", &DSREDataRegion::getScore, "isContent", &DSREDataRegion::isContent, "getEstPeriod", &DSREDataRegion::getEstPeriod, "getPeriodEstimator", &DSREDataRegion::getPeriodEstimator
 
-                                   );
+      );
 
-  lua.new_usertype<LinearRegression>("LinearRegression", "a",
-                                     &LinearRegression::a, "b",
-                                     &LinearRegression::b, "e",
-                                     &LinearRegression::e);
+  lua.new_usertype < LinearRegression
+      > ("LinearRegression", "a", &LinearRegression::a, "b", &LinearRegression::b, "e", &LinearRegression::e);
 
 }
 
