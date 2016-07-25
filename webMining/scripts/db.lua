@@ -166,3 +166,5 @@ saveDB = function(dom, dsre)
     }
   end
 end
+
+db = initSQLite()

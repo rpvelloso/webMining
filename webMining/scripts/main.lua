@@ -10,12 +10,11 @@ term["svg"]=".svg"
 -- default terminal type (vector graphics)
 term["default"]="svg"
 
-loadfile("../scripts/db.lua")()
+--loadfile("../scripts/db.lua")()
 loadfile("../scripts/plot.lua")()
 loadfile("../scripts/output.lua")()
 loadfile("../scripts/testbed.lua")()
 
-db = initSQLite()
 --queryDB()
 --do return end
 

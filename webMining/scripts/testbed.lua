@@ -23,7 +23,7 @@ processTestBed = function(dir, generateOutput)
       --print("Plotting graphs.")
       plotSequences(dsre,"file",output)
     end
-    saveDB(dom,dsre)
+    --saveDB(dom,dsre)
   end
 end
 
