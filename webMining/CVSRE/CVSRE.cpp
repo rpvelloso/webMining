@@ -33,8 +33,13 @@ CVSRE::~CVSRE() {
 }
 
 void CVSRE::luaBinding(sol::state& lua) {
-  lua.new_usertype < CVSRE
-      > ("CVSRE", "extract", &CVSRE::extract, "cleanup", &CVSRE::cleanup, "getTps", &CVSRE::getTps, "printTps", &CVSRE::printTps, "regionCount", &CVSRE::regionCount, "getDataRegion", &CVSRE::getDataRegion);
+  lua.new_usertype<CVSRE>("CVSRE",
+		  "extract", &CVSRE::extract,
+		  "cleanup", &CVSRE::cleanup,
+		  "getTps", &CVSRE::getTps,
+		  "printTps", &CVSRE::printTps,
+		  "regionCount", &CVSRE::regionCount,
+		  "getDataRegion", &CVSRE::getDataRegion);
   CVSREDataRegion::luaBinding(lua);
 }
 
@@ -53,14 +58,13 @@ void CVSRE::segment(size_t offset) {
     auto recpos = checkCV(tps, i, period);
     if (recpos.size() > 0 && period >= 2
         && period < 0.30 * tagPathSequence.size()) {
-      offset = recpos[0];
-      auto subTps = tps.substr(offset,
+      auto subTps = tps.substr(recpos[0],
                                recpos[recpos.size() - 1] - recpos[0] + period);
       if (checkFreq(subTps, recpos.size())) {
         auto recSeq = align(subTps, recpos);
-        CVSREDataRegion region(offset, period, subTps,
-                               nodeSequence.begin() + offset,
-                               nodeSequence.begin() + offset + subTps.size());
+        CVSREDataRegion region(offset + recpos[0], period, subTps,
+                               nodeSequence.begin() + offset + recpos[0],
+                               nodeSequence.begin() + offset + recpos[0] + subTps.size());
         extractRecords(recSeq, recpos, region);
         dataRegions.emplace_back(region);
         segment(region.getEndPos() + 1);
@@ -121,8 +125,8 @@ void CVSRE::extractRecords(std::vector<std::wstring> &m,
 
 bool CVSRE::checkFreq(const std::wstring &tps, size_t freq) {
   std::vector<double> signal(tps.begin(), tps.end());
-  auto m = mean(signal);
-  std::for_each(signal.begin(), signal.end(), [m](auto a)
+  double m = mean(signal);
+  std::for_each(signal.begin(), signal.end(), [m](auto &a)
   {
     a -= m;
   });
