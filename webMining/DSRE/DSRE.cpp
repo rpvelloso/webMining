@@ -299,8 +299,8 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
 			  regionCoverage > 0.80
       	  ) {
         bool foundPeak = false;
-        std::for_each(spectrum.begin() + 2*recpos.size()-1 - 2,
-                      spectrum.begin() + 2*recpos.size()-1 + 2,
+        std::for_each(spectrum.begin() + 2*(recpos.size()-1) - 3,
+                      spectrum.begin() + 2*(recpos.size()-1) + 3,
                       [&foundPeak, spectrumSd](auto p)
                       {
                         if (abs(p) > 3.0*spectrumSd)
