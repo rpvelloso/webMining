@@ -8,6 +8,7 @@ processTestBed = function(dir, generateOutput)
     
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom = DOM.new(filename)
+    --local dsre = CVSRE.new()
     local dsre = DSRE.new()
     --dsre:setPeriodEstimator(1)
     
@@ -45,6 +46,6 @@ processFile = function(filename)
     print("Plotting graphs.")
     plotSequences(dsre,"file","output.html")
     
-    --dom:printHTML()
-    --dsre:printTps()
+    dom:printHTML()
+    dsre:printTps()
 end

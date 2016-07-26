@@ -24,7 +24,7 @@ if #args > 4 then
 end
 
 processTestBed("../../datasets/clustvx")
-do return end
+--do return end
 processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/yamada")
 -- [[

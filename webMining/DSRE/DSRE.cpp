@@ -19,8 +19,14 @@
 #include "../base/util.hpp"
 
 void DSRE::luaBinding(sol::state &lua) {
-  lua.new_usertype < DSRE
-      > ("DSRE", "extract", &DSRE::extract, "cleanup", &DSRE::cleanup, "getTps", &DSRE::getTps, "printTps", &DSRE::printTps, "regionCount", &DSRE::regionCount, "getDataRegion", &DSRE::getDataRegion, "setPeriodEstimator", &DSRE::setPeriodEstimator);
+  lua.new_usertype<DSRE>("DSRE",
+		  "extract", &DSRE::extract,
+		  "cleanup", &DSRE::cleanup,
+		  "getTps", &DSRE::getTps,
+		  "printTps", &DSRE::printTps,
+		  "regionCount", &DSRE::regionCount,
+		  "getDataRegion", &DSRE::getDataRegion,
+		  "setPeriodEstimator", &DSRE::setPeriodEstimator);
   DSREDataRegion::luaBinding(lua);
 }
 
@@ -238,24 +244,40 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
   std::set < size_t > result;
 
   std::vector<double> signal(s.begin(), s.end());
+
   auto dc = mean(signal);
 
   for (auto &i : signal)
     i -= dc;
 
-  auto spectrum = fft(signal);
+  auto spectrum = fct(signal);
   auto spectrumSd = stddev(spectrum);
+  double rcount = 0;
+
+  {
+	  auto ss = signal;
+	  ss.resize(signal.size() + 4000, 0);
+	  auto f = fft(ss);
+	  auto fSD = stddev(f);
+	  double maxAmpl = std::numeric_limits<double>::min();
+	  size_t peakFreq = 0;
+	  for (size_t i = 1; i < f.size()/2; ++i) {
+		  if (f[i] > maxAmpl) {
+			  maxAmpl = f[i];
+			  peakFreq = i;
+		  }
+	  }
+	  rcount = ((double)peakFreq*(double)signal.size())/(double)ss.size();
+	  std::cerr << peakFreq << std::endl;
+  }
 
   std::set<int> symbols(s.begin(), s.end());
 
   for (auto symbol : symbols) {
     size_t pos = 0;
-    std::vector < size_t > recpos;  // = {0};
+    std::vector < size_t > recpos;
     while ((pos = s.find(symbol, pos)) != std::string::npos)
       recpos.emplace_back(pos++);
-    recpos.emplace_back(s.size() - 1);
-    auto rpEnd = std::unique(recpos.begin(), recpos.end());
-    recpos.resize(std::distance(recpos.begin(), rpEnd));
 
     if (recpos.size() > 2) {
       auto recsize = difference(recpos);
@@ -263,19 +285,25 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
       auto m = mean(recsize);
       auto sd = stddev(recsize);
       auto cv = sd / m;
+      double regionCoverage = (double)std::min((size_t)(recpos[recpos.size()-1] - recpos[0] + m), s.size())/(double)s.size();
       auto firstPos = recpos.begin();
       auto lastPos = recpos.end() - 1;
       if (s[*firstPos] != symbol)
         ++firstPos;
       if (s[*lastPos] == symbol)
         ++lastPos;
-      if (std::distance(firstPos, lastPos) > 1 && cv < 0.4) {
+      std::cerr << "CV: " << cv << ", RC: " << regionCoverage << ", #: " << rcount << std::endl;
+      if (
+    		  std::distance(firstPos, lastPos) > 1 &&
+    		  cv < 0.3 &&
+			  regionCoverage > 0.80
+      	  ) {
         bool foundPeak = false;
-        std::for_each(spectrum.begin() + recpos.size() - 3,
-                      spectrum.begin() + recpos.size() + 3,
+        std::for_each(spectrum.begin() + 2*recpos.size()-1 - 2,
+                      spectrum.begin() + 2*recpos.size()-1 + 2,
                       [&foundPeak, spectrumSd](auto p)
                       {
-                        if (p > 3.0*spectrumSd)
+                        if (abs(p) > 3.0*spectrumSd)
                         foundPeak = true;
                       });
         if (foundPeak) {

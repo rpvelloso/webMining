@@ -16,6 +16,8 @@
 #ifndef TPSEXTRACTOR_HPP_
 #define TPSEXTRACTOR_HPP_
 
+#include <iomanip>
+
 #include "StructuredExtractor.hpp"
 #include "Node.hpp"
 #include "../base/util.hpp"
@@ -38,9 +40,13 @@ class TPSExtractor : public StructuredExtractor<DataRegionType> {
     for (auto tps : tagPathMap)
       tpcMap.insert(make_pair(tps.second, tps.first));
 
+    size_t i = 0;
     for (auto tpc : tagPathSequence)
-      std::cout << tpcMap[tpc] << std::endl;
+      std::cout << std::setfill('0') << std::setw(5) << i++ << ":" <<
+	  std::setfill('0') << std::setw(5) << tpc << ":" <<
+	  tpcMap[tpc] << std::endl;
   }
+
   virtual void extract(pDOM dom) = 0;
   virtual void cleanup() {
     StructuredExtractor < DataRegionType > ::cleanup();

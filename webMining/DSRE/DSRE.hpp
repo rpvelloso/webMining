@@ -102,6 +102,7 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   std::unordered_map<int, int> symbolFrequency(std::wstring, std::set<int> &);
   void extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos,
                       DSREDataRegion &);
+  std::wstring reencode(const std::wstring &tps);
 
   std::unique_ptr<PeriodEstimatorStrategy> periodEstimatorPtr;
   PeriodEstimator periodEstimator;
