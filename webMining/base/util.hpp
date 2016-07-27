@@ -28,6 +28,7 @@
 
 #define fft(X) _fft(X,1)
 #define ifft(X) _fft(X,-1,false)
+void hannWindow(std::vector<double> &inp);
 
 struct LinearRegression {
   /* y = a*x + b; e = sum of squared error */

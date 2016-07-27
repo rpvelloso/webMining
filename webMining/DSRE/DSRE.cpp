@@ -250,26 +250,15 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
   for (auto &i : signal)
     i -= dc;
 
-  auto spectrum = fct(signal);
-  auto spectrumSd = stddev(spectrum);
-  double rcount = 0;
+  hannWindow(signal);
 
-  {
-	  auto ss = signal;
-	  ss.resize(signal.size() + 4000, 0);
-	  auto f = fft(ss);
-	  auto fSD = stddev(f);
-	  double maxAmpl = std::numeric_limits<double>::min();
-	  size_t peakFreq = 0;
-	  for (size_t i = 1; i < f.size()/2; ++i) {
-		  if (f[i] > maxAmpl) {
-			  maxAmpl = f[i];
-			  peakFreq = i;
-		  }
-	  }
-	  rcount = ((double)peakFreq*(double)signal.size())/(double)ss.size();
-	  std::cerr << peakFreq << std::endl;
-  }
+  signal.resize(signal.size()*2, 0); // zero pad
+  auto psd = fft(signal);
+  auto psdSD = stddev(psd);
+  double transformScale = 1.0*(double)signal.size()/(double)s.size();
+  for (auto &i:psd) // convert to Z Score
+	  i /= psdSD;
+  region.setTransform(psd);
 
   std::set<int> symbols(s.begin(), s.end());
 
@@ -292,18 +281,22 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         ++firstPos;
       if (s[*lastPos] == symbol)
         ++lastPos;
-      std::cerr << "CV: " << cv << ", RC: " << regionCoverage << ", #: " << rcount << std::endl;
+      std::cerr << "CV: " << cv << ", RC: " << regionCoverage << std::endl;
       if (
     		  std::distance(firstPos, lastPos) > 1 &&
     		  cv < 0.3 &&
 			  regionCoverage > 0.80
       	  ) {
         bool foundPeak = false;
-        std::for_each(spectrum.begin() + 2*(recpos.size()-1) - 3,
-                      spectrum.begin() + 2*(recpos.size()-1) + 3,
-                      [&foundPeak, spectrumSd](auto p)
+        auto firstFreq = psd.begin();
+        auto lastFreq = psd.begin();
+        std::advance(firstFreq, (std::max(recpos.size(),(size_t)4)-1-3)*transformScale);
+        std::advance(lastFreq, (recpos.size()-1+3)*transformScale);
+
+        std::for_each(firstFreq,lastFreq,
+                      [&foundPeak](auto p)
                       {
-                        if (abs(p) > 3.0*spectrumSd)
+                        if (abs(p) > 4.0)
                         foundPeak = true;
                       });
         if (foundPeak) {

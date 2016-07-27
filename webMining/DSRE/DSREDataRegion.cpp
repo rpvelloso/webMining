@@ -22,13 +22,27 @@
 //TODO: expose FFT, DCT & Autocorrelation for each data region
 
 void DSREDataRegion::luaBinding(sol::state &lua) {
-  lua.new_usertype < DSREDataRegion
-      > ("DSREDataRegion", "getRecord", &DSREDataRegion::getRecord, "recordCount", &DSREDataRegion::recordCount, "recordSize", &DSREDataRegion::recordSize, "size", &DSREDataRegion::size, "getEndPos", &DSREDataRegion::getEndPos, "getStartPos", &DSREDataRegion::getStartPos, "getTps", &DSREDataRegion::getTps, "getLinearRegression", &DSREDataRegion::getLinearRegression, "isStructured", &DSREDataRegion::isStructured, "getScore", &DSREDataRegion::getScore, "isContent", &DSREDataRegion::isContent, "getEstPeriod", &DSREDataRegion::getEstPeriod, "getPeriodEstimator", &DSREDataRegion::getPeriodEstimator
-
+  lua.new_usertype<DSREDataRegion>("DSREDataRegion",
+		  "getRecord", &DSREDataRegion::getRecord,
+		  "recordCount", &DSREDataRegion::recordCount,
+		  "recordSize", &DSREDataRegion::recordSize,
+		  "size", &DSREDataRegion::size,
+		  "getEndPos", &DSREDataRegion::getEndPos,
+		  "getStartPos", &DSREDataRegion::getStartPos,
+		  "getTps", &DSREDataRegion::getTps,
+		  "getLinearRegression", &DSREDataRegion::getLinearRegression,
+		  "isStructured", &DSREDataRegion::isStructured,
+		  "getScore", &DSREDataRegion::getScore,
+		  "isContent", &DSREDataRegion::isContent,
+		  "getEstPeriod", &DSREDataRegion::getEstPeriod,
+		  "getPeriodEstimator", &DSREDataRegion::getPeriodEstimator,
+		  "getTransform",  &DSREDataRegion::getTransform
       );
 
-  lua.new_usertype < LinearRegression
-      > ("LinearRegression", "a", &LinearRegression::a, "b", &LinearRegression::b, "e", &LinearRegression::e);
+  lua.new_usertype<LinearRegression>("LinearRegression",
+		  "a", &LinearRegression::a,
+		  "b", &LinearRegression::b,
+		  "e", &LinearRegression::e);
 
 }
 
@@ -161,4 +175,12 @@ PeriodEstimator DSREDataRegion::getPeriodEstimator() const {
 
 void DSREDataRegion::setPeriodEstimator(PeriodEstimator periodEstimator) {
   this->periodEstimator = periodEstimator;
+}
+
+std::vector<double> DSREDataRegion::getTransform() const {
+	return transform;
+}
+
+void DSREDataRegion::setTransform(const std::vector<double>& transform) {
+	this->transform = transform;
 }

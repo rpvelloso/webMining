@@ -64,6 +64,8 @@ class DSREDataRegion : public StructuredDataRegion {
   void setPeriodEstimator(PeriodEstimator periodEstimator);
 
   static void luaBinding(sol::state &lua);
+	std::vector<double> getTransform() const;
+	void setTransform(const std::vector<double>& transform);
 
  private:
   std::wstring tps;
@@ -76,6 +78,7 @@ class DSREDataRegion : public StructuredDataRegion {
   double stdDev = 0;
   double estPeriod = 0;
   PeriodEstimator periodEstimator;
+  std::vector<double> transform;
 };
 
 #endif /* DSREDATAREGION_HPP_ */

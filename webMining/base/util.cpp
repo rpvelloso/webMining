@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "../3rdparty/hsfft.h"
 
@@ -91,4 +92,15 @@ std::vector<double> fct(std::vector<double> signal) {
   ft.resize(signal.size());
 
   return ft;
+}
+
+#ifndef M_PI
+const double M_PI = 3.14159265359;
+#endif
+
+void hannWindow(std::vector<double> &inp) {
+	for (size_t i = 0; i < inp.size(); i++) {
+	    double multiplier = 0.5 * (1.0 - std::cos(2.0*M_PI*(double)i/(double)(inp.size()-1)));
+	    inp[i] = multiplier * inp[i];
+	}
 }
