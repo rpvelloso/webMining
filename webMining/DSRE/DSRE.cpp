@@ -180,7 +180,7 @@ void DSRE::segment() {
 
     r.setStartPos(seg.first);
     r.setEndPos(seg.second);
-    //r.setTps(tagPathSequence.substr(r.getStartPos(), r.size()));
+    r.setTps(tagPathSequence.substr(r.getStartPos(), r.size()));
     dataRegions.emplace_back(r);
   }
 
@@ -190,8 +190,8 @@ void DSRE::segment() {
 
     symbolFrequency(r.getTps(), alpha);
 
-    /*auto minTPC = *alpha.begin();
-     auto maxTPC = *alpha.rbegin();*/
+    auto minTPC = *alpha.begin();
+    auto maxTPC = *alpha.rbegin();
 
     // pad left
     //while (r.getStartPos() > 0 && tagPathSequence[r.getStartPos() - 1] >= minTPC && tagPathSequence[r.getStartPos() - 1] <= maxTPC) {
