@@ -350,7 +350,7 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         std::for_each(firstFreq,lastFreq,
                       [&foundPeak](auto p)
                       {
-                        if (abs(p) > 4.0)
+                        if (abs(p) > 3.0)
                         foundPeak = true;
                       });
         if (foundPeak) {
