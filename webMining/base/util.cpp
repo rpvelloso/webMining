@@ -86,7 +86,7 @@ std::vector<double> _fft(std::vector<double> &signal, int dir, bool psd = true) 
   return ret;
 }
 
-std::vector<double> fct(std::vector<double> signal) {
+std::vector<double> fct(const std::vector<double> &signal) {
   std::vector<double> sig4n(signal.size() * 4, 0);
 
   for (size_t i = 0; i < signal.size(); ++i) {

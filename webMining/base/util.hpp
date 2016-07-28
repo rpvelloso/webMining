@@ -36,7 +36,7 @@ struct LinearRegression {
 };
 
 std::string stringTok(std::string &inp, const std::string &delim);
-std::vector<double> fct(std::vector<double> signal);
+std::vector<double> fct(const std::vector<double> &signal);
 std::vector<double> _fft(std::vector<double> &, int, bool = true);
 
 template<typename T>
@@ -52,7 +52,7 @@ T contour(T s) {
 }
 
 template<typename T>
-std::vector<double> difference(T s) {
+std::vector<double> difference(const T &s) {
   std::vector<double> d(s.size() - 1);
 
   for (size_t i = 1; i < s.size(); ++i)
@@ -201,7 +201,7 @@ double centerStar(std::vector<T> &M) {
 }
 
 template<class T>
-LinearRegression computeLinearRegression(T s) {
+LinearRegression computeLinearRegression(const T &s) {
   //trimSequence(s);
   double delta, x, y, xy, x2, sx = 0, sy = 0, sxy = 0, sx2 = 0, n = s.size();
   LinearRegression lc;
