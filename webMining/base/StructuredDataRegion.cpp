@@ -20,13 +20,13 @@
 #include <iterator>
 #include <stdexcept>
 
-StructuredDataRegion::StructuredDataRegion() {
+StructuredDataRegion::StructuredDataRegion() : DataRegion() {
 }
 
 StructuredDataRegion::~StructuredDataRegion() {
 }
 
-const Record StructuredDataRegion::getRecord(size_t pos) const {
+Record StructuredDataRegion::getRecord(size_t pos) const {
   if (pos < records.size())
     return records[pos];
 

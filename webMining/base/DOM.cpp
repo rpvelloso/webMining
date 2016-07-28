@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_set>
+#include <exception>
 
 #include "Node.hpp"
 
@@ -36,12 +37,14 @@
  }*/
 
 void DOM::luaBinding(sol::state &lua) {
-  lua.new_usertype < DOM
-      > ("DOM", sol::constructors<sol::types<const std::string>>(), "isLoaded", &DOM::isLoaded, "printHTML", &DOM::printHTML, "getURI", DOM::getURI);
+  lua.new_usertype<DOM>("DOM",
+		  sol::constructors<sol::types<const std::string>>(),
+		  "printHTML", &DOM::printHTML,
+		  "getURI", DOM::getURI);
   Node::luaBinding(lua);
 }
 
-DOM::DOM(const std::string uri) {
+DOM::DOM(const std::string &uri) {
   this->uri = uri;
   tdoc = tidyCreate();
 
@@ -74,9 +77,9 @@ DOM::DOM(const std::string uri) {
     clear();
     tidySaveBuffer(tdoc, &output);
     mapNodes(tidyGetHtml(tdoc));
-    loaded = true;
     //traverse(this,tidyGetHtml(tdoc));
-  }
+  } else
+	  throw new std::runtime_error("error parsing file " + uri);
 }
 ;
 
@@ -91,12 +94,7 @@ DOM::~DOM() {
 }
 ;
 
-bool DOM::isLoaded() const {
-  return loaded;
-}
-
 void DOM::printHTML() const {
-  if (loaded)
     std::cout << output.bp << std::endl;
 }
 ;
@@ -137,7 +135,7 @@ static void cleanHelper(TidyNode n, std::vector<TidyNode> &remove) {
     cleanHelper(c, remove);
 }
 
-std::string DOM::getURI() const {
+std::string DOM::getURI() const noexcept {
   return uri;
 }
 

@@ -103,6 +103,7 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   void extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos,
                       DSREDataRegion &);
   std::wstring reencode(const std::wstring &tps);
+  void correctBoundaries();
 
   std::unique_ptr<PeriodEstimatorStrategy> periodEstimatorPtr;
   PeriodEstimator periodEstimator;

@@ -26,7 +26,7 @@
 template<typename DataRegionType>
 class TPSExtractor : public StructuredExtractor<DataRegionType> {
  public:
-  TPSExtractor() {
+  TPSExtractor() : StructuredExtractor<DataRegionType>() {
   }
   virtual ~TPSExtractor() {
   }

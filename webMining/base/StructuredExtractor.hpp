@@ -22,7 +22,7 @@
 template<typename DataRegionType>
 class StructuredExtractor : public Extractor<DataRegionType> {
  public:
-  StructuredExtractor() {
+  StructuredExtractor() : Extractor<DataRegionType>() {
   }
   virtual ~StructuredExtractor() {
   }

@@ -29,13 +29,12 @@ using pNode = Node *;
 class DOM {
   friend class Node;
  public:
-  DOM(const std::string uri);
+  DOM(const std::string &uri);
   ~DOM();
-  bool isLoaded() const;
   void printHTML() const;
   pNode body();
   //pNode html();
-  std::string getURI() const;
+  std::string getURI() const noexcept;
   static void luaBinding(sol::state &lua);
  private:
   void mapNodes(TidyNode node);
@@ -45,7 +44,6 @@ class DOM {
   TidyDoc tdoc;
   TidyBuffer output = { 0 };
   TidyBuffer errbuf = { 0 };
-  bool loaded = false;
   DOM() = delete;
   std::string uri;
 };
