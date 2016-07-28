@@ -190,20 +190,18 @@ void DSRE::segment() {
 
     symbolFrequency(r.getTps(), alpha);
 
-    auto minTPC = *alpha.begin();
-    auto maxTPC = *alpha.rbegin();
+    /*auto minTPC = *alpha.begin();
+    auto maxTPC = *alpha.rbegin();*/
 
     // pad left
     //while (r.getStartPos() > 0 && tagPathSequence[r.getStartPos() - 1] >= minTPC && tagPathSequence[r.getStartPos() - 1] <= maxTPC) {
-    while (r.getStartPos() > 0
-        && alpha.count(tagPathSequence[r.getStartPos() - 1]) > 0) {
+    while (r.getStartPos() > 0 && alpha.count(tagPathSequence[r.getStartPos() - 1]) > 0) {
       r.shiftStartPos(-1);
     }
 
     // pad right
-    //while ((static_cast<size_t>(r.getEndPos()) < tagPathSequence.size()-1) && tagPathSequence[r.getEndPos()+1] >= minTPC && tagPathSequence[r.getEndPos()+1] <= maxTPC) {
-    while ((r.getEndPos() < tagPathSequence.size() - 1)
-        && alpha.count(tagPathSequence[r.getEndPos() + 1]) > 0) {
+    //while (r.getEndPos() < tagPathSequence.size()-1 && tagPathSequence[r.getEndPos()+1] >= minTPC && tagPathSequence[r.getEndPos()+1] <= maxTPC) {
+    while ((r.getEndPos() < tagPathSequence.size() - 1) && alpha.count(tagPathSequence[r.getEndPos() + 1]) > 0) {
       r.shiftEndPos(+1);
     }
 
@@ -243,7 +241,7 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
   std::wstring s = region.getTps();
   std::set < size_t > result;
 
-  std::vector<double> signal(s.begin(), s.end());
+  /*std::vector<double> signal(s.begin(), s.end());
 
   auto dc = mean(signal);
 
@@ -258,7 +256,7 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
   double transformScale = 1.0*(double)signal.size()/(double)s.size();
   for (auto &i:psd) // convert to Z Score
 	  i /= psdSD;
-  region.setTransform(psd);
+  region.setTransform(psd);*/
 
   std::set<int> symbols(s.begin(), s.end());
 
@@ -275,18 +273,35 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
       auto sd = stddev(recsize);
       auto cv = sd / m;
       double regionCoverage = (double)std::min((size_t)(recpos[recpos.size()-1] - recpos[0] + m), s.size())/(double)s.size();
-      auto firstPos = recpos.begin();
-      auto lastPos = recpos.end() - 1;
-      if (s[*firstPos] != symbol)
-        ++firstPos;
-      if (s[*lastPos] == symbol)
-        ++lastPos;
+      auto firstRec = recpos.begin();
+      auto lastRec = recpos.end() - 1;
+      if (s[*firstRec] != symbol)
+        ++firstRec;
+      if (s[*lastRec] == symbol)
+        ++lastRec;
       std::cerr << "CV: " << cv << ", RC: " << regionCoverage << std::endl;
       if (
-    		  std::distance(firstPos, lastPos) > 1 &&
+    		  std::distance(firstRec, lastRec) > 1 &&
     		  cv < 0.3 &&
 			  regionCoverage > 0.80
       	  ) {
+
+        std::vector<double> signal(s.begin() + *recpos.begin(), s.begin() + *recpos.rbegin() + m);
+
+        auto dc = mean(signal);
+
+        for (auto &i : signal)
+          i -= dc;
+
+        hannWindow(signal);
+
+        signal.resize(signal.size()*2, 0); // zero pad
+        auto psd = fft(signal);
+        auto psdSD = stddev(psd);
+        double transformScale = 1.0*(double)signal.size()/(double)s.size();
+        for (auto &i:psd) // convert to Z Score
+          i /= psdSD;
+
         bool foundPeak = false;
         auto firstFreq = psd.begin();
         auto lastFreq = psd.begin();
@@ -300,7 +315,8 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
                         foundPeak = true;
                       });
         if (foundPeak) {
-          result.insert(firstPos, lastPos);
+          result.insert(firstRec, lastRec);
+          region.setTransform(psd);
           break;
         }
       }

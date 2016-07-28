@@ -37,7 +37,7 @@ struct LinearRegression {
 
 std::string stringTok(std::string &inp, const std::string &delim);
 std::vector<double> fct(std::vector<double> signal);
-std::vector<double> _fft(std::vector<double>, int, bool = true);
+std::vector<double> _fft(std::vector<double> &, int, bool = true);
 
 template<typename T>
 T contour(T s) {
@@ -233,7 +233,7 @@ LinearRegression computeLinearRegression(T s) {
 }
 
 template<typename T>
-double mean(T s) {
+double mean(const T &s) {
 
   double total = 0;
 
@@ -244,7 +244,7 @@ double mean(T s) {
 }
 
 template<typename T>
-double variance(T s) {
+double variance(const T &s) {
   auto m = mean(s);
 
   double var = 0;
@@ -258,7 +258,7 @@ double variance(T s) {
 }
 
 template<typename T>
-double stddev(T s) {
+double stddev(const T &s) {
   return sqrt(variance(s));
 }
 

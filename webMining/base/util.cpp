@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <memory>
 
 #include "../3rdparty/hsfft.h"
 
@@ -46,14 +47,18 @@ std::string stringTok(std::string &inp, const std::string &delim) {
   return token;
 }
 
-std::vector<double> _fft(std::vector<double> signal, int dir, bool psd = true) {
+std::vector<double> _fft(std::vector<double> &signal, int dir, bool psd = true) {
   size_t N = (signal.size() + (signal.size() % 2));
-  std::vector<double> ret;
+  std::vector<double> ret(N);
 
-  fft_object obj = fft_init(N, dir);  // Initialize FFT object obj . N - FFT Length. 1 - Forward FFT and -1 for Inverse FFT
+  //fft_object obj = fft_init(N, dir);  // Initialize FFT object obj . N - FFT Length. 1 - Forward FFT and -1 for Inverse FFT
+  auto fftDeleter = [](fft_set *ptr){free(ptr);};
+  std::unique_ptr<fft_set, decltype(fftDeleter)> obj(fft_init(N, dir),fftDeleter);  // Initialize FFT object obj . N - FFT Length. 1 - Forward FFT and -1 for Inverse FFT
 
-  fft_data* inp = (fft_data*) malloc(sizeof(fft_data) * N);
-  fft_data* oup = (fft_data*) malloc(sizeof(fft_data) * N);
+  std::unique_ptr<fft_data[]> inp(new fft_data[N]);
+  std::unique_ptr<fft_data[]> oup(new fft_data[N]);
+  //fft_data* inp = (fft_data*) malloc(sizeof(fft_data) * N);
+  //fft_data* oup = (fft_data*) malloc(sizeof(fft_data) * N);
 
   for (size_t i = 0; i < N; i++) {
     inp[i].re = signal[i];
@@ -65,18 +70,18 @@ std::vector<double> _fft(std::vector<double> signal, int dir, bool psd = true) {
     inp[N - 1].im = 0;
   }
 
-  fft_exec(obj, inp, oup);
+  fft_exec(obj.get(), inp.get(), oup.get());
 
   for (size_t i = 0; i < N; i++) {
     if (psd)
-      ret.push_back((oup[i].re * oup[i].re) + (oup[i].im * oup[i].im));
+      ret[i] = (oup[i].re * oup[i].re) + (oup[i].im * oup[i].im);
     else
-      ret.push_back(oup[i].re);
+      ret[i] = oup[i].re;
   }
 
-  free(inp);
-  free(oup);
-  free_fft(obj);
+  //free(inp);
+  //free(oup);
+  //free_fft(obj);
 
   return ret;
 }
