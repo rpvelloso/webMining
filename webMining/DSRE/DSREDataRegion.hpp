@@ -28,7 +28,7 @@
 
 class DSREDataRegion : public StructuredDataRegion {
  public:
-  DSREDataRegion();
+	DSREDataRegion(const std::wstring &ftps, const std::vector<pNode> &fns);
   virtual ~DSREDataRegion();
   size_t size() const noexcept;
   size_t getEndPos() const noexcept;
@@ -55,14 +55,14 @@ class DSREDataRegion : public StructuredDataRegion {
   void setContent(bool content);
   double getStdDev() const;
   void setStdDev(double stddev);
-  double getEstPeriod() const;
-  void setEstPeriod(double estPeriod);
+  void refreshTps();
 
   static void luaBinding(sol::state &lua);
 	std::vector<double> getTransform() const;
 	void setTransform(const std::vector<double>& transform);
 
  private:
+DSREDataRegion() = delete;
   std::wstring tps;
   std::vector<pNode> nodeSequence;
   LinearRegression linearRegression;
@@ -71,8 +71,10 @@ class DSREDataRegion : public StructuredDataRegion {
   bool content = false;
   double score = 0;
   double stdDev = 0;
-  double estPeriod = 0;
   std::vector<double> transform;
+
+  const std::wstring *fullTps;
+  const std::vector<pNode> *fullNodeSequence;
 };
 
 #endif /* DSREDATAREGION_HPP_ */

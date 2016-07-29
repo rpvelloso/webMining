@@ -169,7 +169,8 @@ void DSRE::correctBoundaries() {
 	  r.shiftEndPos(+1);
 	}
 
-	r.setTps(tagPathSequence.substr(r.getStartPos(), r.size()));
+	//r.setTps(tagPathSequence.substr(r.getStartPos(), r.size()));
+	r.refreshTps();
   }
 
   /*for (auto i = dataRegions.begin(); i != dataRegions.end();) {
@@ -235,11 +236,13 @@ void DSRE::segment() {
   mergeRegions(segs);
 
   for (auto seg : segs) {
-    DSREDataRegion r;
+	    //DSREDataRegion r;
+	    DSREDataRegion r(tagPathSequence, nodeSequence);
 
     r.setStartPos(seg.first);
     r.setEndPos(seg.second);
-    r.setTps(tagPathSequence.substr(r.getStartPos(), r.size()));
+    r.refreshTps();
+    //r.setTps(tagPathSequence.substr(r.getStartPos(), r.size()));
     dataRegions.emplace_back(r);
   }
 
@@ -263,11 +266,6 @@ std::vector<size_t> DSRE::detectStructure() {
         (r.size() >= sizeThreshold)  // test for size
         ) {
       structured.emplace_back(i);
-
-      auto firstNode = nodeSequence.begin() + r.getStartPos();
-      auto lastNode = firstNode + r.size();
-      r.assignNodeSequence(firstNode, lastNode);
-
       r.setStructured(true);
     }
   }
@@ -321,8 +319,9 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
 
     	  auto firstPos = s.begin();
     	  auto lastPos = s.begin();
+    	  size_t endRecPos = std::min((size_t)(*lastRec + m), s.size()-1);
     	  std::advance(firstPos, *firstRec);
-    	  std::advance(lastPos, std::min((size_t)(*lastRec + m), s.size()-1));
+    	  std::advance(lastPos, endRecPos);
     	  std::vector<double> signal(firstPos, lastPos);
 
     	  auto dc = mean(signal);
@@ -335,7 +334,7 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
     	  signal.resize(signal.size()*2, 0); // zero pad
     	  auto psd = fft(signal);
     	  auto psdSD = stddev(psd);
-    	  double transformScale = 1.0*(double)signal.size()/(double)(*lastRec - *firstRec + m);
+    	  double transformScale = 1.0*(double)signal.size()/(double)(std::distance(firstPos, lastPos));
     	  for (auto &i:psd) // convert to Z Score
     		  i /= psdSD;
 
@@ -352,8 +351,15 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
                         foundPeak = true;
                       });
         if (foundPeak) {
-          result.insert(firstRec, lastRec.base());
+        	std::for_each(recpos.begin(), recpos.end(),[firstRec](auto &a){
+        		a -= *firstRec;
+        	});
+          region.shiftStartPos(*firstRec);
+          region.shiftEndPos(-(s.size()-1 - endRecPos));
+          region.refreshTps();
           region.setTransform(psd);
+
+          result.insert(firstRec, lastRec.base());
           break;
         }
       }
@@ -574,9 +580,11 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
       dataRegions[i].setContent((((*j) == 2) || (scoreResult.nClusters < 2)));
 
       // restore the original region's tps
-      dataRegions[i].setTps(
+      dataRegions[i].refreshTps();
+      /*dataRegions[i].setTps(
           tagPathSequence.substr(dataRegions[i].getStartPos(),
-                                 dataRegions[i].size()));
+                                 dataRegions[i].size()));*/
+
       ++j;
     }
 

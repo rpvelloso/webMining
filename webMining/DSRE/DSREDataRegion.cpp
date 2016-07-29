@@ -19,8 +19,6 @@
 #include <iterator>
 #include <string>
 
-//TODO: expose FFT, DCT & Autocorrelation for each data region
-
 void DSREDataRegion::luaBinding(sol::state &lua) {
   lua.new_usertype<DSREDataRegion>("DSREDataRegion",
 		  "getRecord", &DSREDataRegion::getRecord,
@@ -34,7 +32,6 @@ void DSREDataRegion::luaBinding(sol::state &lua) {
 		  "isStructured", &DSREDataRegion::isStructured,
 		  "getScore", &DSREDataRegion::getScore,
 		  "isContent", &DSREDataRegion::isContent,
-		  "getEstPeriod", &DSREDataRegion::getEstPeriod,
 		  "getTransform",  &DSREDataRegion::getTransform
       );
 
@@ -45,7 +42,8 @@ void DSREDataRegion::luaBinding(sol::state &lua) {
 
 }
 
-DSREDataRegion::DSREDataRegion() {
+DSREDataRegion::DSREDataRegion(const std::wstring &ftps, const std::vector<pNode> &fns) : StructuredDataRegion(), fullTps(&ftps), fullNodeSequence(&fns) {
+
 }
 
 DSREDataRegion::~DSREDataRegion() {
@@ -160,16 +158,13 @@ void DSREDataRegion::setStdDev(double stddev) {
   this->stdDev = stddev;
 }
 
-double DSREDataRegion::getEstPeriod() const {
-  return estPeriod;
-}
-
-void DSREDataRegion::setEstPeriod(double estPeriod) {
-  this->estPeriod = estPeriod;
-}
-
 std::vector<double> DSREDataRegion::getTransform() const {
 	return transform;
+}
+
+void DSREDataRegion::refreshTps() {
+	tps = fullTps->substr(startPos, size());
+	nodeSequence.assign(fullNodeSequence->begin() + startPos, fullNodeSequence->begin() + startPos + size());
 }
 
 void DSREDataRegion::setTransform(const std::vector<double>& transform) {

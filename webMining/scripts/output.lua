@@ -48,6 +48,7 @@ displayResults = function(dsre,dir,filename)
     
     local tps = dr:getTps()
     local linReg = dr:getLinearRegression()
+    local transform = dr:getTransform()
     if #tps then
       outp:write("<img src='",filename,".region",i,term[term["default"]],"' /><br />",CRLF)
       outp:write(string.format("interval: [%d; %d], size: %d, angle: %.2f, score: %.2f<br/>",dr:getStartPos(),dr:getEndPos(),dr:size(),math.atan(math.abs(linReg.a))*180/math.pi,dr:getScore()),CRLF)
@@ -56,7 +57,15 @@ displayResults = function(dsre,dir,filename)
       for k=2,#tps do
         outp:write(",",tps[k])
       end
-      outp:write("</textarea><br />",CRLF)
+      outp:write("</textarea>",CRLF)
+      if #transform then
+        outp:write("<textarea>",CRLF)
+        outp:write(transform[1])
+        for k=2,#transform do
+          outp:write(",",transform[k])
+        end
+        outp:write("</textarea><br />",CRLF)
+      end
     end
     outp:write(CRLF)
   end
