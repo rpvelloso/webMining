@@ -34,11 +34,14 @@ plotSequences = function(dsre,output,filename)
         f:write(j-1,"\t",tps[j],CRLF)
       end
       f:write("e",CRLF)
-      f:write("plot '-' with linespoints ls 1 title 'transform'",CRLF)
+      f:write("set style line 1 lc rgb \'#0060ad\' lt 1 lw 1 pt 7 ps 0.5",CRLF)
+      f:write("set arrow from "..(dr:recordCount()-1)..", graph 0 to "..(dr:recordCount()-1)..", graph 1 nohead lw 6 lc rgb \'red\'",CRLF)
+      f:write("plot '-' with linespoints ls 1 title \'Transform \'",CRLF)
       for i=1,#transform do
             f:write((i-1)*#tps/#transform,"\t",transform[i],CRLF)
       end
       f:write("e",CRLF)
+      f:write("unset arrow",CRLF)
       f:write("unset multiplot",CRLF)
     end
   end

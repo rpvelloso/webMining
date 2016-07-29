@@ -262,7 +262,7 @@ std::vector<size_t> DSRE::detectStructure() {
 
     std::cerr << "size: " << r.size() << " ang.coeff.: " << lr.a << std::endl;
 
-    if ((abs(lr.a) < angCoeffThreshold) &&  // test for structure
+    if ((std::abs(lr.a) < angCoeffThreshold) &&  // test for structure
         (r.size() >= sizeThreshold)  // test for size
         ) {
       structured.emplace_back(i);
@@ -345,9 +345,9 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
     	  std::advance(lastFreq, (recpos.size()-1+3)*transformScale);
 
         std::for_each(firstFreq,lastFreq,
-                      [&foundPeak](auto p)
+                      [&foundPeak](double p)
                       {
-                        if (abs(p) > 3.0)
+                        if (std::abs(p) > 2.0)
                         foundPeak = true;
                       });
         if (foundPeak) {
@@ -560,7 +560,7 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
        //(double)recCount * (double)recSize * stddev;
        */
 
-      float positionScore = 1 - (abs(tpsCenter - regionCenter) / maxDistance);
+      float positionScore = 1 - (std::abs(tpsCenter - regionCenter) / maxDistance);
       float sizeScore = dataRegions[i].size() / tpsSize;
       float recScore = std::min(recCount, recSize)
           / std::max(recCount, recSize);

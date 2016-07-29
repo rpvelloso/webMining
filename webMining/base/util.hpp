@@ -224,7 +224,7 @@ LinearRegression computeLinearRegression(const T &s) {
 
   for (long int i = 0; i < n; i++) {
     double ee;
-    ee = abs(s[i] - (lc.a * i + lc.b));
+    ee = std::abs(s[i] - (lc.a * i + lc.b));
     lc.e += ee * ee;
   }
   lc.e /= n;
