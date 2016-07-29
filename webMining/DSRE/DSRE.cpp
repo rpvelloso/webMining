@@ -25,14 +25,12 @@ void DSRE::luaBinding(sol::state &lua) {
 		  "getTps", &DSRE::getTps,
 		  "printTps", &DSRE::printTps,
 		  "regionCount", &DSRE::regionCount,
-		  "getDataRegion", &DSRE::getDataRegion,
-		  "setPeriodEstimator", &DSRE::setPeriodEstimator);
+		  "getDataRegion", &DSRE::getDataRegion);
+
   DSREDataRegion::luaBinding(lua);
 }
 
-DSRE::DSRE()
-    : periodEstimatorPtr(new ModifiedDCTPeriodEstimator()),
-      periodEstimator(PeriodEstimator::ModifiedDCT) {
+DSRE::DSRE() :  TPSExtractor<DSREDataRegion>() {
 }
 
 DSRE::~DSRE() {
@@ -468,31 +466,6 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
  }
  */
 
-double DSRE::estimatePeriod(const std::vector<double> &signal) {
-  return periodEstimatorPtr->estimate(signal);
-}
-
-void DSRE::setPeriodEstimator(PeriodEstimator strategy) {
-  switch (strategy) {
-    case PeriodEstimator::DCT:
-      periodEstimatorPtr.reset(new DCTPeriodEstimator());
-      periodEstimator = strategy;
-      break;
-    case PeriodEstimator::ModifiedDCT:
-      periodEstimatorPtr.reset(new ModifiedDCTPeriodEstimator());
-      periodEstimator = strategy;
-      break;
-    case PeriodEstimator::DFT:
-      periodEstimatorPtr.reset(new DFTPeriodEstimator());
-      periodEstimator = strategy;
-      break;
-    case PeriodEstimator::StdDev3:
-      periodEstimatorPtr.reset(new StdDev3PeriodEstimator());
-      periodEstimator = strategy;
-      break;
-  }
-}
-
 void DSRE::pruneRecords(DSREDataRegion &region, std::set<size_t> &recpos) {
   // consider only leaf nodes when performing field alignment
   std::vector<bool> remove(region.getTps().size());
@@ -670,96 +643,4 @@ void DSRE::extractRecords(std::vector<std::wstring> &m,
   }
   region.cleanup();
   std::cerr << std::endl;
-}
-
-double DFTPeriodEstimator::estimate(std::vector<double> signal) {
-  size_t N = (signal.size() + (signal.size() % 2));
-
-  if (signal.size() != N) {  // repeat last sample when signal size is odd
-    signal.resize(N);
-    signal[N - 1] = signal[N - 2];
-  }
-
-  auto spectrum = fft(signal);
-
-  double freq = 1;
-  double power = spectrum[1];
-  for (size_t i = 1; i < spectrum.size() / 2; ++i) {
-    if (spectrum[i] > power) {
-      freq = (double) (i);
-      power = spectrum[i];
-    }
-  }
-  return (double) (N) / (double) (freq);
-}
-
-double DCTPeriodEstimator::estimate(std::vector<double> signal) {
-  size_t N = (signal.size() + (signal.size() % 2));
-
-  if (signal.size() != N) {
-    signal.resize(N);
-    signal[N - 1] = signal[N - 2];
-  }
-
-  auto spectrum = fct(signal);
-
-  double freq = 1;
-  double power = spectrum[1];
-  for (size_t i = 1; i < spectrum.size() / 4; ++i) {
-    if (spectrum[i] > power) {
-      freq = (double) (i) / 2.0;
-      power = spectrum[i];
-    }
-  }
-  return (double) (N) / (double) (freq);
-}
-
-double ModifiedDCTPeriodEstimator::estimate(std::vector<double> signal) {
-  size_t N = (signal.size() + (signal.size() % 2));
-
-  if (signal.size() != N) {  // repeat last sample when signal size is odd
-    signal.resize(N);
-    signal[N - 1] = signal[N - 2];
-  }
-
-  auto spectrum = fct(signal);
-
-  for (size_t i = 0; i < spectrum.size() - 3; ++i)
-    spectrum[i] = abs(spectrum[i] - spectrum[i + 2]);
-
-  spectrum.resize(signal.size() - 2);
-
-  double freq = 1;
-  double power = spectrum[1];
-  for (size_t i = 1; i < spectrum.size() / 4; ++i) {
-    if (spectrum[i] > power) {
-      freq = (double) (i) / 2.0;
-      power = spectrum[i];
-    }
-  }
-  return (double) (N) / (double) (freq);
-}
-
-double StdDev3PeriodEstimator::estimate(std::vector<double> signal) {
-  size_t N = (signal.size() + (signal.size() % 2));
-
-  if (signal.size() != N) {  // repeat last sample when signal size is odd
-    signal.resize(N);
-    signal[N - 1] = signal[N - 2];
-  }
-
-  auto spectrum = fct(signal);
-  auto std3 = stddev(spectrum) * 4;
-
-  double freq = 0;
-  for (size_t i = 1; i < spectrum.size() / 4; ++i) {
-    if (abs(spectrum[i]) > std3) {
-      freq = (double) (i) / 2.0;
-      break;
-    }
-  }
-  if (freq != 0)
-    return (double) (N) / (double) (freq);
-  else
-    return 0;
 }

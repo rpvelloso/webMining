@@ -35,7 +35,6 @@ void DSREDataRegion::luaBinding(sol::state &lua) {
 		  "getScore", &DSREDataRegion::getScore,
 		  "isContent", &DSREDataRegion::isContent,
 		  "getEstPeriod", &DSREDataRegion::getEstPeriod,
-		  "getPeriodEstimator", &DSREDataRegion::getPeriodEstimator,
 		  "getTransform",  &DSREDataRegion::getTransform
       );
 
@@ -167,14 +166,6 @@ double DSREDataRegion::getEstPeriod() const {
 
 void DSREDataRegion::setEstPeriod(double estPeriod) {
   this->estPeriod = estPeriod;
-}
-
-PeriodEstimator DSREDataRegion::getPeriodEstimator() const {
-  return periodEstimator;
-}
-
-void DSREDataRegion::setPeriodEstimator(PeriodEstimator periodEstimator) {
-  this->periodEstimator = periodEstimator;
 }
 
 std::vector<double> DSREDataRegion::getTransform() const {
