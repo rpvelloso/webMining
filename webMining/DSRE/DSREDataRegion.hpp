@@ -28,23 +28,19 @@
 
 class DSREDataRegion : public StructuredDataRegion {
  public:
-	DSREDataRegion(const std::wstring &ftps, const std::vector<pNode> &fns);
+  DSREDataRegion(const std::wstring &ftps, const std::vector<pNode> &fns);
   virtual ~DSREDataRegion();
   size_t size() const noexcept;
   size_t getEndPos() const noexcept;
-  void setEndPos(size_t endPos) noexcept;
+  void setEndPos(size_t endPos);
   size_t getStartPos() const noexcept;
-  void setStartPos(size_t startPos) noexcept;
+  void setStartPos(size_t startPos);
   void shiftStartPos(long int shift);
   void shiftEndPos(long int shift);
   const std::vector<pNode>& getNodeSequence() const;
-  void setNodeSequence(const std::vector<pNode>& nodeSequence);
-  void assignNodeSequence(std::vector<pNode>::iterator first,
-                          std::vector<pNode>::iterator last);
   void eraseNodeSequence(std::function<bool(const pNode &)>);
   void eraseTPS(std::function<bool(const wchar_t &)>);
   const std::wstring& getTps() const;
-  void setTps(const std::wstring& tps);
   LinearRegression getLinearRegression() const noexcept;
   void detectStructure();
   bool isStructured() const;
@@ -58,11 +54,11 @@ class DSREDataRegion : public StructuredDataRegion {
   void refreshTps();
 
   static void luaBinding(sol::state &lua);
-	std::vector<double> getTransform() const;
-	void setTransform(const std::vector<double>& transform);
+  std::vector<double> getTransform() const;
+  void setTransform(const std::vector<double>& transform);
 
  private:
-DSREDataRegion() = delete;
+  DSREDataRegion() = delete;
   std::wstring tps;
   std::vector<pNode> nodeSequence;
   LinearRegression linearRegression;

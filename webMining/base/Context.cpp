@@ -20,7 +20,6 @@
 #include <iostream>
 #include <string>
 
-#include "../CVSRE/CVSRE.hpp"
 #include "../DSRE/DSRE.hpp"
 #include "DOM.hpp"
 
@@ -53,7 +52,6 @@ Context::~Context() {
 void Context::bind(int argc, char **argv) {
   DOM::luaBinding (lua);
   DSRE::luaBinding(lua);
-  CVSRE::luaBinding(lua);
 
   luaopen_lsqlite3(lua.lua_state());
   lua_setglobal(lua.lua_state(), "sqlite3");

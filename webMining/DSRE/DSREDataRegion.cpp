@@ -42,7 +42,11 @@ void DSREDataRegion::luaBinding(sol::state &lua) {
 
 }
 
-DSREDataRegion::DSREDataRegion(const std::wstring &ftps, const std::vector<pNode> &fns) : StructuredDataRegion(), fullTps(&ftps), fullNodeSequence(&fns) {
+DSREDataRegion::DSREDataRegion(const std::wstring &ftps,
+                               const std::vector<pNode> &fns)
+    : StructuredDataRegion(),
+      fullTps(&ftps),
+      fullNodeSequence(&fns) {
 
 }
 
@@ -57,43 +61,44 @@ size_t DSREDataRegion::getEndPos() const noexcept {
   return endPos;
 }
 
-void DSREDataRegion::setEndPos(size_t endPos) noexcept {
-  this->endPos = endPos;
+void DSREDataRegion::setEndPos(size_t endPos) {
+  if (endPos < fullTps->size())
+    this->endPos = endPos;
+  else
+    throw new std::out_of_range("tps end position out of range");
 }
 
 size_t DSREDataRegion::getStartPos() const noexcept {
   return startPos;
 }
 
-void DSREDataRegion::setStartPos(size_t startPos) noexcept {
-  this->startPos = startPos;
+void DSREDataRegion::setStartPos(size_t startPos) {
+  if (startPos < fullTps->size())
+    this->startPos = startPos;
+  else
+    throw new std::out_of_range("tps start position out of range");
 }
 
 void DSREDataRegion::shiftStartPos(long int shift) {
   auto result = startPos + shift;
 
-  if (result < 0)
-    startPos = 0;
-  else
+  if (result >= 0 && result < fullTps->size())
     startPos = result;
+  else
+    throw new std::out_of_range("tps start position shifted out of range");
 }
 
 void DSREDataRegion::shiftEndPos(long int shift) {
   auto result = endPos + shift;
 
-  if (result < 0)
-    endPos = 0;
-  else
+  if (result >= 0 && result < fullTps->size())
     endPos = result;
+  else
+    throw new std::out_of_range("tps end position shifted out of range");
 }
 
 const std::vector<pNode>& DSREDataRegion::getNodeSequence() const {
   return nodeSequence;
-}
-
-void DSREDataRegion::assignNodeSequence(std::vector<pNode>::iterator first,
-                                        std::vector<pNode>::iterator last) {
-  nodeSequence.assign(first, last);
 }
 
 void DSREDataRegion::eraseNodeSequence(std::function<bool(const pNode &)> f) {
@@ -106,16 +111,8 @@ void DSREDataRegion::eraseTPS(std::function<bool(const wchar_t &)> f) {
   tps.erase(tpsEnd, tps.end());
 }
 
-void DSREDataRegion::setNodeSequence(const std::vector<pNode>& nodeSequence) {
-  this->nodeSequence = nodeSequence;
-}
-
 const std::wstring& DSREDataRegion::getTps() const {
   return tps;
-}
-
-void DSREDataRegion::setTps(const std::wstring& tps) {
-  this->tps = tps;
 }
 
 LinearRegression DSREDataRegion::getLinearRegression() const noexcept {
@@ -159,14 +156,15 @@ void DSREDataRegion::setStdDev(double stddev) {
 }
 
 std::vector<double> DSREDataRegion::getTransform() const {
-	return transform;
-}
-
-void DSREDataRegion::refreshTps() {
-	tps = fullTps->substr(startPos, size());
-	nodeSequence.assign(fullNodeSequence->begin() + startPos, fullNodeSequence->begin() + startPos + size());
+  return transform;
 }
 
 void DSREDataRegion::setTransform(const std::vector<double>& transform) {
-	this->transform = transform;
+  this->transform = transform;
+}
+
+void DSREDataRegion::refreshTps() {
+  tps = fullTps->substr(startPos, size());
+  nodeSequence.assign(fullNodeSequence->begin() + startPos,
+                      fullNodeSequence->begin() + startPos + size());
 }

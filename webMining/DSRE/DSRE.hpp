@@ -31,22 +31,28 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   DSRE();
   virtual ~DSRE();
   void extract(pDOM dom) override;
+  double getMinZScore() const;
+  void setMinZScore(double minZScore);
 
   static void luaBinding(sol::state &lua);
+
  private:
   void segment();
+  void correctBoundaries();
   std::vector<size_t> detectStructure();
   std::set<size_t> locateRecords(DSREDataRegion &region);
   void pruneRecords(DSREDataRegion &, std::set<size_t> &);
   void alignRecords(DSREDataRegion &, std::set<size_t> &);
+  void extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos,
+                      DSREDataRegion &);
   void rankRegions(const std::vector<size_t> &);
 
-  std::list<std::pair<size_t, size_t> > segmentDifference(const std::vector<double> &);
+  std::list<std::pair<size_t, size_t> > segmentDifference(
+      const std::vector<double> &);
   void mergeRegions(std::list<std::pair<size_t, size_t> > &);
   std::unordered_map<int, int> symbolFrequency(std::wstring, std::set<int> &);
-  void extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos, DSREDataRegion &);
-  std::wstring reencode(const std::wstring &tps);
-  void correctBoundaries();
+
+  double minZScore;  // default 3*stddev(PSD)
 };
 
 #endif /* DSRE_HPP_ */
