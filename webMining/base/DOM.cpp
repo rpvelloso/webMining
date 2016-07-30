@@ -25,22 +25,14 @@
 
 #include "Node.hpp"
 
-/*static void traverse(DOM *dom, TidyNode node, size_t ident = 0) {
- Node n(dom, node);
-
- for (size_t i = 0; i < ident; ++i)
- cout << " ";
- cout << n.toString() << endl;
-
- for (auto c = tidyGetChild(node); c; c = tidyGetNext(c))
- traverse(dom, c, ident+2);
- }*/
-
 void DOM::luaBinding(sol::state &lua) {
   lua.new_usertype<DOM>("DOM",
 		  sol::constructors<sol::types<const std::string>>(),
 		  "printHTML", &DOM::printHTML,
-		  "getURI", DOM::getURI);
+		  "getURI", DOM::getURI,
+      "traverse",&DOM::traverse,
+      "setPreOrder",&DOM::setPreOrder,
+		  "setPostOrder",&DOM::setPostOrder);
   Node::luaBinding(lua);
 }
 
@@ -81,7 +73,6 @@ DOM::DOM(const std::string &uri) {
   } else
 	  throw new std::runtime_error("error parsing file " + uri);
 }
-;
 
 DOM::~DOM() {
   if (errbuf.allocated)
@@ -92,7 +83,20 @@ DOM::~DOM() {
   for (auto n : domNodes)
     delete n.second;
 }
-;
+
+void DOM::traverse() {
+  traverseHelper(body());
+}
+
+void DOM::traverseHelper(pNode node) {
+  if (node != nullptr) {
+    int result = preOrder(this, node);
+    if (result == 1)
+      for (auto c = node->child(); c != nullptr; c = c->next())
+        traverseHelper(c);
+    postOrder(this, node);
+  }
+}
 
 void DOM::printHTML() const {
     std::cout << output.bp << std::endl;
@@ -103,10 +107,6 @@ pNode DOM::body() {
   return domNodes[tidyGetBody(tdoc)];
 }
 ;
-
-/*pNode DOM::html() {
- return domNodes[tidyGetHtml(tdoc)];
- };*/
 
 void DOM::mapNodes(TidyNode node) {
   if (domNodes.count(node) == 0) {
@@ -137,6 +137,16 @@ static void cleanHelper(TidyNode n, std::vector<TidyNode> &remove) {
 
 std::string DOM::getURI() const noexcept {
   return uri;
+}
+
+void DOM::setPostOrder(std::string luaFunc, sol::this_state s) {
+  sol::state_view lua(s);
+  this->postOrder = lua[luaFunc];
+}
+
+void DOM::setPreOrder(std::string luaFunc, sol::this_state s) {
+  sol::state_view lua(s);
+  this->preOrder = lua[luaFunc];
 }
 
 void DOM::clear() {

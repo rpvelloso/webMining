@@ -23,7 +23,15 @@
 #include "DOM.hpp"
 
 void Node::luaBinding(sol::state &lua) {
-  lua.new_usertype < Node > ("Node", "toString", &Node::toString);
+  lua.new_usertype<Node>("Node",
+                         "toString", &Node::toString,
+                         "getAttr",&Node::getAttr,
+                         "type",&Node::type,
+                         "getTagName",&Node::getTagName,
+                         "isImage",&Node::isImage,
+                         "isLink",&Node::isLink,
+                         "isText",&Node::isText
+                         );
 }
 
 Node::Node(DOM *d, TidyNode n)

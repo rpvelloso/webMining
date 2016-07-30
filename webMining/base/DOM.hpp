@@ -25,6 +25,8 @@
 
 class Node;
 using pNode = Node *;
+class DOM;
+using pDOM = DOM *;
 
 class DOM {
   friend class Node;
@@ -35,11 +37,20 @@ class DOM {
   pNode body();
   //pNode html();
   std::string getURI() const noexcept;
+  void traverse();
+
+  void setPostOrder(std::string luaFunc, sol::this_state s);
+  void setPreOrder(std::string luaFunc, sol::this_state s);
+
   static void luaBinding(sol::state &lua);
+
  private:
+  void traverseHelper(pNode node);
   void mapNodes(TidyNode node);
   std::unordered_map<TidyNode, pNode> domNodes;
   void clear();
+  sol::function preOrder;
+  sol::function postOrder;
 
   TidyDoc tdoc;
   TidyBuffer output = { 0 };
