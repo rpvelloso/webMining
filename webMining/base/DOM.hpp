@@ -35,22 +35,17 @@ class DOM {
   ~DOM();
   void printHTML() const;
   pNode body();
-  //pNode html();
   std::string getURI() const noexcept;
-  void traverse();
-
-  void setPostOrder(std::string luaFunc, sol::this_state s);
-  void setPreOrder(std::string luaFunc, sol::this_state s);
+  void traverse(int);
+  void setVisitFunction(sol::function v);
 
   static void luaBinding(sol::state &lua);
 
  private:
-  void traverseHelper(pNode node);
   void mapNodes(TidyNode node);
   std::unordered_map<TidyNode, pNode> domNodes;
   void clear();
-  sol::function preOrder;
-  sol::function postOrder;
+  sol::function visit;
 
   TidyDoc tdoc;
   TidyBuffer output = { 0 };

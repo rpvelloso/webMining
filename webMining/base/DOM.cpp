@@ -14,6 +14,7 @@
  */
 
 #include "DOM.hpp"
+#include "DOMTraverse.hpp"
 
 #include <tidyenum.h>
 #include <tidyplatform.h>
@@ -26,137 +27,140 @@
 #include "Node.hpp"
 
 void DOM::luaBinding(sol::state &lua) {
-  lua.new_usertype<DOM>("DOM",
-		  sol::constructors<sol::types<const std::string>>(),
-		  "printHTML", &DOM::printHTML,
-		  "getURI", DOM::getURI,
-      "traverse",&DOM::traverse,
-      "setPreOrder",&DOM::setPreOrder,
-		  "setPostOrder",&DOM::setPostOrder);
-  Node::luaBinding(lua);
+	lua.new_usertype<DOM>("DOM",
+			sol::constructors<sol::types<const std::string>>(),
+			"printHTML", &DOM::printHTML,
+			"getURI", DOM::getURI,
+			"traverse", &DOM::traverse,
+			"setVisitFunction", &DOM::setVisitFunction);
+	Node::luaBinding(lua);
 }
 
 DOM::DOM(const std::string &uri) {
-  this->uri = uri;
-  tdoc = tidyCreate();
+	this->uri = uri;
+	tdoc = tidyCreate();
 
-  tidyOptSetValue(tdoc, TidyIndentContent, "auto");
-  tidyOptSetValue(tdoc, TidySortAttributes, "alpha");
+	tidyOptSetValue(tdoc, TidyIndentContent, "auto");
+	tidyOptSetValue(tdoc, TidySortAttributes, "alpha");
+	tidyOptSetValue(tdoc, TidyCharEncoding, "utf8");
 
-  tidyOptSetInt(tdoc, TidyIndentSpaces, 2);
+	tidyOptSetInt(tdoc, TidyIndentSpaces, 2);
 
-  tidyOptSetInt(tdoc, TidyMergeDivs, yes);
-  tidyOptSetInt(tdoc, TidyMergeSpans, yes);
+	tidyOptSetInt(tdoc, TidyMergeDivs, yes);
+	tidyOptSetInt(tdoc, TidyMergeSpans, yes);
 
-  tidyOptSetBool(tdoc, TidyHtmlOut, yes);
-  tidyOptSetBool(tdoc, TidyMakeClean, yes);
-  tidyOptSetBool(tdoc, TidyJoinClasses, yes);
-  tidyOptSetBool(tdoc, TidyJoinStyles, yes);
-  tidyOptSetBool(tdoc, TidyCoerceEndTags, yes);
-  tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
-  tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
-  tidyOptSetBool(tdoc, TidyIndentCdata, yes);
-  tidyOptSetBool(tdoc, TidyFixComments, yes);
-  tidyOptSetBool(tdoc, TidyHideComments, yes);
-  tidyOptSetBool(tdoc, TidyForceOutput, yes);
-  tidyOptSetBool(tdoc, TidySkipNested, yes);
+	tidyOptSetBool(tdoc, TidyHtmlOut, yes);
+	tidyOptSetBool(tdoc, TidyMakeClean, yes);
+	tidyOptSetBool(tdoc, TidyJoinClasses, yes);
+	tidyOptSetBool(tdoc, TidyJoinStyles, yes);
+	tidyOptSetBool(tdoc, TidyCoerceEndTags, yes);
+	tidyOptSetBool(tdoc, TidyDropEmptyElems, yes);
+	tidyOptSetBool(tdoc, TidyDropEmptyParas, yes);
+	tidyOptSetBool(tdoc, TidyIndentCdata, yes);
+	tidyOptSetBool(tdoc, TidyFixComments, yes);
+	tidyOptSetBool(tdoc, TidyHideComments, yes);
+	tidyOptSetBool(tdoc, TidyForceOutput, yes);
+	tidyOptSetBool(tdoc, TidySkipNested, yes);
+	tidyOptSetBool(tdoc, TidyEscapeCdata, yes);
+	tidyOptSetBool(tdoc, TidyFixUri, yes);
 
-  tidySetErrorBuffer(tdoc, &errbuf);
+	tidySetErrorBuffer(tdoc, &errbuf);
 
-  if (tidyParseFile(tdoc, uri.c_str()) >= 0) {
-    tidyCleanAndRepair (tdoc);
-    tidyRunDiagnostics(tdoc);
-    clear();
-    tidySaveBuffer(tdoc, &output);
-    mapNodes(tidyGetHtml(tdoc));
-    //traverse(this,tidyGetHtml(tdoc));
-  } else
-	  throw new std::runtime_error("error parsing file " + uri);
+	if (tidyParseFile(tdoc, uri.c_str()) >= 0) {
+		tidyCleanAndRepair(tdoc);
+		tidyRunDiagnostics(tdoc);
+		clear();
+		tidySaveBuffer(tdoc, &output);
+		mapNodes(tidyGetHtml(tdoc));
+	} else
+		throw new std::runtime_error("error parsing file " + uri);
 }
 
 DOM::~DOM() {
-  if (errbuf.allocated)
-    tidyBufFree (&errbuf);
-  if (output.allocated)
-    tidyBufFree (&output);
-  tidyRelease (tdoc);
-  for (auto n : domNodes)
-    delete n.second;
+	if (errbuf.allocated)
+		tidyBufFree(&errbuf);
+	if (output.allocated)
+		tidyBufFree(&output);
+	tidyRelease(tdoc);
+	for (auto n : domNodes)
+		delete n.second;
 }
 
-void DOM::traverse() {
-  traverseHelper(body());
-}
+void DOM::traverse(int strategy) {
+	TraverseContainer<pNode> traverseContainer(
+			strategy == 1?
+			static_cast<TraverseStrategyInterface<pNode> *>(new QueueTraverseStrategy<pNode>()):
+			static_cast<TraverseStrategyInterface<pNode> *>(new StackTraverseStrategy<pNode>()));
 
-void DOM::traverseHelper(pNode node) {
-  if (node != nullptr) {
-    int result = preOrder(this, node);
-    if (result == 1)
-      for (auto c = node->child(); c != nullptr; c = c->next())
-        traverseHelper(c);
-    postOrder(this, node);
-  }
+	traverseContainer.push(body());
+
+	while (!traverseContainer.empty()) {
+		auto n = traverseContainer.top();
+		traverseContainer.pop();
+
+		int visitResult = visit(this, n);
+
+		if (visitResult != 1)
+			break;
+
+		for (auto c = n->child(); c != nullptr; c = c->next())
+			traverseContainer.push(c);
+	}
 }
 
 void DOM::printHTML() const {
-    std::cout << output.bp << std::endl;
+	std::cout << output.bp << std::endl;
 }
 ;
 
 pNode DOM::body() {
-  return domNodes[tidyGetBody(tdoc)];
+	return domNodes[tidyGetBody(tdoc)];
 }
 ;
 
 void DOM::mapNodes(TidyNode node) {
-  if (domNodes.count(node) == 0) {
-    domNodes[node] = new Node(this, node);
+	if (domNodes.count(node) == 0) {
+		domNodes[node] = new Node(this, node);
 
-    for (auto child = tidyGetChild(node); child; child = tidyGetNext(child))
-      mapNodes(child);
-  }
+		for (auto child = tidyGetChild(node); child; child = tidyGetNext(child))
+			mapNodes(child);
+	}
 }
 ;
 
 static void cleanHelper(TidyNode n, std::vector<TidyNode> &remove) {
-  static std::unordered_set<std::string> removeTags = { "script", "noscript" };
+	static std::unordered_set<std::string> removeTags = { "script", "noscript" };
 
-  auto pTagName = tidyNodeGetName(n);
-  auto nodeType = tidyNodeGetType(n);
-  std::string tagName;
+	auto pTagName = tidyNodeGetName(n);
+	auto nodeType = tidyNodeGetType(n);
+	std::string tagName;
 
-  if (pTagName != nullptr)
-    tagName = pTagName;
+	if (pTagName != nullptr)
+		tagName = pTagName;
 
-  if (removeTags.count(tagName) > 0 || nodeType == TidyNode_Comment)
-    remove.push_back(n);
+	if (removeTags.count(tagName) > 0 || nodeType == TidyNode_Comment)
+		remove.push_back(n);
 
-  for (auto c = tidyGetChild(n); c; c = tidyGetNext(c))
-    cleanHelper(c, remove);
+	for (auto c = tidyGetChild(n); c; c = tidyGetNext(c))
+		cleanHelper(c, remove);
 }
 
 std::string DOM::getURI() const noexcept {
-  return uri;
+	return uri;
 }
 
-void DOM::setPostOrder(std::string luaFunc, sol::this_state s) {
-  sol::state_view lua(s);
-  this->postOrder = lua[luaFunc];
-}
-
-void DOM::setPreOrder(std::string luaFunc, sol::this_state s) {
-  sol::state_view lua(s);
-  this->preOrder = lua[luaFunc];
+void DOM::setVisitFunction(sol::function v) {
+	this->visit = v;
 }
 
 void DOM::clear() {
-  std::vector < TidyNode > remove;
+	std::vector<TidyNode> remove;
 
-  cleanHelper(tidyGetHtml(tdoc), remove);
+	cleanHelper(tidyGetHtml(tdoc), remove);
 
-  while (!remove.empty()) {
-    auto node = remove.back();
-    remove.pop_back();
-    tidyDiscardElement(tdoc, node);
-  }
+	while (!remove.empty()) {
+		auto node = remove.back();
+		remove.pop_back();
+		tidyDiscardElement(tdoc, node);
+	}
 }
