@@ -1,4 +1,4 @@
-words = {}
+wordCount = {}
 
 tableAccents = {
   ["à"] = "a", ["á"] = "a",  ["â"] = "a",  ["ã"] = "a", ["ä"] = "a",
@@ -19,18 +19,17 @@ tableAccents = {
   ["Ý"] = "Y"
  }
  
--- Strip accents from a string
-function string.stripAccents(str)
-  local normalizedString = ""
+function string.stripAccents(input)
+  local output = ""
    
-  for strChar in string.gmatch(str, "([%z\1-\127\194-\244][\128-\191]*)") do
-    if tableAccents[strChar] ~= nil then
-      normalizedString = normalizedString..tableAccents[strChar]
+  for ch in string.gmatch(input, "([%z\1-\127\194-\244][\128-\191]*)") do
+    if tableAccents[ch] ~= nil then
+      output = output..tableAccents[ch]
     else
-      normalizedString = normalizedString..strChar
+      output = output..ch
     end
   end
-  return normalizedString
+  return output
 end
 
 visit = function (dom, node)
@@ -39,10 +38,10 @@ visit = function (dom, node)
     s = string.stripAccents(s)
     s = string.lower(s)
     for w in string.gmatch(s, "%w+") do
-      if words[w] == nil then
-        words[w] = 0
+      if wordCount[w] == nil then
+        wordCount[w] = 0
       end
-      words[w] = words[w] + 1
+      wordCount[w] = wordCount[w] + 1
     end
   end
   return 1
@@ -52,4 +51,8 @@ if #args > 4 then
   local dom = DOM.new(args[5])
   dom:setVisitFunction(visit)
   dom:traverse(1) -- 1 = breadth first; 0 = depth first  
+end
+
+for w,c in pairs(wordCount) do
+  print(w,"=",c)
 end
