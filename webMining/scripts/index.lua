@@ -1,4 +1,4 @@
-wordCount = {}
+loadfile("../scripts/dbIndex.lua")()
 
 tableAccents = {
   ["à"] = "a", ["á"] = "a",  ["â"] = "a",  ["ã"] = "a", ["ä"] = "a",
@@ -47,10 +47,13 @@ visit = function (dom, node)
   return 1
 end
 
+wordCount = {}
 if #args > 4 then
   local dom = DOM.new(args[5])
   dom:setVisitFunction(visit)
-  dom:traverse(1) -- 1 = breadth first; 0 = depth first  
+  dom:traverse(0, dom:body()) -- 1 = breadth first; 0 = depth first
+  
+  indexDocument(db, dom:getURI(), wordCount)
 end
 
 for w,c in pairs(wordCount) do

@@ -36,7 +36,7 @@ class DOM {
   void printHTML() const;
   pNode body();
   std::string getURI() const noexcept;
-  void traverse(int);
+  void traverse(int, pNode = nullptr);
   void setVisitFunction(sol::function v);
 
   static void luaBinding(sol::state &lua);

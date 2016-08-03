@@ -32,7 +32,9 @@ void DOM::luaBinding(sol::state &lua) {
 			"printHTML", &DOM::printHTML,
 			"getURI", DOM::getURI,
 			"traverse", &DOM::traverse,
-			"setVisitFunction", &DOM::setVisitFunction);
+			"setVisitFunction", &DOM::setVisitFunction,
+			"body", &DOM::body
+			);
 	Node::luaBinding(lua);
 }
 
@@ -86,10 +88,10 @@ DOM::~DOM() {
 		delete n.second;
 }
 
-void DOM::traverse(int strategy) {
+void DOM::traverse(int strategy, pNode start) {
 	TraverseContainer<pNode> traverseContainer(TraverseStrategyFactory<pNode>::get(strategy));
 
-	traverseContainer.push(body());
+	traverseContainer.push(start==nullptr?body():start);
 
 	while (!traverseContainer.empty()) {
 		auto n = traverseContainer.top();
