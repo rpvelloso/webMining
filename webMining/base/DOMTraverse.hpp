@@ -109,4 +109,20 @@ private:
 	std::unordered_set<Item> visited;
 };
 
+template<typename Item>
+class TraverseStrategyFactory {
+public:
+	static TraverseStrategyInterface<Item> *get(int strategy) {
+		switch (strategy) {
+		case 0:
+			return new StackTraverseStrategy<Item>();
+		case 1:
+			return new QueueTraverseStrategy<Item>();
+		}
+		return new StackTraverseStrategy<Item>();
+	}
+private:
+	TraverseStrategyFactory() = delete;
+};
+
 #endif /* BASE_DOMTRAVERSE_HPP_ */

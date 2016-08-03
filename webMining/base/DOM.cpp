@@ -87,10 +87,7 @@ DOM::~DOM() {
 }
 
 void DOM::traverse(int strategy) {
-	TraverseContainer<pNode> traverseContainer(
-			strategy == 1?
-			static_cast<TraverseStrategyInterface<pNode> *>(new QueueTraverseStrategy<pNode>()):
-			static_cast<TraverseStrategyInterface<pNode> *>(new StackTraverseStrategy<pNode>()));
+	TraverseContainer<pNode> traverseContainer(TraverseStrategyFactory<pNode>::get(strategy));
 
 	traverseContainer.push(body());
 
