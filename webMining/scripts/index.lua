@@ -47,6 +47,9 @@ visit = function (dom, node)
   return 1
 end
 
+tf_idf(db, 3)
+do return end
+
 wordCount = {}
 if #args > 4 then
   local dom = DOM.new(args[5])

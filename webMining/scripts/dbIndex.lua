@@ -106,5 +106,59 @@ indexDocument = function(db, uri, wordCount)
   end
 end
 
+tf_idf = function(db, docId)
+  -- total number of indexed documents
+  local n = 0
+  for c in db:urows("select count(*) from document;") do
+    n = c
+    break
+  end
+
+  -- word count in docId
+  local wordlist = ""  
+  local tf = {}
+  local maxf = 1
+  for word, count in db:urows("select word, document from wordcount where document = "..docId..";") do
+    tf[word] = count
+    if wordlist == "" then
+      wordlist = word
+    else
+      wordlist = wordlist .. "," .. word
+    end
+    if count > maxf then
+      maxf = count
+    end
+  end
+
+  -- document count by word
+  local df = {}
+  for word, count in db:urows("select word,count(*)  from wordcount where word in ("..wordlist..") group by word;") do
+    df[word] = count
+  end
+
+  -- normalized word count
+  for word, count in pairs(tf) do
+    tf[word] = df[word] / maxf
+  end
+  
+  -- inverse document count
+  local idf = {}
+  for word, count in pairs(df) do
+    idf[word] = math.log(n/df[word])
+  end
+  
+  -- final word weight
+  local w = {}
+  for word, count in pairs(idf) do
+    w[word] = tf[word] * idf[word]
+  end
+  
+  for word,count in pairs(w) do
+    print(word,"=",string.format("%.2f",count))
+  end
+  
+  return w
+end
+
 db = initdb()
 --ddl(db)
