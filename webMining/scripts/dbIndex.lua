@@ -269,7 +269,7 @@ processQuery = function(db, query)
   -- make word unique
   local queryWords = {}
   for word in string.gmatch(query, "%w+") do
-    table.insert(queryWords,word)
+    table.insert(queryWords,string.stripAccents(word))
   end
   
   local wordlist = ""
