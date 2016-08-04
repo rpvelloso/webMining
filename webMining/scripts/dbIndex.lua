@@ -244,16 +244,16 @@ function searchEngine.stripAccents(input)
   return output
 end
 
-function searchEngine.visit(dom, node)
+function searchEngine.visitDOMNode(dom, node)
   if node:isText() then
     local s = node:toString()
     s = searchEngine.stripAccents(s)
     s = string.lower(s)
     for w in string.gmatch(s, "%w+") do
-      if wordCount[w] == nil then
-        wordCount[w] = 0
+      if searchEngine.wordCount[w] == nil then
+        searchEngine.wordCount[w] = 0
       end
-      wordCount[w] = wordCount[w] + 1
+      searchEngine.wordCount[w] = searchEngine.wordCount[w] + 1
     end
   end
   return 1
@@ -261,11 +261,11 @@ end
 
 function searchEngine:indexDocument(uri)
   local dom = DOM.new(uri)
-  dom:setVisitFunction(searchEngine.visit)
-  wordCount = {}
+  dom:setVisitFunction(searchEngine.visitDOMNode)
+  searchEngine.wordCount = {}
   dom:traverse(0, dom:body()) -- 1 = breadth first; 0 = depth first
   
-  self:indexWords(dom:getURI(), wordCount)
+  self:indexWords(dom:getURI(), searchEngine.wordCount)
 end
 
 function searchEngine:processQuery(query)
