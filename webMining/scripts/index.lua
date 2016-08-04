@@ -21,7 +21,7 @@ if #args > 5 then
       print(string.format("docId=%05d, doc=%s,\tscore=%f",docId, searchEngine:getDocumentURI(docId),score))
     end
   else
-    print("usage")
+    usage()
   end
 
 end
