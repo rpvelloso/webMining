@@ -1,13 +1,17 @@
-local initdb = function()
-  local db = sqlite3.open("index.db")
-  db:exec("pragma foreign_keys = '1';");
-  return db
+searchEngine = {
+  db = nil
+}
+
+function searchEngine:initdb()
+  self.db = sqlite3.open("index.db")
+  self.db:exec("pragma foreign_keys = '1';");
+  return self.db
 end
 
-local ddl = function(db)
+function searchEngine:ddl()
   -- [=[
   -- drop
-  db:exec([[
+  self.db:exec([[
     drop table wordcount;
     drop table word;
     drop table document;
@@ -15,7 +19,7 @@ local ddl = function(db)
   -- ]=]
   
   -- create
-  db:exec([[
+  self.db:exec([[
     create table document (
       id integer primary key,
       uri varchar unique not null
@@ -35,7 +39,7 @@ local ddl = function(db)
       foreign key(document) references document(id)
     );
   ]])
-  print(db:errmsg())
+  print(self.db:errmsg())
   
   -- delete
   --[=[
@@ -47,40 +51,40 @@ local ddl = function(db)
   --]=]
 end
 
-local getDocumentId = function(db, uri)
-  local stmt = db:prepare([[
+function searchEngine:getDocumentId(uri)
+  local stmt = self.db:prepare([[
     insert into document (uri) values (:uri);
   ]])
   stmt:bind_values(uri)
   stmt:step()
   local err = stmt:finalize()
   if err == sqlite3.OK then
-    return db:last_insert_rowid()
-  elseif db:errcode() == sqlite3.CONSTRAINT then
-    for id in db:urows("select id from document where uri = '" .. uri .. "';") do
+    return self.db:last_insert_rowid()
+  elseif self.db:errcode() == sqlite3.CONSTRAINT then
+    for id in self.db:urows("select id from document where uri = '" .. uri .. "';") do
       return id
     end
   end
 end
 
-local getWordId = function(db, word)
-  local stmt = db:prepare([[
+function searchEngine:getWordId(word)
+  local stmt = self.db:prepare([[
     insert into word (word) values (:word);
   ]])
   stmt:bind_values(word)
   stmt:step()
   local err = stmt:finalize()
   if err == sqlite3.OK then
-    return db:last_insert_rowid()
-  elseif db:errcode() == sqlite3.CONSTRAINT then
-    for id in db:urows("select id from word where word = '" .. word .. "';") do
+    return self.db:last_insert_rowid()
+  elseif self.db:errcode() == sqlite3.CONSTRAINT then
+    for id in self.db:urows("select id from word where word = '" .. word .. "';") do
       return id
     end
   end
 end
 
-local cleanDocWordCount = function(db, docId)
-  local stmt = db:prepare([[
+function searchEngine:cleanDocWordCount(docId)
+  local stmt = self.db:prepare([[
     delete from wordcount where document = :docId;
   ]])
   stmt:bind_values(docId)
@@ -88,8 +92,8 @@ local cleanDocWordCount = function(db, docId)
   local err = stmt:finalize()
 end
 
-local insertWordCount = function(db, docId, wordId, count)
-  local stmt = db:prepare([[
+function searchEngine:insertWordCount(docId, wordId, count)
+  local stmt = self.db:prepare([[
     insert into wordcount (document, word, count) values (:docId, :wordId, :count);
   ]])
   stmt:bind_values(docId, wordId, count)
@@ -97,10 +101,10 @@ local insertWordCount = function(db, docId, wordId, count)
   local err = stmt:finalize()
 end
 
-local docVector = function(db, docId)
+function searchEngine:docVector(docId)
   -- total number of indexed documents
   local n = 0
-  for c in db:urows("select count(*) from document;") do
+  for c in self.db:urows("select count(*) from document;") do
     n = c
     break
   end
@@ -109,7 +113,7 @@ local docVector = function(db, docId)
   local wordlist = ""  
   local tf = {}
   local maxf = 1
-  for word, count in db:urows("select word, document from wordcount where document = "..docId..";") do
+  for word, count in self.db:urows("select word, document from wordcount where document = "..docId..";") do
     tf[word] = count
     if wordlist == "" then
       wordlist = word
@@ -123,7 +127,7 @@ local docVector = function(db, docId)
 
   -- document count by word
   local df = {}
-  for word, count in db:urows("select word,count(*)  from wordcount where word in ("..wordlist..") group by word;") do
+  for word, count in self.db:urows("select word,count(*)  from wordcount where word in ("..wordlist..") group by word;") do
     df[word] = count
   end
 
@@ -147,17 +151,17 @@ local docVector = function(db, docId)
   return w
 end
 
-local queryVector = function(db, wordIdList)
+function searchEngine:queryVector(wordIdList)
   -- total number of indexed documents
   local n = 0
-  for c in db:urows("select count(*) from document;") do
+  for c in self.db:urows("select count(*) from document;") do
     n = c
     break
   end
   
   -- document count by word
   local df = {}
-  for word, count in db:urows("select word,count(*)  from wordcount where word in ("..wordIdList..") group by word;") do
+  for word, count in self.db:urows("select word,count(*)  from wordcount where word in ("..wordIdList..") group by word;") do
     df[word] = count
   end
 
@@ -170,7 +174,7 @@ local queryVector = function(db, wordIdList)
   return w
 end
 
-local cosineDistance = function(query, doc)
+function searchEngine:cosineDistance(query, doc)
   local a,b
   if #query < #doc then
     a = query
@@ -195,21 +199,20 @@ local cosineDistance = function(query, doc)
   end
   
   local score = dotProd/(sizeA * sizeB)
-  print (score)
   
   return score
 end
 
-local indexWords = function(db, uri, wordCount)
-  local docId = getDocumentId(db, uri)
-  cleanDocWordCount(db, docId)
+function searchEngine:indexWords(uri, wordCount)
+  local docId = self:getDocumentId(uri)
+  self:cleanDocWordCount(docId)
   for word,count in pairs(wordCount) do
-    local wordId = getWordId(db, word)
-    insertWordCount(db, docId, wordId, count)
+    local wordId = self:getWordId(word)
+    self:insertWordCount(docId, wordId, count)
   end
 end
 
-tableAccents = {
+searchEngine.tableAccents = {
   ["à"] = "a", ["á"] = "a",  ["â"] = "a",  ["ã"] = "a", ["ä"] = "a",
   ["ç"] = "c",
   ["è"] = "e", ["é"] = "e", ["ê"] = "e", ["ë"] = "e",
@@ -228,12 +231,12 @@ tableAccents = {
   ["Ý"] = "Y"
  }
  
-function string.stripAccents(input)
+function searchEngine.stripAccents(input)
   local output = ""
    
   for ch in string.gmatch(input, "([%z\1-\127\194-\244][\128-\191]*)") do
-    if tableAccents[ch] ~= nil then
-      output = output..tableAccents[ch]
+    if searchEngine.tableAccents[ch] ~= nil then
+      output = output..searchEngine.tableAccents[ch]
     else
       output = output..ch
     end
@@ -241,10 +244,10 @@ function string.stripAccents(input)
   return output
 end
 
-local visit = function (dom, node)
+function searchEngine.visit(dom, node)
   if node:isText() then
     local s = node:toString()
-    s = string.stripAccents(s)
+    s = searchEngine.stripAccents(s)
     s = string.lower(s)
     for w in string.gmatch(s, "%w+") do
       if wordCount[w] == nil then
@@ -256,20 +259,20 @@ local visit = function (dom, node)
   return 1
 end
 
-indexDocument = function(uri)
+function searchEngine:indexDocument(uri)
   local dom = DOM.new(uri)
-  dom:setVisitFunction(visit)
+  dom:setVisitFunction(searchEngine.visit)
   wordCount = {}
   dom:traverse(0, dom:body()) -- 1 = breadth first; 0 = depth first
   
-  indexWords(db, dom:getURI(), wordCount)
+  self:indexWords(dom:getURI(), wordCount)
 end
 
-processQuery = function(db, query)
+function searchEngine:processQuery(query)
   -- make word unique
   local queryWords = {}
   for word in string.gmatch(query, "%w+") do
-    table.insert(queryWords,string.stripAccents(word))
+    table.insert(queryWords,searchEngine.stripAccents(word))
   end
   
   local wordlist = ""
@@ -280,33 +283,27 @@ processQuery = function(db, query)
       wordlist = wordlist .. "," .. "\'"..word.."\'"
     end
   end
-  print(wordlist)
   
   -- convert word string do wordId
   local wordIdList = ""
-  for wordId in db:urows("select id from word where word in ("..wordlist..");") do
+  for wordId in self.db:urows("select id from word where word in ("..wordlist..");") do
     if wordIdList == "" then
       wordIdList = wordId
     else
       wordIdList = wordIdList .. "," .. wordId
     end
   end
-  print(wordIdList)
 
-  local qw = queryVector(db, wordIdList)
-  
-  for k,v in pairs(qw) do
-    print(k,"=",v)
-  end
+  local qw = self:queryVector(wordIdList)
   
   local dw = {}
-  for docId in db:urows("select document from wordcount where word in (" .. wordIdList .. ");") do
-    dw[docId] = docVector(db, docId)
+  for docId in self.db:urows("select document from wordcount where word in (" .. wordIdList .. ");") do
+    dw[docId] = self:docVector(docId)
   end
 
   docs = {}
   for docId, vec in pairs(dw) do
-    table.insert(docs,{docId, cosineDistance(qw, dw[docId])})
+    table.insert(docs,{docId, self:cosineDistance(qw, dw[docId])})
   end
   
   table.sort(docs, function(a,b) return a[2] > b[2] end)
@@ -314,5 +311,5 @@ processQuery = function(db, query)
   return docs
 end
 
-db = initdb()
---ddl(db)
+searchEngine:initdb()
+--searchEngine:ddl(db)
