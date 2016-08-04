@@ -311,5 +311,11 @@ function searchEngine:processQuery(query)
   return docs
 end
 
+function searchEngine:getDocumentURI(docId)
+  for uri in self.db:urows("select uri from document where id = "..docId..";") do
+    return uri
+  end 
+end
+
 searchEngine:initdb()
 --searchEngine:ddl(db)
