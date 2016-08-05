@@ -2,8 +2,8 @@ searchEngine = {
   db = nil
 }
 
-function searchEngine:initdb()
-  self.db = sqlite3.open("index.db")
+function searchEngine:initdb(dbfile)
+  self.db = sqlite3.open(dbfile)
   self.db:exec("pragma foreign_keys = '1';");
   return self.db
 end
@@ -65,6 +65,7 @@ function searchEngine:getDocumentId(uri)
       return id
     end
   end
+  return nil
 end
 
 function searchEngine:getWordId(word)
@@ -81,6 +82,7 @@ function searchEngine:getWordId(word)
       return id
     end
   end
+  return nil
 end
 
 function searchEngine:cleanDocWordCount(docId)
@@ -103,32 +105,32 @@ end
 
 function searchEngine:docVector(n, docId)
   -- word count in docId
-  local wordlist = ""  
+  local wordIdList = ""  
   local tf = {}
   local maxf = 1
   for word, count in self.db:urows("select word, document from wordcount where document = "..docId..";") do
     tf[word] = count
-    if wordlist == "" then
-      wordlist = word
+    if wordIdList == "" then
+      wordIdList = word
     else
-      wordlist = wordlist .. "," .. word
+      wordIdList = wordIdList .. "," .. word
     end
     if count > maxf then
       maxf = count
     end
   end
 
+  -- normalized word count
+  for word, count in pairs(tf) do
+    tf[word] = tf[word] / maxf
+  end
+  
   -- document count by word
   local df = {}
-  for word, count in self.db:urows("select word,count(*)  from wordcount where word in ("..wordlist..") group by word;") do
+  for word, count in self.db:urows("select word,count(*)  from wordcount where word in ("..wordIdList..") group by word;") do
     df[word] = count
   end
 
-  -- normalized word count
-  for word, count in pairs(tf) do
-    tf[word] = df[word] / maxf
-  end
-  
   -- inverse document count
   local idf = {}
   for word, count in pairs(df) do
@@ -161,6 +163,24 @@ function searchEngine:queryVector(n, wordIdList)
 end
 
 function searchEngine:cosineDistance(query, doc)
+  --[=[
+  io.write("query vector=")
+  for k,v in pairs(query) do
+    if v>0 then
+      io.write(string.format("%d=%f, ",k,v))
+    end
+  end
+  print()
+
+  io.write("  doc vector=")
+  for k,v in pairs(doc) do
+    if v>0 then
+      io.write(string.format("%d=%f, ",k,v))
+    end
+  end
+  print()
+  --]=]
+
   local a,b
   if #query < #doc then
     a = query
@@ -184,7 +204,10 @@ function searchEngine:cosineDistance(query, doc)
     sizeB = sizeB + weight
   end
   
-  local score = dotProd/(sizeA * sizeB)
+  local score = 0
+  if sizeA > 0 and sizeB > 0 then
+    score = dotProd/(sizeA * sizeB)
+  end
   
   return score
 end
@@ -262,24 +285,24 @@ function searchEngine:processQuery(query)
     break
   end
   
-  -- make word unique
+  -- make word unique and strip accents
   local queryWords = {}
   for word in string.gmatch(query, "%w+") do
     table.insert(queryWords,searchEngine.stripAccents(word))
   end
   
-  local wordlist = ""
+  local wordList = ""
   for i,word in pairs(queryWords) do
-    if wordlist == "" then
-      wordlist = "\'"..word.."\'"
+    if wordList == "" then
+      wordList = "\'"..word.."\'"
     else
-      wordlist = wordlist .. "," .. "\'"..word.."\'"
+      wordList = wordList .. "," .. "\'"..word.."\'"
     end
   end
   
-  -- convert word string do wordId
+  -- convert word string do word id
   local wordIdList = ""
-  for wordId in self.db:urows("select id from word where word in ("..wordlist..");") do
+  for wordId in self.db:urows("select id from word where word in ("..wordList..");") do
     if wordIdList == "" then
       wordIdList = wordId
     else
@@ -296,7 +319,7 @@ function searchEngine:processQuery(query)
 
   local docs = {}
   for docId, vec in pairs(dw) do
-    table.insert(docs,{docId, self:cosineDistance(qw, dw[docId])})
+    table.insert(docs,{docId, self:cosineDistance(qw, vec)})
   end
   
   table.sort(docs, 
@@ -310,8 +333,9 @@ end
 function searchEngine:getDocumentURI(docId)
   for uri in self.db:urows("select uri from document where id = "..docId..";") do
     return uri
-  end 
+  end
+  return nil
 end
 
-searchEngine:initdb()
+searchEngine:initdb("index.db")
 --searchEngine:ddl(db)
