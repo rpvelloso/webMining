@@ -4,7 +4,7 @@ searchEngine = {
 
 function searchEngine:initdb(dbfile)
   self.db = sqlite3.open(dbfile)
-  self.db:exec("pragma foreign_keys = '1';");
+  --self.db:exec("pragma foreign_keys = '1';");
   return self.db
 end
 
@@ -97,11 +97,8 @@ function searchEngine:cleanDocWordCount(docId)
   local err = stmt:finalize()
 end
 
-function searchEngine:insertWordCount(docId, wordId, count)
-  local stmt = self.db:prepare([[
-    insert into wordcount (document, word, count) values (:docId, :wordId, :count);
-  ]])
-  stmt:bind_values(docId, wordId, count)
+function searchEngine:insertWordCount(docWordCountList)
+  local stmt = self.db:prepare("insert into wordcount (document, word, count) values "..docWordCountList..";")
   stmt:step()
   local err = stmt:finalize()
 end
@@ -218,10 +215,16 @@ end
 function searchEngine:indexWords(uri, wordCount)
   local docId = self:getDocumentId(uri)
   local wc = 0
+  local docWordCountList = ""
   self:cleanDocWordCount(docId)
   for word,count in pairs(wordCount) do
     local wordId = self:getWordId(word)
-    self:insertWordCount(docId, wordId, count)
+    if docWordCountList == "" then
+      docWordCountList = "("..docId..", "..wordId..", "..count..")"
+    else
+      docWordCountList = docWordCountList .. ", " .. "("..docId..", "..wordId..", "..count..")"
+    end
+    self:insertWordCount(docWordCountList)
     wc = wc + 1
   end
   return wc
