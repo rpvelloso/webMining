@@ -10,7 +10,9 @@ if #args > 5 then
   local option = args[5]
   if option == "index" then
     local uri = args[6]
-    searchEngine:indexDocument(uri)
+    io.write("indexing "..uri.." ... ")
+    local wc = searchEngine:indexDocument(uri)
+    io.write(" done: "..wc.." words\n")
   elseif option == "query" then
     local query = args[6]
     local docs = searchEngine:processQuery(query)

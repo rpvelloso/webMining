@@ -214,11 +214,14 @@ end
 
 function searchEngine:indexWords(uri, wordCount)
   local docId = self:getDocumentId(uri)
+  local wc = 0
   self:cleanDocWordCount(docId)
   for word,count in pairs(wordCount) do
     local wordId = self:getWordId(word)
     self:insertWordCount(docId, wordId, count)
+    wc = wc + 1
   end
+  return wc
 end
 
 searchEngine.tableAccents = {
@@ -274,7 +277,7 @@ function searchEngine:indexDocument(uri)
   searchEngine.wordCount = {}
   dom:traverse(0, dom:body()) -- 1 = breadth first; 0 = depth first
   
-  self:indexWords(dom:getURI(), searchEngine.wordCount)
+  return self:indexWords(dom:getURI(), searchEngine.wordCount)
 end
 
 function searchEngine:processQuery(query)
