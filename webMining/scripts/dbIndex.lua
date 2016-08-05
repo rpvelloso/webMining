@@ -4,7 +4,7 @@ searchEngine = {
 
 function searchEngine:initdb(dbfile)
   self.db = sqlite3.open(dbfile)
-  --self.db:exec("pragma foreign_keys = '1';");
+  self.db:exec("pragma foreign_keys = '1';");
   return self.db
 end
 
