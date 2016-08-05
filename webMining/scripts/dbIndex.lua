@@ -97,12 +97,6 @@ function searchEngine:cleanDocWordCount(docId)
   local err = stmt:finalize()
 end
 
-function searchEngine:insertWordCount(docWordCountList)
-  local stmt = self.db:prepare("insert into wordcount (document, word, count) values "..docWordCountList..";")
-  stmt:step()
-  local err = stmt:finalize()
-end
-
 function searchEngine:docVector(n, docId)
   -- word count in docId
   local wordIdList = ""  
@@ -224,9 +218,19 @@ function searchEngine:indexWords(uri, wordCount)
     else
       docWordCountList = docWordCountList .. ", " .. "("..docId..", "..wordId..", "..count..")"
     end
-    self:insertWordCount(docWordCountList)
     wc = wc + 1
   end
+
+  if wc > 0 then
+    local stmt = self.db:prepare("insert into wordcount (document, word, count) values "..docWordCountList..";")
+    stmt:step()
+    local err = stmt:finalize()
+  end
+
+  if self.db:errcode() ~= sqlite3.OK then
+    print(self.db:errmsg())
+  end
+  
   return wc
 end
 
