@@ -8,6 +8,8 @@ end
 
 if #args > 5 then
   local option = args[5]
+  searchEngine:initdb("index.db")
+  
   if option == "index" then
     local uri = args[6]
     io.write("indexing "..uri.." ... ")

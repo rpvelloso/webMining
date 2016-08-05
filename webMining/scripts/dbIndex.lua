@@ -339,6 +339,3 @@ function searchEngine:getDocumentURI(docId)
   end
   return nil
 end
-
-searchEngine:initdb("index.db")
---searchEngine:ddl(db)
