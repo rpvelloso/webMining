@@ -101,14 +101,7 @@ function searchEngine:insertWordCount(docId, wordId, count)
   local err = stmt:finalize()
 end
 
-function searchEngine:docVector(docId)
-  -- total number of indexed documents
-  local n = 0
-  for c in self.db:urows("select count(*) from document;") do
-    n = c
-    break
-  end
-
+function searchEngine:docVector(n, docId)
   -- word count in docId
   local wordlist = ""  
   local tf = {}
@@ -151,14 +144,7 @@ function searchEngine:docVector(docId)
   return w
 end
 
-function searchEngine:queryVector(wordIdList)
-  -- total number of indexed documents
-  local n = 0
-  for c in self.db:urows("select count(*) from document;") do
-    n = c
-    break
-  end
-  
+function searchEngine:queryVector(n, wordIdList)
   -- document count by word
   local df = {}
   for word, count in self.db:urows("select word,count(*)  from wordcount where word in ("..wordIdList..") group by word;") do
@@ -269,6 +255,13 @@ function searchEngine:indexDocument(uri)
 end
 
 function searchEngine:processQuery(query)
+  -- total number of indexed documents
+  local n = 0
+  for c in self.db:urows("select count(*) from document;") do
+    n = c
+    break
+  end
+  
   -- make word unique
   local queryWords = {}
   for word in string.gmatch(query, "%w+") do
@@ -294,19 +287,22 @@ function searchEngine:processQuery(query)
     end
   end
 
-  local qw = self:queryVector(wordIdList)
+  local qw = self:queryVector(n, wordIdList)
   
   local dw = {}
   for docId in self.db:urows("select document from wordcount where word in (" .. wordIdList .. ");") do
-    dw[docId] = self:docVector(docId)
+    dw[docId] = self:docVector(n, docId)
   end
 
-  docs = {}
+  local docs = {}
   for docId, vec in pairs(dw) do
     table.insert(docs,{docId, self:cosineDistance(qw, dw[docId])})
   end
   
-  table.sort(docs, function(a,b) return a[2] > b[2] end)
+  table.sort(docs, 
+  function(a,b) 
+    return a[2] > b[2] 
+  end)
   
   return docs
 end
