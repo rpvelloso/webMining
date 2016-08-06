@@ -20,7 +20,7 @@ if #args >= 5 then
     return
   end
   
-  searchEngine:initdb("tmp.db")
+  searchEngine:initdb("index.db")
   
   if option == "index" then
     local uri = args[6]

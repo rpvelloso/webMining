@@ -359,7 +359,10 @@ function searchEngine:indexDocument(uri)
   searchEngine.wordCount = {}
   dom:traverse(0, dom:body()) -- 1 = breadth first; 0 = depth first
   
-  return self:indexWords(dom:getURI(), searchEngine.wordCount)
+  self.db:exec("begin transaction;")
+  local wc = self:indexWords(dom:getURI(), searchEngine.wordCount)
+  self.db:exec("commit transaction;")
+  return wc
 end
 
 function searchEngine:processQuery(query)
