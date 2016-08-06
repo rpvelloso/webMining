@@ -34,7 +34,7 @@ if #args > 5 then
     for k,v in pairs(docs) do
       local docId = v[1]
       local score = v[2]
-      print(string.format("docId=%05d, doc=%s,\tscore=%f",docId, searchEngine:getDocumentURI(docId),score))
+      print(string.format("docId=%05d, uri=%s,\tscore=%f",docId, searchEngine:getDocumentURI(docId),score))
     end
   elseif option == "clear" then
     io.write("reseting database ... ")
