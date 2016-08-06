@@ -30,12 +30,15 @@ if #args >= 5 then
   elseif option == "query" then
     local query = args[6]
     local docs = searchEngine:processQuery(query)
+    local numResults = 0
     -- display results
     for k,v in pairs(docs) do
       local docId = v[1]
       local score = v[2]
       print(string.format("docId=%05d, uri=%s,\tscore=%f",docId, searchEngine:getDocumentURI(docId),score))
+      numResults = numResults + 1
     end
+    print("Found "..numResults.." results.")
   elseif option == "clear" then
     local drop = false
     if #args > 5 then
