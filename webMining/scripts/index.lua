@@ -12,15 +12,15 @@ local options = {
   ["clear"]=2
 }
 
-if #args > 5 then
+if #args >= 5 then
   local option = args[5]
   
-  if options[option] == nil then
+  if (options[option] == nil) or (option ~= "clear" and #args == 5) then
     usage()
     return
   end
   
-  searchEngine:initdb("index.db")
+  searchEngine:initdb("tmp.db")
   
   if option == "index" then
     local uri = args[6]
@@ -37,8 +37,14 @@ if #args > 5 then
       print(string.format("docId=%05d, uri=%s,\tscore=%f",docId, searchEngine:getDocumentURI(docId),score))
     end
   elseif option == "clear" then
+    local drop = false
+    if #args > 5 then
+      if args[6] == "drop" then
+        drop = true
+      end
+    end
     io.write("reseting database ... ")
-    searchEngine:ddl()
+    searchEngine:ddl(drop)
     io.write("done\n")
   end
 else

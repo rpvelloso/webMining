@@ -8,15 +8,14 @@ function searchEngine:initdb(dbfile)
   return self.db
 end
 
-function searchEngine:ddl()
-  -- [=[
-  -- drop
-  self.db:exec([[
-    drop table wordcount;
-    drop table word;
-    drop table document;
-  ]])
-  -- ]=]
+function searchEngine:ddl(drop)
+  if drop == true then
+    self.db:exec([[
+      drop table wordcount;
+      drop table word;
+      drop table document;
+    ]])
+  end
   
   -- create
   self.db:exec([[
