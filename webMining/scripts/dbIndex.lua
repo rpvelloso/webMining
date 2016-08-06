@@ -4,7 +4,7 @@ searchEngine = {
 
 function searchEngine:initdb(dbfile)
   self.db = sqlite3.open(dbfile)
-  self.db:exec("pragma foreign_keys = '1';");
+  --self.db:exec("pragma foreign_keys = '1';");
   return self.db
 end
 
@@ -27,7 +27,8 @@ function searchEngine:ddl()
     
     create table word (
       id integer primary key,
-      word varchar unique not null
+      word varchar unique not null,
+      df integer not null default 0
     );
     
     create table wordcount (
@@ -38,6 +39,8 @@ function searchEngine:ddl()
       foreign key(word) references word(id),
       foreign key(document) references document(id)
     );
+    
+    create index reversePK on wordcount (word, document);
   ]])
   
   -- delete
@@ -73,7 +76,7 @@ end
 
 function searchEngine:getWordId(word)
   local stmt = self.db:prepare([[
-    insert into word (word) values (:word);
+    insert into word (word, df) values (:word, 0);
   ]])
   stmt:bind_values(word)
   stmt:step()
@@ -89,6 +92,17 @@ function searchEngine:getWordId(word)
 end
 
 function searchEngine:cleanDocWordCount(docId)
+  local wordIdList = ""
+  
+  for word in self.db:urows("select word from wordcount where document = "..docId..";") do
+    if wordIdList == "" then
+      wordIdList = word
+    else
+      wordIdList = wordIdList..","..word
+    end
+  end
+  self.db:exec("update word set df=df-1 where id in ("..wordIdList..");")
+  
   local stmt = self.db:prepare([[
     delete from wordcount where document = :docId;
   ]])
@@ -102,7 +116,7 @@ function searchEngine:docVector(n, docId)
   local wordIdList = ""  
   local tf = {}
   local maxf = 1
-  for word, count in self.db:urows("select word, document from wordcount where document = "..docId..";") do
+  for word, count in self.db:urows("select word, count from wordcount where document = "..docId..";") do
     tf[word] = count
     if wordIdList == "" then
       wordIdList = word
@@ -121,7 +135,7 @@ function searchEngine:docVector(n, docId)
   
   -- document count by word
   local df = {}
-  for word, count in self.db:urows("select word,count(*)  from wordcount where word in ("..wordIdList..") group by word;") do
+  for word, count in self.db:urows("select id,df from word where id in ("..wordIdList..");") do
     df[word] = count
   end
 
@@ -143,7 +157,7 @@ end
 function searchEngine:queryVector(n, wordIdList)
   -- document count by word
   local df = {}
-  for word, count in self.db:urows("select word,count(*)  from wordcount where word in ("..wordIdList..") group by word;") do
+  for word, count in self.db:urows("select id,df from word where id in ("..wordIdList..");") do
     df[word] = count
   end
 
@@ -210,6 +224,7 @@ function searchEngine:indexWords(uri, wordCount)
   local docId = self:getDocumentId(uri)
   local wc = 0
   local docWordCountList = ""
+
   self:cleanDocWordCount(docId)
   for word,count in pairs(wordCount) do
     local wordId = self:getWordId(word)
@@ -218,6 +233,7 @@ function searchEngine:indexWords(uri, wordCount)
     else
       docWordCountList = docWordCountList .. ", " .. "("..docId..", "..wordId..", "..count..")"
     end
+    self.db:exec("update word set df=df+1 where id="..wordId..";")
     wc = wc + 1
   end
 
@@ -370,7 +386,7 @@ function searchEngine:processQuery(query)
     end
   end
   
-  -- convert word string do word id
+  -- convert word string to word id
   local wordIdList = ""
   for wordId in self.db:urows("select id from word where word in ("..wordList..");") do
     if wordIdList == "" then
@@ -383,7 +399,7 @@ function searchEngine:processQuery(query)
   local qw = self:queryVector(n, wordIdList)
   
   local dw = {}
-  for docId in self.db:urows("select document from wordcount where word in (" .. wordIdList .. ");") do
+  for docId in self.db:urows("select distinct document from wordcount where word in (" .. wordIdList .. ");") do
     dw[docId] = self:docVector(n, docId)
   end
 
