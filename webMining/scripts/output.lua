@@ -25,11 +25,12 @@ displayResults = function(dsre,dir,filename)
     end
     local rows = dr:recordCount()
     local cols = dr:recordSize()
+    local linReg = dr:getLinearRegression()
     outp:write("<table><tr><th> region ",i,"</th><th> rows ",rows,"</th><th> cols ",cols,"</th></tr></table>",CRLF)
     
     if (rows > 0) and (cols > 0) then 
       outp:write("<table>",CRLF)
-      print(rows)
+      print(rows, math.abs(linReg.a)*180.0/math.pi)
       for r=1,rows do
         outp:write("<tr>")
         local record = dr:getRecord(r-1)
@@ -47,11 +48,10 @@ displayResults = function(dsre,dir,filename)
     end
     
     local tps = dr:getTps()
-    local linReg = dr:getLinearRegression()
     local transform = dr:getTransform()
     if #tps then
       outp:write("<img src='",filename,".region",i,term[term["default"]],"' /><br />",CRLF)
-      outp:write(string.format("interval: [%d; %d], size: %d, angle: %.2f, score: %.2f<br/>",dr:getStartPos(),dr:getEndPos(),dr:size(),math.atan(math.abs(linReg.a))*180/math.pi,dr:getScore()),CRLF)
+      outp:write(string.format("interval: [%d; %d], size: %d, angle: %.2f, score: %.2f<br/>",dr:getStartPos(),dr:getEndPos(),dr:size(),math.abs(linReg.a)*180.0/math.pi,dr:getScore()),CRLF)
       outp:write("<textarea>",CRLF)
       outp:write(tps[1])
       for k=2,#tps do

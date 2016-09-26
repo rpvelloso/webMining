@@ -9,7 +9,7 @@ processTestBed = function(dir, generateOutput)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom = DOM.new(filename)
     local dsre = DSRE.new()
-    dsre:setMinZScore(3.0)
+    dsre:setMinZScore(2.5)
     
     --print("Extracting records.")
     local start = os.clock()
@@ -31,12 +31,12 @@ processFile = function(filename)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom = DOM.new(filename)
     local dsre = DSRE.new()
-    dsre:setMinZScore(3.0)
+    dsre:setMinZScore(2.5)
     
     print("Extracting records.")
     local start = os.clock()
 
-    dsre:extract(dom, 3.0)
+    dsre:extract(dom)
     print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
     
     print("Outputting results.")

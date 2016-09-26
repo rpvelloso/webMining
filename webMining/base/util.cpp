@@ -99,10 +99,6 @@ std::vector<double> fct(const std::vector<double> &signal) {
   return ft;
 }
 
-#ifndef M_PI
-const double M_PI = 3.14159265359;
-#endif
-
 void hannWindow(std::vector<double> &inp) {
 	for (size_t i = 0; i < inp.size(); i++) {
 	    double multiplier = 0.5 * (1.0 - std::cos(2.0*M_PI*(double)i/(double)(inp.size()-1)));

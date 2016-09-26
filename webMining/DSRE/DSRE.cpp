@@ -212,8 +212,9 @@ void DSRE::segment() {
   }
 }
 
+#define ANGLE 4.5
 std::vector<size_t> DSRE::detectStructure() {
-  float angCoeffThreshold = 0.17453;  // 10 degrees
+  float angCoeffThreshold = ANGLE*M_PI/180.0;  // convert angle to radians
   auto sizeThreshold = (tagPathSequence.size() * 3) / 100;  // % page size
   std::vector<size_t> structured;
 
