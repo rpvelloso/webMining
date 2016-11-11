@@ -1,3 +1,12 @@
+%>> available_graphics_toolkits()
+%ans =
+%{
+%  [1,1] = fltk
+%  [1,2] = gnuplot
+%  [1,3] = qt
+%}
+%>> graphics_toolkit("gnuplot")
+
 clc;
 clear all;
 close all;
@@ -179,8 +188,9 @@ function rec = findRecords(reg, a, b)
 	subplot(2,1,1);
 	plot(1:n,reg,'k.-'); hold on;
 	plot(1:n,(a.*[1:n]) + b,'k--');
-	text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") '\circ']);
-	title("a) data region, linear regression and record boundary");
+	text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") 'deg']);
+	%text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") '\circ']);
+	title("a - data region, linear regression and record boundary");
 
 	v = score(reg, period);
 	if length(v) > 1
@@ -199,7 +209,7 @@ function rec = findRecords(reg, a, b)
 	plot(t,'k.-'); hold on;
 	plot(freq,t(freq),'ks');
 	legend("FFT","Peak");
-	title("b) FFT");
+	title("b - FFT");
 end
 
 function sr = extract(s)
