@@ -155,7 +155,7 @@ function drawPlots(s, c, r)
 	title("Contour");
 	plot(s,'k--'); hold;
 	plot(c, 'k.');
-	legend("tps", "contorno");
+	legend("tps", "contour");
 	%plot(d.*mean(c), 'ok');
 	
 	subplot(1,2,2);
