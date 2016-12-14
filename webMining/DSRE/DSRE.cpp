@@ -235,6 +235,9 @@ std::vector<size_t> DSRE::detectStructure() {
   return structured;
 }
 
+#define PADDING 4.0
+#define INTERVAL 3.0
+
 std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
   std::wstring s = region.getTps();
   std::set<size_t> result;
@@ -266,6 +269,7 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         std::advance(firstPos, *firstRec);
         std::advance(lastPos, regionEnd);
         std::vector<double> signal(firstPos, lastPos);
+        auto originalSize = signal.size();
 
         auto dc = mean(signal);
 
@@ -274,11 +278,11 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
 
         hannWindow(signal);
 
-        signal.resize(signal.size() * 2, 0);  // zero pad
+        signal.resize(signal.size() * PADDING, 0);  // zero pad
         auto psd = fft(signal);
         auto psdSD = stddev(psd);
-        double transformScale = 1.0 * (double) signal.size()
-            / (double) (std::distance(firstPos, lastPos));
+        double transformScale = (double) signal.size()
+            / (double) originalSize;
         for (auto &i : psd)  // convert to Z Score
           i /= psdSD;
 
@@ -287,8 +291,14 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         auto lastFreq = psd.begin();
         std::advance(
             firstFreq,
-            (std::max(recpos.size(), (size_t) 4) - 1 - 3) * transformScale);
-        std::advance(lastFreq, (recpos.size() - 1 + 3 + 1) * transformScale);
+			(std::max((double)recpos.size(), INTERVAL) - INTERVAL) * transformScale
+            //std::max(recpos.size() * transformScale, INTERVAL) - INTERVAL
+			) ;
+        std::advance(
+        		lastFreq,
+				((recpos.size() + INTERVAL) * transformScale) + 1
+				//(recpos.size() * transformScale) + INTERVAL+1.0
+				);
 
         for (auto p = firstFreq; p != lastFreq; ++p) {
           if (std::abs(*p) > minZScore) {
