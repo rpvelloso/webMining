@@ -235,7 +235,7 @@ std::vector<size_t> DSRE::detectStructure() {
   return structured;
 }
 
-#define PADDING 4.0
+#define PADDING 2.0
 #define INTERVAL 3.0
 
 std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
@@ -273,14 +273,17 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
 
         auto dc = mean(signal);
 
-        for (auto &i : signal)
+        for (auto &i : signal) // remove DC/mean
           i -= dc;
 
 
+        hannWindow(signal); // smooth signal
+        signal.insert(signal.end(), signal.begin(), signal.end()); // 2x
+        signal.insert(signal.end(), signal.begin(), signal.end()); // 4x
+        signal.insert(signal.end(), signal.begin(), signal.end()); // 8x
         signal.resize(signal.size() * PADDING, 0);  // zero pad
-        hannWindow(signal);
 
-        auto psd = fft(signal);
+        auto psd = fft(signal); // transform
         auto psdSD = stddev(psd);
         auto psdMean = mean(psd);
         double transformScale = (double) signal.size()
