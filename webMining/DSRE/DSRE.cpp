@@ -281,10 +281,11 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         signal.resize(signal.size() * PADDING, 0);  // zero pad
         auto psd = fft(signal);
         auto psdSD = stddev(psd);
+        auto psdMean = mean(psd);
         double transformScale = (double) signal.size()
             / (double) originalSize;
         for (auto &i : psd)  // convert to Z Score
-          i /= psdSD;
+          i = (i - psdMean) / psdSD;
 
         double peakFreq = -1;
         auto firstFreq = psd.begin();
