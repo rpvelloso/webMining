@@ -276,9 +276,10 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         for (auto &i : signal)
           i -= dc;
 
-        hannWindow(signal);
 
         signal.resize(signal.size() * PADDING, 0);  // zero pad
+        hannWindow(signal);
+
         auto psd = fft(signal);
         auto psdSD = stddev(psd);
         auto psdMean = mean(psd);
@@ -292,13 +293,13 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         auto lastFreq = psd.begin();
         std::advance(
             firstFreq,
-			(std::max((double)recpos.size(), INTERVAL) - INTERVAL) * transformScale
-            //std::max(recpos.size() * transformScale, INTERVAL) - INTERVAL
+			//(std::max((double)recpos.size(), INTERVAL) - INTERVAL) * transformScale
+            std::max(recpos.size() * transformScale, INTERVAL) - INTERVAL
 			) ;
         std::advance(
         		lastFreq,
-				((recpos.size() + INTERVAL) * transformScale) + 1
-				//(recpos.size() * transformScale) + INTERVAL+1.0
+				//((recpos.size() + INTERVAL) * transformScale) + 1
+				(recpos.size() * transformScale) + INTERVAL+1.0
 				);
 
         for (auto p = firstFreq; p != lastFreq; ++p) {
@@ -309,16 +310,19 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         }
         if (peakFreq > minZScore) {
           std::cerr << ", peak = " << peakFreq << std::endl;
+
           // adjust region to (recpos[0]; recpos[n-1])
-          std::for_each(recpos.begin(), recpos.end(), [firstRec](auto &a) {
-            a -= *firstRec;
-          });
-          region.shiftStartPos(*firstRec);
+          region.shiftStartPos(recpos[0]);
           region.shiftEndPos(-(s.size() - 1 - regionEnd));
           region.refreshTps();
           region.setTransform(psd);
 
-          result.insert(firstRec, lastRec.base());
+          // correct recpos
+          std::for_each(recpos.begin(), recpos.end(), [recpos](auto &a) {
+            a -= recpos[0];
+          });
+
+          result.insert(recpos.begin(), recpos.end());
           break;
         }
       }
