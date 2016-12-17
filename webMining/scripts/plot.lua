@@ -34,7 +34,7 @@ plotSequences = function(dsre,output,filename)
         f:write(j-1,"\t",tps[j],CRLF)
       end
       f:write("e",CRLF)
-      f:write("set arrow from "..(dr:recordCount())..", graph 0 to "..(dr:recordCount())..", graph 1 nohead lt 1 lw "..(3*2*4).." lc rgb \'red\'",CRLF)
+      f:write("set arrow from "..(dr:recordCount())..", graph 0 to "..(dr:recordCount())..", graph 1 nohead lt 1 lw "..(5).." lc rgb \'red\'",CRLF)
       f:write("plot '-' with linespoints ls 1 title \'Transform \'",CRLF)
       for i=1,#transform do
             f:write((i-1)*#tps/#transform,"\t",transform[i],CRLF)
