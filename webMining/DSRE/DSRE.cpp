@@ -45,6 +45,7 @@ void DSRE::extract(pDOM dom) {
   std::cerr << std::endl << "Processing " << dom->getURI() << " ..."
             << std::endl;
 
+  computeClassFreq(dom->body());
   buildTagPath("", dom->body(), true);
   segment();
   correctBoundaries();
@@ -262,7 +263,7 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
       std::cerr << "sym: " << symbol << "#" << recpos.size() << ", " << "CV: "
                 << cv << ", RC: " << regionCoverage << "(" << *firstRec << ";"
                 << (*lastRec) + m << ")";
-      if (m > 2 && cv < 0.3 && regionCoverage > 0.80) {
+      if (m > 2 && cv < 0.35 && regionCoverage > 0.65) {
         auto firstPos = s.begin();
         auto lastPos = s.begin();
 
@@ -297,12 +298,12 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         std::advance(
             firstFreq,
 			//(std::max((double)recpos.size(), INTERVAL) - INTERVAL) * transformScale
-            std::max(recpos.size() * transformScale, INTERVAL) - INTERVAL
+            std::max((recpos.size()-1) * transformScale, INTERVAL) - INTERVAL
 			) ;
         std::advance(
         		lastFreq,
 				//((recpos.size() + INTERVAL) * transformScale) + 1
-				(recpos.size() * transformScale) + INTERVAL+1.0
+				((recpos.size()+1) * transformScale) + INTERVAL+1.0
 				);
 
         for (auto p = firstFreq; p != lastFreq; ++p) {

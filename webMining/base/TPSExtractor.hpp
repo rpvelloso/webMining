@@ -45,6 +45,14 @@ class TPSExtractor : public StructuredExtractor<DataRegionType> {
       std::cout << std::setfill('0') << std::setw(5) << i++ << ":" <<
 	  std::setfill('0') << std::setw(5) << tpc << ":" <<
 	  tpcMap[tpc] << std::endl;
+
+    std::set<std::pair<int, std::string>> f;
+    for (auto c:classFreq)
+    	f.insert(std::make_pair(c.second, c.first));
+
+    std::cout << std::endl;
+    for (auto c:f)
+    	std::cout << c.second << " = " << c.first << std::endl;
   }
 
   virtual void extract(pDOM dom) = 0;
@@ -55,10 +63,31 @@ class TPSExtractor : public StructuredExtractor<DataRegionType> {
     nodeSequence.clear();
   }
  protected:
+  std::string cleanClassName(std::string v) {
+	  auto vend = std::remove_if(v.begin(), v.end(), isdigit);
+	  v.erase(vend,v.end());
+	  std::transform(v.begin(), v.end(), v.begin(), tolower);
+	  return v;
+  };
+
+  void computeClassFreq(pNode n) {
+	  auto classValues = n->getAttr("class");
+
+	  while (classValues != "") {
+    	  auto v = cleanClassName(stringTok(classValues, " \r\n\t"));
+    	  if (v != "")
+    		  ++classFreq[v];
+	  }
+
+      for (auto child = n->child(); child != nullptr; child = child->next())
+    	  computeClassFreq(child);
+  };
+
   void buildTagPath(std::string s, pNode n, bool css) {
     static std::vector<std::string> styleAttr = { "style", "class", "color",
         "bgcolor", "width", "height", "align", "valign", "halign", "colspan",
         "rowspan" };
+    static std::set<std::string> ignoreClass = { "special", "last", "odd", "first", "even", "item", "feature" };
 
     std::string tagStyle;
 
@@ -71,8 +100,23 @@ class TPSExtractor : public StructuredExtractor<DataRegionType> {
     for (auto attrName : styleAttr) {
       auto attrValue = n->getAttr(attrName);
 
-      if (attrName == "class")  // consider only tag's first class
-        attrValue = stringTok(attrValue, " \r\n\t");
+      if (attrName == "class") {
+          std::set<std::pair<int,std::string>> classes;
+
+          while (attrValue != "") {
+        	  auto v = cleanClassName(stringTok(attrValue, " \r\n\t"));
+        	  bool insert = true;
+        	  for (auto i:ignoreClass)
+        		  if (v.find(i) != std::string::npos)
+        			  insert = false;
+        	  if (insert)
+        		classes.insert(std::make_pair(classFreq[v],v));
+          }
+
+          // consider only tag's most frequent class
+          if (classes.size() > 0)
+        	  attrValue = (*classes.rbegin()).second;
+      }
 
       if (attrValue != "")
         tagStyle = tagStyle + " " + attrName + "=" + attrValue;
@@ -108,6 +152,7 @@ class TPSExtractor : public StructuredExtractor<DataRegionType> {
   std::unordered_map<std::string, int> tagPathMap;
   std::wstring tagPathSequence;
   std::vector<pNode> nodeSequence;
+  std::unordered_map<std::string, int> classFreq;
 };
 
 #endif /* TPSEXTRACTOR_HPP_ */
