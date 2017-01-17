@@ -33,7 +33,8 @@ void DOM::luaBinding(sol::state &lua) {
 			"getURI", DOM::getURI,
 			"traverse", &DOM::traverse,
 			"setVisitFunction", &DOM::setVisitFunction,
-			"body", &DOM::body
+			"body", &DOM::body,
+			"size", &DOM::size
 			);
 	Node::luaBinding(lua);
 }
@@ -150,6 +151,10 @@ std::string DOM::getURI() const noexcept {
 
 void DOM::setVisitFunction(sol::function v) {
 	this->visit = v;
+}
+
+size_t DOM::size() const {
+	return domNodes.size();
 }
 
 void DOM::clear() {
