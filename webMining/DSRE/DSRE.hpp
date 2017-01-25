@@ -33,6 +33,8 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   void extract(pDOM dom) override;
   double getMinZScore() const;
   void setMinZScore(double minZScore);
+  double getMinCV() const;
+  void setMinCV(double minCV);
 
   static void luaBinding(sol::state &lua);
 
@@ -52,7 +54,8 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   void mergeRegions(std::list<std::pair<size_t, size_t> > &);
   std::unordered_map<int, int> symbolFrequency(std::wstring, std::set<int> &);
 
-  double minZScore;  // default 3*stddev(PSD)
+  double minZScore;
+  double minCV;
 };
 
 #endif /* DSRE_HPP_ */

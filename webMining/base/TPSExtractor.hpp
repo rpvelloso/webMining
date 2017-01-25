@@ -87,7 +87,7 @@ class TPSExtractor : public StructuredExtractor<DataRegionType> {
     static std::vector<std::string> styleAttr = { "style", "class", "color",
         "bgcolor", "width", "height", "align", "valign", "halign", "colspan",
         "rowspan" };
-    static std::set<std::string> ignoreClass = { "special", "last", "odd", "first", "even", "item", "feature" };
+    static std::set<std::string> ignoreClass = { "highlight", "special", "last", "odd", "first", "even", "item", "feature" };
 
     std::string tagStyle;
 

@@ -27,14 +27,16 @@ void DSRE::luaBinding(sol::state &lua) {
 		  "regionCount", &DSRE::regionCount,
 		  "getDataRegion", &DSRE::getDataRegion,
 		  "getMinZScore",&DSRE::getMinZScore,
-		  "setMinZScore",&DSRE::setMinZScore
+		  "setMinZScore",&DSRE::setMinZScore,
+		  "getMinCV",&DSRE::getMinCV,
+		  "setMinCV",&DSRE::setMinCV
 		  );
 
   DSREDataRegion::luaBinding(lua);
 }
 
 DSRE::DSRE()
-    : TPSExtractor<DSREDataRegion>(), minZScore(3.0) {
+    : TPSExtractor<DSREDataRegion>(), minZScore(3.0), minCV(0.35) {
 }
 
 DSRE::~DSRE() {
@@ -263,7 +265,7 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
       std::cerr << "sym: " << symbol << "#" << recpos.size() << ", " << "CV: "
                 << cv << ", RC: " << regionCoverage << "(" << *firstRec << ";"
                 << (*lastRec) + m << ")";
-      if (m > 2 && cv < 0.35 && regionCoverage > 0.65) {
+      if (m > 2 && cv < minCV && regionCoverage > 0.65) {
         auto firstPos = s.begin();
         auto lastPos = s.begin();
 
@@ -508,4 +510,11 @@ double DSRE::getMinZScore() const {
 
 void DSRE::setMinZScore(double minZScore) {
   this->minZScore = minZScore;
+}
+double DSRE::getMinCV() const {
+  return minZScore;
+}
+
+void DSRE::setMinCV(double minCV) {
+  this->minCV = minCV;
 }
