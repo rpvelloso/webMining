@@ -1,4 +1,5 @@
-minZScore = 2.5
+minZScore = 9.0
+minCV = 0.35
 
 processTestBed = function(dir, generateOutput)
   local t, popen = {}, io.popen
@@ -12,11 +13,12 @@ processTestBed = function(dir, generateOutput)
     local dom = DOM.new(filename)
     local dsre = DSRE.new()
     dsre:setMinZScore(minZScore)
+    dsre:setMinCV(minCV)
     
     --print("Extracting records.")
     local start = os.clock()
     dsre:extract(dom)
-    print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
+    print(string.format("elapsed time: %.6f",os.clock() - start),";",dom:size(),CRLF)
     
     if generateOutput == 1 then
       --print("Outputting results.")
