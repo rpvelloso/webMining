@@ -46,14 +46,14 @@ bestfit = "";
 for i=1:1:length(funcs)
 	if maxR2 == fitness{i}{2};
 		sd = std(y);
-		plot(xx,funcs{i}{1}(xx,fitness{i}{1}).-2*sd,'k:');
 		plot(xx,funcs{i}{1}(xx,fitness{i}{1}),'k-');
+		plot(xx,funcs{i}{1}(xx,fitness{i}{1}).-2*sd,'k:');
 		plot(xx,funcs{i}{1}(xx,fitness{i}{1}).+2*sd,'k:');
 		bestfit = [funcs{i}{2} " R2 = " num2str(maxR2)];
 	end
 end
 ylabel("running time (in seconds)");
 xlabel("document size (in # of nodes)");
-legend("data", [bestfit], "95%");
+legend("data", [bestfit], "95% interval");
 
 return
