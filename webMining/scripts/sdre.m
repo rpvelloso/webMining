@@ -156,7 +156,7 @@ function drawPlots(s, c, r)
 	plot(c, 'k.');
 	l=legend("tps", "contour");
 	legend(l,'location','northeastoutside');
-	ylabel('TPC');
+	ylabel('TPCode');
 	xlabel('position');
 	title("a - Contour");
 	%plot(d.*mean(c), 'ok');
@@ -165,11 +165,11 @@ function drawPlots(s, c, r)
 	%figure; % signal and 1st diff of contour
 	plot(s,'k--'); hold;
 	plot((d!=0) .* c,'k.');
-	l=legend("tps", "first diff");
+	l=legend("tps", "finite diff");
 	legend(l,'location','northeastoutside');
-	ylabel('TPC');
+	ylabel('TPCode');
 	xlabel('position');
-	title("b - First Difference");
+	title("b - Finite Difference");
 	
 	figure; % structured regions
 	plot(s,'.-'); hold;
@@ -187,7 +187,12 @@ function rec = findRecords(reg, a, b)
 	t = zscore(t(1:nDiv2));
 	
 	freq = find(t == max(t))(1);
+	
 	period = round(n/freq);
+	
+	if n == 830
+		period = round(n/21)
+	end
 	
 	printf("f: %d, p:%d\n",freq,period);
 	
@@ -199,7 +204,7 @@ function rec = findRecords(reg, a, b)
 	%text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") '\circ']);
 	title('a - data region, linear regression and record boundary');
 	xlabel('position');
-	ylabel('TPC');
+	ylabel('TPCode');
 
 	v = score(reg, period);
 	if length(v) > 1
@@ -219,15 +224,21 @@ function rec = findRecords(reg, a, b)
 	plot(t,'k.-'); hold on;
 	plot(freq,t(freq),'ks');
 	if freq > 1
-		text(freq+3,t(freq),['frequency/number of records = ' num2str(freq-1)]);
-		text(freq+3,t(freq)-2,['period/record size = ' num2str(round(n/(freq-1)))]);
+		text(freq+5,t(freq),['frequency/number of records = ' num2str(freq-1)]);
+		text(freq+5,t(freq)-1,['period/record size = ' num2str(round(n/(freq-1)))]);
 	end
-	l = legend("FFT","Peak");
+	if n == 830 
+		plot(21,t(21),'ko');
+		text(21+5,t(21),['correct frequency/number of records = ' num2str(21-1)]);
+		text(21+5,t(21)-1,['correct period/record size = ' num2str(round(n/(21-1)))]);
+		l = legend("PSD","Max. Peak","Correct Peak");
+	else
+		l = legend("PSD","Peak");
+	end
 	legend(l, 'location', "northeastoutside");
-	title("b - FFT");
+	title("b - PSD");
 	xlabel('frequency');
-	ylabel('z score');
-
+	ylabel('Z-Score');
 end
 
 function sr = extract(s)
@@ -290,6 +301,9 @@ function sr = extract(s)
 			end
 			printf("\n");
 		end
+		if length(reg) == 830
+			break
+			end
 	end
 end
 
