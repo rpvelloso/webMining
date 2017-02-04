@@ -16,7 +16,7 @@
 #ifndef DSREDATAREGION_HPP_
 #define DSREDATAREGION_HPP_
 
-#include <crtdefs.h>
+//#include <crtdefs.h>
 #include <functional>
 #include <string>
 #include <vector>
