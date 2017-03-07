@@ -12,7 +12,7 @@
  * language localizations. As such do not edit PO files for this language;
  * modify this file directly.
  *
- * (c) 2015-2017 HTACG
+ * (c) 2015 HTACG
  * See tidy.h and access.h for the copyright notice.
  *
  * Created by Jim Derry on 11/28/15.
@@ -21,6 +21,10 @@
 #ifdef _MSC_VER
 #pragma execution_character_set("utf-8")
 #endif
+
+#include "language.h"
+#include "access.h"
+#include "message.h"
 
 
 /**
@@ -95,7 +99,9 @@ static languageDefinition language_en = { whichPluralForm_en, {
     {/* For example, "you should avoid using the specified encoding." */
       STRING_SPECIFIED,             0,   "specified"
     },
+    { STRING_UNKNOWN_FILE,          0,   "%s: can't open file \"%s\"\n"                                            },
     { STRING_UNKNOWN_OPTION,        0,   "unknown option: %s"                                                      },
+    { STRING_UNRECZD_OPTION,        0,   "unrecognized option -%c use -help to list options\n"                     },
     { STRING_XML_DECLARATION,       0,   "XML declaration"                                                         },
     
     {/* This console output should be limited to 78 characters per line. */
@@ -308,13 +314,13 @@ static languageDefinition language_en = { whichPluralForm_en, {
     /***************************************
      ** Message Severity Level
      ***************************************/
-    { TidyInfo,               0,   "Info: "                                                                  },
-    { TidyWarning,            0,   "Warning: "                                                               },
-    { TidyConfig,             0,   "Config: "                                                                },
-    { TidyAccess,             0,   "Access: "                                                                },
-    { TidyError,              0,   "Error: "                                                                 },
-    { TidyBadDocument,        0,   "Document: "                                                              },
-    { TidyFatal,              0,   "Panic: "                                                                 },
+    { TidyInfoString,               0,   "Info: "                                                                  },
+    { TidyWarningString,            0,   "Warning: "                                                               },
+    { TidyConfigString,             0,   "Config: "                                                                },
+    { TidyAccessString,             0,   "Access: "                                                                },
+    { TidyErrorString,              0,   "Error: "                                                                 },
+    { TidyBadDocumentString,        0,   "Document: "                                                              },
+    { TidyFatalString,              0,   "Panic: "                                                                 },
     
     /***************************************
      ** Warnings and Errors
@@ -1555,6 +1561,17 @@ static languageDefinition language_en = { whichPluralForm_en, {
         - It's very important that <br/> be self-closing!
         - The strings "Tidy" and "HTML Tidy" are the program name and must not
           be translated. */
+      TidyBurstSlides,              0,
+        "This option has no function and is deprecated. "
+    },
+    {/* Important notes for translators:
+        - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
+          <br/>.
+        - Entities, tags, attributes, etc., should be enclosed in <code></code>.
+        - Option values should be enclosed in <var></var>.
+        - It's very important that <br/> be self-closing!
+        - The strings "Tidy" and "HTML Tidy" are the program name and must not
+          be translated. */
       TidyTabSize,                  0,
         "This option specifies the number of columns that Tidy uses between "
         "successive tab stops. It is used to map tabs to spaces when reading the "
@@ -1741,6 +1758,20 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "This option specifies the character encoding Tidy uses for the input. See "
         "<code>char-encoding</code> for more info. "
     },
+#if SUPPORT_ASIAN_ENCODINGS
+    {/* Important notes for translators:
+        - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
+          <br/>.
+        - Entities, tags, attributes, etc., should be enclosed in <code></code>.
+        - Option values should be enclosed in <var></var>.
+        - It's very important that <br/> be self-closing!
+        - The strings "Tidy" and "HTML Tidy" are the program name and must not
+          be translated. */
+      TidyLanguage,                 0,
+        "Currently not used, but this option specifies the language Tidy would use "
+        "if it were properly localized. For example: <var>en</var>. "
+    },
+#endif
 #if SUPPORT_UTF16_ENCODINGS
     {/* Important notes for translators:
         - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
@@ -1856,9 +1887,7 @@ static languageDefinition language_en = { whichPluralForm_en, {
         - The strings "Tidy" and "HTML Tidy" are the program name and must not
           be translated. */
       TidyEmacsFile,                0,
-        "When <code>gnu-emacs</code> is <var>yes</var>, then this option value "
-        "specifies the filename to be used in the output report. The HTML Tidy "
-        "command line program will set this automatically. "
+        "Used internally. "
     },
     {/* Important notes for translators:
         - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
@@ -1902,6 +1931,17 @@ static languageDefinition language_en = { whichPluralForm_en, {
       TidyQuiet,                    0,
         "This option specifies if Tidy should output the summary of the numbers "
         "of errors and warnings, or the welcome or informational messages. "
+    },
+    {/* Important notes for translators:
+        - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
+          <br/>.
+        - Entities, tags, attributes, etc., should be enclosed in <code></code>.
+        - Option values should be enclosed in <var></var>.
+        - It's very important that <br/> be self-closing!
+        - The strings "Tidy" and "HTML Tidy" are the program name and must not
+          be translated. */
+      TidySlideStyle,               0,
+        "This option has no function and is deprecated. "
     },
     {/* Important notes for translators:
         - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
@@ -2044,7 +2084,6 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "to <code>&lt;\\/g</code>. Set this option to 'no' if you do not want this."
     },
 
-#if SUPPORT_CONSOLE_APP
     /********************************************************
      ** Console Application
      **  Although these strings are not used within LibTidy
@@ -2052,11 +2091,11 @@ static languageDefinition language_en = { whichPluralForm_en, {
      **  provided as part of LibTidy for convenience to
      **  developers.
      ********************************************************/
-    { TidyDiagnostics,              0,   "diagnostics"                                                             },
-    { TidyEncoding,                 0,   "encoding"                                                                },
-    { TidyMarkup,                   0,   "markup"                                                                  },
-    { TidyMiscellaneous,            0,   "misc"                                                                    },
-    { TidyPrettyPrint,              0,   "print"                                                                   },
+    { TC_CAT_DIAGNOSTICS,           0,   "diagnostics"                                                             },
+    { TC_CAT_ENCODING,              0,   "encoding"                                                                },
+    { TC_CAT_MARKUP,                0,   "markup"                                                                  },
+    { TC_CAT_MISC,                  0,   "misc"                                                                    },
+    { TC_CAT_PRETTYPRINT,           0,   "print"                                                                   },
     { TC_LABEL_COL,                 0,   "column"                                                                  },
     { TC_LABEL_FILE,                0,   "file"                                                                    },
     { TC_LABEL_LANG,                0,   "lang"                                                                    },
@@ -2263,12 +2302,12 @@ static languageDefinition language_en = { whichPluralForm_en, {
         - The strings "Tidy" and "HTML Tidy" are the program name and must not be translated. */
       TC_TXT_HELP_LANG_1,           0,
         "\n"
-        "The -language (or -lang) option indicates which language Tidy \n"
+        "The --language (or --lang) option indicates which language Tidy \n"
         "should use to communicate its output. Please note that this is not \n"
         "a document translation service, and only affects the messages that \n"
         "Tidy communicates to you. \n"
         "\n"
-        "When used from the command line the -language argument must \n"
+        "When used from the command line the --language argument must \n"
         "be used before any arguments that result in output, otherwise Tidy \n"
         "will produce output before it knows which language to use. \n"
         "\n"
@@ -2306,7 +2345,7 @@ static languageDefinition language_en = { whichPluralForm_en, {
         "Tidy is currently using locale %s. \n"
         "\n"
     },
-#endif /* SUPPORT_CONSOLE_APP */
+    
     
     {/* This MUST be present and last. */
       TIDY_MESSAGE_TYPE_LAST,      0,   NULL
