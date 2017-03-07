@@ -21,23 +21,19 @@
  *     `poconvert.rb msgunfmt language_es.h` (our own
  *     conversion tool) to generate a fresh PO from this file first!
  *
- * (c) 2015 HTACG
+ * (c) 2015-2017 HTACG
  * See tidy.h and access.h for the copyright notice.
  *
  * Template Created by Jim Derry on 01/14/2016.
  *
  * Orginating PO file metadata:
  *   PO_LAST_TRANSLATOR=jderry
- *   PO_REVISION_DATE=2016-02-17 20:04:18
+ *   PO_REVISION_DATE=2017-02-18 18:13:23
  */
 
 #ifdef _MSC_VER
 #pragma execution_character_set("utf-8")
 #endif
-
-#include "language.h"
-#include "access.h"
-#include "message.h"
 
 
 /**
@@ -65,23 +61,13 @@ static languageDefinition language_es = { whichPluralForm_es, {
     {/* Specify the ll or ll_cc language code here. */
       TIDY_LANGUAGE,          0, "es"
     },
-    {/* This console output should be limited to 78 characters per line. 
-      - The strings "Tidy" and "HTML Tidy" are the program name and must not be translated. */
-      TEXT_GENERAL_INFO_PLEA, 0,        
+    { TEXT_GENERAL_INFO_PLEA, 0,        
         "\n"
         "¿Le gustaría ver Tidy en un español correcto? Por favor considere \n"
         "ayudarnos a localizar HTML Tidy. Para más detalles consulte \n"
         "https://github.com/htacg/tidy-html5/blob/master/README/LOCALIZE.md \n"
     },
-    {/* Important notes for translators:
-        - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
-          <br/>.
-        - Entities, tags, attributes, etc., should be enclosed in <code></code>.
-        - Option values should be enclosed in <var></var>.
-        - It's very important that <br/> be self-closing!
-        - The strings "Tidy" and "HTML Tidy" are the program name and must not
-          be translated. */
-      TidyMakeClean,          0,        
+    { TidyMakeClean,          0,        
         "Esta opción especifica si Tidy debe realizar la limpieza de algún legado etiquetas de "
         "presentación (actualmente <code>&lt;i&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;center&gt;</"
         "code> cuando encerrados dentro de las etiquetas apropiadas en línea y <code>&lt;font&gt;</"
@@ -90,28 +76,19 @@ static languageDefinition language_es = { whichPluralForm_es, {
     },
 
 #if SUPPORT_ASIAN_ENCODINGS
-    {/* Important notes for translators:
-        - Use only <code></code>, <var></var>, <em></em>, <strong></strong>, and
-          <br/>.
-        - Entities, tags, attributes, etc., should be enclosed in <code></code>.
-        - Option values should be enclosed in <var></var>.
-        - It's very important that <br/> be self-closing!
-        - The strings "Tidy" and "HTML Tidy" are the program name and must not
-          be translated. */
-      TidyNCR,                0, "Esta opción especifica si Tidy debe permitir referencias de caracteres numéricos. "
-    },
+    { TidyNCR,                0, "Esta opción especifica si Tidy debe permitir referencias de caracteres numéricos. "   },
 #endif /* SUPPORT_ASIAN_ENCODINGS */
 
-    {/* This console output should be limited to 78 characters per line.
-        - The strings "Tidy" and "HTML Tidy" are the program name and must not be translated. */
-      TC_TXT_HELP_LANG_1,     0,        
+
+#if SUPPORT_CONSOLE_APP
+    { TC_TXT_HELP_LANG_1,     0,        
         "\n"
-        "La opción --language (o --lang) indica el lenguaje Tidy debe \n"
+        "La opción -language (o -lang) indica el lenguaje Tidy debe \n"
         "utilizar para comunicar su salida. Tenga en cuenta que esto no es \n"
         "un servicio de traducción de documentos, y sólo afecta a los mensajes \n"
         "que Tidy comunica a usted. \n"
         "\n"
-        "Cuando se utiliza la línea de comandos el argumento --language debe \n"
+        "Cuando se utiliza la línea de comandos el argumento -language debe \n"
         "utilizarse antes de cualquier argumento que dan lugar a la producción, \n"
         "de lo contrario Tidy producirá la salida antes de que se conozca el \n"
         "idioma a utilizar. \n"
@@ -124,10 +101,10 @@ static languageDefinition language_es = { whichPluralForm_es, {
         "La columna más a la derecha indica cómo Tidy comprenderá el \n"
         "legado nombre de Windows.\n"
         "\n"
+        "Tidy está utilizando la configuración regional %s. \n"
+        "\n"
     },
-    {/* This console output should be limited to 78 characters per line.
-        - The strings "Tidy" and "HTML Tidy" are the program name and must not be translated. */
-      TC_TXT_HELP_LANG_2,     0,        
+    { TC_TXT_HELP_LANG_2,     0,        
         "\n"
         "Los siguientes idiomas están instalados actualmente en Tidy. Tenga \n"
         "en cuenta que no hay garantía de que están completos; sólo quiere decir \n"
@@ -137,9 +114,7 @@ static languageDefinition language_es = { whichPluralForm_es, {
         "necesario. ¡Favor de informar los desarrolladores de estes casos! \n"
         "\n"
     },
-    {/* This console output should be limited to 78 characters per line.
-        - The strings "Tidy" and "HTML Tidy" are the program name and must not be translated. */
-      TC_TXT_HELP_LANG_3,     0,        
+    { TC_TXT_HELP_LANG_3,     0,        
         "\n"
         "Si Tidy es capaz de determinar la configuración regional entonces \n"
         "Tidy utilizará el lenguaje de forma automática de la configuración \n"
@@ -147,7 +122,10 @@ static languageDefinition language_es = { whichPluralForm_es, {
         "$LANG y/o $LC_ALL. Consulte a su documentación del sistema para \n"
         "obtener más información.\n"
         "\n"
+        "Tidy está utilizando la configuración regional %s. \n"
+        "\n"
     },
+#endif /* SUPPORT_CONSOLE_APP */
 
     {/* This MUST be present and last. */
       TIDY_MESSAGE_TYPE_LAST, 0, NULL

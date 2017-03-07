@@ -21,23 +21,19 @@
  *     `poconvert.rb msgunfmt language_es_mx.h` (our own
  *     conversion tool) to generate a fresh PO from this file first!
  *
- * (c) 2015 HTACG
+ * (c) 2015-2017 HTACG
  * See tidy.h and access.h for the copyright notice.
  *
  * Template Created by Jim Derry on 01/14/2016.
  *
  * Orginating PO file metadata:
  *   PO_LAST_TRANSLATOR=jderry
- *   PO_REVISION_DATE=2016-02-17 20:04:18
+ *   PO_REVISION_DATE=2017-02-18 18:13:23
  */
 
 #ifdef _MSC_VER
 #pragma execution_character_set("utf-8")
 #endif
-
-#include "language.h"
-#include "access.h"
-#include "message.h"
 
 
 /**
@@ -65,9 +61,7 @@ static languageDefinition language_es_mx = { whichPluralForm_es_mx, {
     {/* Specify the ll or ll_cc language code here. */
       TIDY_LANGUAGE,          0, "es_mx"
     },
-    {/* This console output should be limited to 78 characters per line. 
-      - The strings "Tidy" and "HTML Tidy" are the program name and must not be translated. */
-      TEXT_GENERAL_INFO_PLEA, 0,        
+    { TEXT_GENERAL_INFO_PLEA, 0,        
         "\n"
         "¿Le gustaría ver Tidy en adecuada, español mexicano? Por favor considere \n"
         "ayudarnos a localizar HTML Tidy. Para más detalles consulte \n"

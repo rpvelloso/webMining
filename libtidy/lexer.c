@@ -143,9 +143,9 @@ static void Show_Node( TidyDocImpl* doc, const char *msg, Node *node )
     int col  = ( doc->lexer ? doc->lexer->columns : 0 );
     tmbstr src = lex ? "lexer" : "stream";
     SPRTF("R=%d C=%d: ", line, col );
-    // DEBUG: Be able to set a TRAP on a SPECIFIC row,col
+    /* DEBUG: Be able to set a TRAP on a SPECIFIC row,col */
     if ((line == 67) && (col == 95)) {
-        check_me("Show_Node"); // just a debug trap
+        check_me("Show_Node"); /* just a debug trap */
     }
     if (lexer && lexer->token && 
         ((lexer->token->type == TextNode)||(node && (node->type == TextNode)))) {
@@ -255,12 +255,18 @@ int TY_(HTMLVersion)(TidyDocImpl* doc)
     TidyDoctypeModes dtmode = (TidyDoctypeModes)cfg(doc, TidyDoctypeMode);
     Bool xhtml = (cfgBool(doc, TidyXmlOut) || doc->lexer->isvoyager) &&
                  !cfgBool(doc, TidyHtmlOut);
-    Bool html4 = dtmode == TidyDoctypeStrict || dtmode == TidyDoctypeLoose || VERS_FROM40 & dtver;
+    Bool html4 = ((dtmode == TidyDoctypeStrict) || (dtmode == TidyDoctypeLoose) ||
+                  (VERS_FROM40 & dtver) ? yes : no);
+    Bool html5 = (!html4 && ((dtmode == TidyDoctypeAuto) ||
+                  (dtmode == TidyDoctypeHtml5)) ? yes : no);
 
     if (xhtml && dtver == VERS_UNKNOWN) return XH50;
     if (dtver == VERS_UNKNOWN) return HT50;
     /* Issue #167 - if NOT XHTML, and doctype is default VERS_HTML5, then return HT50 */
     if (!xhtml && (dtver == VERS_HTML5)) return HT50;
+    /* Issue #377 - If xhtml and (doctype == html5) and constrained vers contains XH50 return that,
+       and really if tidy defaults to 'html5', then maybe 'auto' should also apply! */
+    if (xhtml && html5 && ((vers & VERS_HTML5) == XH50)) return XH50;
 
     for (i = 0; W3C_Doctypes[i].name; ++i)
     {
@@ -326,12 +332,105 @@ static uint GetVersFromFPI(ctmbstr fpi)
     return 0;
 }
 
+#if (defined(_MSC_VER) && !defined(NDEBUG))
+/* Issue #377 - Output diminishing version bits */
+typedef struct tagV2S {
+    uint bit;
+    ctmbstr val;
+}V2S, *PV2S;
+
+static V2S v2s[] = {
+    { HT20, "HT20" },
+    { HT32, "HT32" },
+    { H40S, "H40S" },
+    { H40T, "H40T" },
+    { H40F, "H40F" },
+    { H41S, "H41S" },
+    { H41T, "H41T" },
+    { H41F, "H41F" },
+    { X10S, "X10S" },
+    { X10T, "X10T" },
+    { X10F, "X10F" },
+    { XH11, "XH11" },
+    { XB10, "XB10" }, /* 4096u */
+    /* { VERS_SUN, "VSUN" }, */
+    /* { VERS_NETSCAPE, "VNET" }, */
+    /* { VERS_MICROSOFT, "VMIC" }, 32768u */
+    { VERS_XML, "VXML" }, /* 65536u */
+        /* HTML5 */
+    { HT50, "HT50" }, /* 131072u */
+    { XH50, "XH50" }, /* 262144u */
+    { 0,     0  }
+};
+
+/* Process the above table, adding a bit name,
+   or '----' when not present   */
+static char *add_vers_string( tmbstr buf, uint vers )
+{
+    PV2S pv2s = v2s;
+    int len = (int)strlen(buf);
+    while (pv2s->val) {
+        if (vers & pv2s->bit) {
+            if (len) {
+                strcat(buf,"|");
+                len++;
+            }
+            strcat(buf,pv2s->val);
+            len += (int)strlen(pv2s->val);
+            vers &= ~(pv2s->bit);
+            if (!vers)
+                break;
+        } else {
+            if (len) {
+                strcat(buf,"|");
+                len++;
+            }
+            strcat(buf,"----");
+            len += 4;
+
+        }
+        pv2s++;
+    }
+    if (vers) { /* Should not have any here! */
+        if (len)
+            strcat(buf,"|");
+        sprintf(EndBuf(buf),"%u",vers);
+    }
+    return buf;
+
+}
+
+/* Issue #377 - Show first Before: list, and then on any change
+   Note the VERS_PROPRIETARY are exclude since they always remain */
+void TY_(ConstrainVersion)(TidyDocImpl* doc, uint vers)
+{
+    static char vcur[256];
+    static Bool dnfirst = no;
+    uint curr = doc->lexer->versions; /* get current */
+    doc->lexer->versions &= (vers | VERS_PROPRIETARY);
+    if (curr != doc->lexer->versions) { /* only if different */
+        if (!dnfirst) {
+            dnfirst = yes;
+            vcur[0] = 0;
+            curr &= ~(VERS_PROPRIETARY);
+            add_vers_string( vcur, curr );
+            SPRTF("Before: %s\n", vcur);
+        }
+        vcur[0] = 0;
+        curr = doc->lexer->versions;
+        curr &= ~(VERS_PROPRIETARY);
+        add_vers_string( vcur, curr );
+        SPRTF("After : %s\n", vcur);
+    }
+}
+#else /* !#if (defined(_MSC_VER) && !defined(NDEBUG)) */
 /* everything is allowed in proprietary version of HTML */
 /* this is handled here rather than in the tag/attr dicts */
 void TY_(ConstrainVersion)(TidyDocImpl* doc, uint vers)
 {
     doc->lexer->versions &= (vers | VERS_PROPRIETARY);
 }
+#endif /* #if (defined(_MSC_VER) && !defined(NDEBUG)) y/n */
 
 Bool TY_(IsWhite)(uint c)
 {
@@ -935,6 +1034,121 @@ static void SetLexerLocus( TidyDocImpl* doc, Lexer *lexer )
 }
 
 /*
+    Issue #483
+    Have detected the first of a surrogate pair...
+    Try to find, decode the second...
+    Already have '&' start...
+*/
+
+typedef enum {
+    SP_ok,
+    SP_failed,
+    SP_error
+}SPStatus;
+
+static SPStatus GetSurrogatePair(TidyDocImpl* doc, Bool isXml, uint *pch)
+{
+    Lexer* lexer = doc->lexer;
+    uint bufSize = 32;
+    uint c, ch, offset = 0;
+    tmbstr buf = 0;
+    SPStatus status = SP_error;  /* assume failed */
+    int type = 0;   /* assume numeric */
+    uint fch = *pch;
+    int i;  /* has to be signed due to for i >= 0 */
+    if (!lexer)
+        return status;
+    buf = (tmbstr)TidyRealloc(lexer->allocator, buf, bufSize);
+    if (!buf)
+        return status;
+    while ((c = TY_(ReadChar)(doc->docIn)) != EndOfStream )
+    {
+        if (c == ';')
+        {
+            break;  /* reached end of entity */
+        }
+        if ((offset + 2) > bufSize)
+        {
+            bufSize *= 2;
+            buf = (tmbstr)TidyRealloc(lexer->allocator, buf, bufSize);
+            if (!buf)
+            {
+                break;
+            }
+        }
+        buf[offset++] = c;  /* add char to buffer */
+        if (offset == 1)
+        {
+            if (c != '#')   /* is a numeric entity */
+                break;
+        }
+        else if (offset == 2 && ((c == 'x') || (!isXml && c == 'X')))
+        {
+            type = 1;   /* set hex digits */
+        }
+        else
+        {
+            if (type)   /* if hex digits */
+            {
+                if (!IsDigitHex(c))
+                    break;
+            }
+            else    /* if numeric */
+            {
+                if (!TY_(IsDigit)(c))
+                    break;
+            }
+        }
+    }
+
+    if (c == ';')
+    {
+        buf[offset] = 0;
+        if (type)
+            sscanf(buf + 2, "%x", &ch);
+        else
+            sscanf(buf + 1, "%d", &ch);
+
+        if (TY_(IsHighSurrogate)(ch))
+        {
+            ch = TY_(CombineSurrogatePair)(ch, fch);
+            if (TY_(IsValidCombinedChar)(ch))
+            {
+                *pch = ch;  /* return combined pair value */
+                status = SP_ok; /* full success - pair used */
+            }
+            else
+            {
+                status = SP_failed; /* is one of the 32 out-of-range pairs */
+                *pch = 0xFFFD;  /* return substitute character */
+                TY_(ReportSurrogateError)(doc, BAD_SURROGATE_PAIR, fch, ch); /* SP WARNING: -  */
+            }
+        }
+    }
+
+    if (status == SP_error)
+    {
+        /* Error condition - can only put back all the chars */
+        if (c == ';') /* if last, not added to buffer */
+            TY_(UngetChar)(c, doc->docIn);
+        if (buf && offset)
+        {
+            /* correct the order for unget - last first */
+            for (i = offset - 1; i >= 0; i--)
+            {
+                c = buf[i];
+                TY_(UngetChar)(c, doc->docIn);
+            }
+        }
+    }
+
+    if (buf)
+        TidyFree(lexer->allocator, buf);
+
+    return status;
+}
+
+/*
   No longer attempts to insert missing ';' for unknown
   enitities unless one was present already, since this
   gives unexpected results.
@@ -1058,6 +1272,42 @@ static void ParseEntity( TidyDocImpl* doc, GetTokenMode mode )
         /* Lookup entity code and version
         */
         found = TY_(EntityInfo)( lexer->lexbuf+start, isXml, &ch, &entver );
+    }
+
+    /* Issue #483 - Deal with 'surrogate pairs' */
+    /* TODO: Maybe warning/error, like found a leading surrogate
+       but no following surrogate! Maybe should avoid outputting
+       invalid utf-8 for this entity - maybe substitute?  */
+    if (!preserveEntities && found && TY_(IsLowSurrogate)(ch))
+    {
+        uint c1;
+        if ((c1 = TY_(ReadChar)(doc->docIn)) == '&')
+        {
+            SPStatus status;
+            /* Have a following entity, 
+               so there is a chance of having a valid surrogate pair */
+            c1 = ch;    /* keep first value, in case of error */
+            status = GetSurrogatePair(doc, isXml, &ch);
+            if (status == SP_error)
+            {
+                TY_(ReportSurrogateError)(doc, BAD_SURROGATE_TAIL, c1, 0); /* SP WARNING: - using substitute character */
+                TY_(UngetChar)('&', doc->docIn);  /* otherwise put it back */
+            }
+        }
+        else
+        {
+            /* put this non-entity lead char back */
+            TY_(UngetChar)(c1, doc->docIn);
+            /* Have leading surrogate pair, with no tail */
+            TY_(ReportSurrogateError)(doc, BAD_SURROGATE_TAIL, ch, 0); /* SP WARNING: - using substitute character */
+            ch = 0xFFFD;
+        }
+    } 
+    else if (!preserveEntities && found && TY_(IsHighSurrogate)(ch))
+    {
+        /* Have trailing surrogate pair, with no lead */
+        TY_(ReportSurrogateError)(doc, BAD_SURROGATE_LEAD, ch, 0); /* SP WARNING: - using substitute character */
+        ch = 0xFFFD;
     }
 
     /* deal with unrecognized or invalid entities */
@@ -2192,8 +2442,10 @@ static Node *GetCDATA( TidyDocImpl* doc, Node *container )
                 SetLexerLocus( doc, lexer );
                 lexer->columns -= 3;
 
-                /* if javascript insert backslash before / */
-                if (TY_(IsJavaScript)(container))
+                /*\ if javascript insert backslash before / 
+                 *  Issue #348 - Add option, escape-scripts, to skip
+                \*/
+                if ((TY_(IsJavaScript)(container)) && cfgBool(doc, TidyEscapeScripts))
                 {
                     /* Issue #281 - only warn if adding the escape! */
                     TY_(ReportError)(doc, NULL, NULL, BAD_CDATA_CONTENT);
@@ -2653,14 +2905,11 @@ static Node* GetTokenFromStream( TidyDocImpl* doc, GetTokenMode mode )
                     continue;       /* no text so keep going */
                 }
 
-                /* fix for bug 762102 */
-                if (c == '&')
-                {
-                    TY_(UngetChar)(c, doc->docIn);
-                    --(lexer->lexsize);
-                }
-
                 /* otherwise treat as CDATA */
+                /* fix for bug 762102 (486) */
+                /* Issue #384 - Fix skipping parsing character, particularly '<<' */
+                TY_(UngetChar)(c, doc->docIn);
+                lexer->lexsize -= 1;
                 lexer->state = LEX_CONTENT;
                 lexer->waswhite = no;
                 continue;
@@ -2737,7 +2986,9 @@ static Node* GetTokenFromStream( TidyDocImpl* doc, GetTokenMode mode )
                 {
                     c = TY_(ReadChar)(doc->docIn);
 
-                    if (c != '\n' && c != '\f')
+                    if ((c == '\n') && (mode != IgnoreWhitespace)) /* Issue #329 - Can NOT afford to lose this newline */
+                        TY_(UngetChar)(c, doc->docIn);  /* Issue #329 - make sure the newline is maintained for now */
+                    else if (c != '\n' && c != '\f')
                         TY_(UngetChar)(c, doc->docIn);
 
                     lexer->waswhite = yes;  /* to swallow leading whitespace */
@@ -3847,7 +4098,8 @@ static tmbstr ParseValue( TidyDocImpl* doc, ctmbstr name,
             while (TY_(IsWhite)(lexer->lexbuf[start+len-1]) && (len > 0))
                 --len;
 
-            while (TY_(IsWhite)(lexer->lexbuf[start]) && (start < len) && (len > 0))
+            /* Issue #497 - Fix leading space trimming */
+            while (TY_(IsWhite)(lexer->lexbuf[start]) && (len > 0))
             {
                 ++start;
                 --len;

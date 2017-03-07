@@ -1,17 +1,13 @@
 #ifndef __TIDY_H__
 #define __TIDY_H__
 
-/** @file tidy.h - Defines HTML Tidy API implemented by tidy library.
+/** @file tidy.h - Defines HTML Tidy API implemented by LibTidy.
 
-  Public interface is const-correct and doesn't explicitly depend
-  on any globals.  Thus, thread-safety may be introduced w/out
-  changing the interface.
+  Public interface is const-correct and doesn't explicitly depend on any
+  globals.  Thus, thread-safety may be introduced without changing the
+  interface.
 
-  Looking ahead to a C++ wrapper, C functions always pass 
-  this-equivalent as 1st arg.
-
-
-  Copyright (c) 1998-2008 World Wide Web Consortium
+  Copyright (c) 1998-2016 World Wide Web Consortium
   (Massachusetts Institute of Technology, European Research 
   Consortium for Informatics and Mathematics, Keio University).
   All Rights Reserved.
@@ -20,45 +16,43 @@
 
      Dave Raggett <dsr@w3.org>
 
-  The contributing author(s) would like to thank all those who
-  helped with testing, bug fixes and suggestions for improvements. 
-  This wouldn't have been possible without your help.
+  The contributing author(s) would like to thank all those who helped with 
+  testing, bug fixes and suggestions for improvements. This wouldn't have been
+  possible without your help.
 
   COPYRIGHT NOTICE:
  
-  This software and documentation is provided "as is," and
-  the copyright holders and contributing author(s) make no
-  representations or warranties, express or implied, including
-  but not limited to, warranties of merchantability or fitness
-  for any particular purpose or that the use of the software or
-  documentation will not infringe any third party patents,
-  copyrights, trademarks or other rights. 
+  This software and documentation is provided "as is," and the copyright holders
+  and contributing author(s) make no representations or warranties, express or
+  implied, including but not limited to, warranties of merchantability or 
+  fitness for any particular purpose or that the use of the software or
+  documentation will not infringe any third party patents, copyrights, 
+  trademarks or other rights.
 
-  The copyright holders and contributing author(s) will not be held
-  liable for any direct, indirect, special or consequential damages
-  arising out of any use of the software or documentation, even if
-  advised of the possibility of such damage.
+  The copyright holders and contributing author(s) will not be held liable for 
+  any direct, indirect, special or consequential damages arising out of any use
+  of the software or documentation, even if advised of the possibility of such 
+  damage.
 
-  Permission is hereby granted to use, copy, modify, and distribute
-  this source code, or portions hereof, documentation and executables,
-  for any purpose, without fee, subject to the following restrictions:
+  Permission is hereby granted to use, copy, modify, and distribute this source
+  code, or portions hereof, documentation and executables, for any purpose,
+  without fee, subject to the following restrictions:
 
   1. The origin of this source code must not be misrepresented.
-  2. Altered versions must be plainly marked as such and must
-     not be misrepresented as being the original source.
-  3. This Copyright notice may not be removed or altered from any
-     source or altered source distribution.
+  2. Altered versions must be plainly marked as such and must not be
+     misrepresented as being the original source.
+  3. This Copyright notice may not be removed or altered from any source or 
+     altered source distribution.
  
-  The copyright holders and contributing author(s) specifically
-  permit, without fee, and encourage the use of this source code
-  as a component for supporting the Hypertext Markup Language in
-  commercial products. If you use this source code in a product,
-  acknowledgment is not required but would be appreciated.
-
+  The copyright holders and contributing author(s) specifically permit, without
+  fee, and encourage the use of this source code as a component for supporting
+  the Hypertext Markup Language in commercial products. If you use this source
+  code in a product, acknowledgment is not required but would be appreciated.
 
   Created 2001-05-20 by Charles Reitzel
   Updated 2002-07-01 by Charles Reitzel - 1st Implementation
   Updated 2015-06-09 by Geoff R. McLane - Add more doxygen syntax
+  Additional updates: consult git log
 
 */
 
@@ -71,8 +65,14 @@ extern "C" {
 
 /** @defgroup Opaque Opaque Types
 **
+** These instances of these types are available for use in your programs,
+** however their internal details are opaque. These items should be accessed
+** with LibTidy's accessor functions.
+**
+** Internally LibTidy will cast these to internal implementation types.
 ** Cast to implementation types within lib.
-** Reduces inter-dependencies/conflicts w/ application code.
+**
+** This reduces inter-dependencies and conflicts with application code.
 ** @{
 */
 
@@ -98,55 +98,46 @@ opaque_type( TidyAttr );
 
 /** @} end Opaque group */
 
+
 TIDY_STRUCT struct _TidyBuffer;
 typedef struct _TidyBuffer TidyBuffer;
 
 
 /** @defgroup Memory  Memory Allocation
 **
-** Tidy uses a user provided allocator for all
-** memory allocations.  If this allocator is
-** not provided, then a default allocator is
-** used which simply wraps standard C malloc/free
-** calls.  These wrappers call the panic function
-** upon any failure.  The default panic function
-** prints an out of memory message to stderr, and
-** calls exit(2).
+** Tidy uses a user provided allocator for all memory allocations.  If this 
+** allocator is not provided, then a default allocator is used which simply
+** wraps standard C malloc/free calls.  These wrappers call the panic function
+** upon any failure.  The default panic function prints an out of memory message
+** to stderr, and calls exit(2).
 **
-** For applications in which it is unacceptable to
-** abort in the case of memory allocation, then the
-** panic function can be replaced with one which
-** longjmps() out of the tidy code.  For this to
-** clean up completely, you should be careful not
-** to use any tidy methods that open files as these
-** will not be closed before panic() is called.
+** For applications in which it is unacceptable to abort in the case of memory 
+** allocation, then the panic function can be replaced with one which longjmps()
+** out of the LibTidy code.  For this to clean up completely, you should be
+** careful not to use any tidy methods that open files as these will not be 
+** closed before panic() is called.
 **
-** TODO: associate file handles with tidyDoc and
-** ensure that tidyDocRelease() can close them all.
+** TODO: associate file handles with tidyDoc and ensure that tidyDocRelease()
+** can close them all.
 **
-** Calling the withAllocator() family (
-** tidyCreateWithAllocator, tidyBufInitWithAllocator,
-** tidyBufAllocWithAllocator) allow settings custom
-** allocators).
+** Calling the xWithAllocator() family (tidyCreateWithAllocator,
+** tidyBufInitWithAllocator, tidyBufAllocWithAllocator) allow setting custom
+** allocators.
 **
-** All parts of the document use the same allocator.
-** Calls that require a user provided buffer can
-** optionally use a different allocator.
+** All parts of the document use the same allocator. Calls that require a user
+** provided buffer can optionally use a different allocator.
 **
-** For reference in designing a plug-in allocator,
-** most allocations made by tidy are less than 100
-** bytes, corresponding to attribute names/values, etc.
+** For reference in designing a plug-in allocator, most allocations made by 
+** LibTidy are less than 100 bytes, corresponding to attribute names and 
+** values, etc.
 **
-** There is also an additional class of much larger
-** allocations which are where most of the data from
-** the lexer is stored.  (It is not currently possible
-** to use a separate allocator for the lexer, this
-** would be a useful extension).
+** There is also an additional class of much larger allocations which are where
+** most of the data from the lexer is stored. It is not currently possible to
+** use a separate allocator for the lexer; this would be a useful extension.
 **
-** In general, approximately 1/3rd of the memory
-** used by tidy is freed during the parse, so if
-** memory usage is an issue then an allocator that 
-** can reuse this memory is a good idea.
+** In general, approximately 1/3rd of the memory used by LibTidy is freed during
+** the parse, so if memory usage is an issue then an allocator that can reuse
+** this memory is a good idea.
 **
 ** @{
 */
@@ -161,8 +152,7 @@ struct _TidyAllocator;
 /** The allocator **/
 typedef struct _TidyAllocator TidyAllocator;
 
-/**  An allocator's function table.  All functions here must
-    be provided.
+/**  An allocator's function table.  All functions here must be provided.
  */
 struct _TidyAllocatorVtbl {
     /** Called to allocate a block of nBytes of memory */
@@ -173,15 +163,14 @@ struct _TidyAllocatorVtbl {
     void* (TIDY_CALL *realloc)( TidyAllocator *self, void *block, size_t nBytes );
     /** Called to free a previously allocated block of memory */
     void (TIDY_CALL *free)( TidyAllocator *self, void *block);
-    /** Called when a panic condition is detected.  Must support
-        block == NULL.  This function is not called if either alloc 
-        or realloc fails; it is up to the allocator to do this.
-        Currently this function can only be called if an error is
-        detected in the tree integrity via the internal function
-        CheckNodeIntegrity().  This is a situation that can
-        only arise in the case of a programming error in tidylib.
-        You can turn off node integrity checking by defining
-        the constant NO_NODE_INTEGRITY_CHECK during the build.
+    /** Called when a panic condition is detected.  Must support block == NULL.
+        This function is not called if either alloc or realloc fails; it is up 
+        to the allocator to do this. Currently this function can only be called
+        if an error is detected in the tree integrity via the internal function
+        CheckNodeIntegrity().  This is a situation that can only arise in the 
+        case of a programming error in LibTidy. You can turn off node integrity
+        checking by defining the constant NO_NODE_INTEGRITY_CHECK during the
+        build.
     **/
     void (TIDY_CALL *panic)( TidyAllocator *self, ctmbstr msg );
 };
@@ -249,73 +238,20 @@ TIDY_EXPORT Bool TIDY_CALL tidySetPanicCall( TidyPanic fpanic );
 
 /** @defgroup Basic Basic Operations
 **
-** Tidy public interface
+** For an excellent example of how to invoke LibTidy, please consult
+** `console/tidy.c:main()` for in-depth implementation details. A simplified
+** example can be seen on our site: http://www.html-tidy.org/developer/
 **
-** Several functions return an integer document status:
+** There used to be an example built into the documentation right here, but
+** as it was formatted for Doxygen rather than a developer, it was unreadable
+** and so has been removed.
 **
-** <pre>
-** 0    -> SUCCESS
-** >0   -> 1 == TIDY WARNING, 2 == TIDY ERROR
-** <0   -> SEVERE ERROR
-** </pre>
-** 
-The following is a short example program.
-
-<pre>
-\#include &lt;tidy.h&gt;
-\#include &lt;tidybuffio.h&gt;
-\#include &lt;stdio.h&gt;
-\#include &lt;errno.h&gt;
-
-
-int main(int argc, char **argv )
-{
-  const char* input = "&lt;title&gt;Foo&lt;/title&gt;&lt;p&gt;Foo!";
-  TidyBuffer output;
-  TidyBuffer errbuf;
-  int rc = -1;
-  Bool ok;
-
-  TidyDoc tdoc = tidyCreate();                     // Initialize "document"
-  tidyBufInit( &amp;output );
-  tidyBufInit( &amp;errbuf );
-  printf( "Tidying:\t\%s\\n", input );
-
-  ok = tidyOptSetBool( tdoc, TidyXhtmlOut, yes );  // Convert to XHTML
-  if ( ok )
-    rc = tidySetErrorBuffer( tdoc, &amp;errbuf );      // Capture diagnostics
-  if ( rc &gt;= 0 )
-    rc = tidyParseString( tdoc, input );           // Parse the input
-  if ( rc &gt;= 0 )
-    rc = tidyCleanAndRepair( tdoc );               // Tidy it up!
-  if ( rc &gt;= 0 )
-    rc = tidyRunDiagnostics( tdoc );               // Kvetch
-  if ( rc &gt; 1 )                                    // If error, force output.
-    rc = ( tidyOptSetBool(tdoc, TidyForceOutput, yes) ? rc : -1 );
-  if ( rc &gt;= 0 )
-    rc = tidySaveBuffer( tdoc, &amp;output );          // Pretty Print
-
-  if ( rc &gt;= 0 )
-  {
-    if ( rc &gt; 0 )
-      printf( "\\nDiagnostics:\\n\\n\%s", errbuf.bp );
-    printf( "\\nAnd here is the result:\\n\\n\%s", output.bp );
-  }
-  else
-    printf( "A severe error (\%d) occurred.\\n", rc );
-
-  tidyBufFree( &amp;output );
-  tidyBufFree( &amp;errbuf );
-  tidyRelease( tdoc );
-  return rc;
-}
-</pre>
 ** @{
 */
 
-/** The primary creation of a TidyDoc.
- ** This must be the first call before most of the Tidy API which require the TidyDoc parameter.
- ** When completed tidyRelease( TidyDoc tdoc ); should be called to release all memory
+/** The primary creation of a TidyDoc. This must be the first call before most
+ ** of the Tidy API which require the TidyDoc parameter. When completed,
+ **  tidyRelease( TidyDoc tdoc ); should be called to release all memory
  */
 TIDY_EXPORT TidyDoc TIDY_CALL     tidyCreate(void);
 
@@ -338,10 +274,7 @@ TIDY_EXPORT void TIDY_CALL        tidySetAppData( TidyDoc tdoc, void* appData );
 TIDY_EXPORT void* TIDY_CALL       tidyGetAppData( TidyDoc tdoc );
 
 /** Get release date (version) for current library 
- ** @deprecated tidyReleaseDate() is deprecated in favor of semantic
- ** versioning and should be replaced with tidyLibraryVersion().
  */
-
 TIDY_EXPORT ctmbstr TIDY_CALL     tidyReleaseDate(void);
 
 /** Get version number for the current library */
@@ -476,7 +409,7 @@ TIDY_EXPORT TidyIterator TIDY_CALL  tidyOptGetPickList( TidyOption opt );
 /** Get next string value of Option "pick list" */
 TIDY_EXPORT ctmbstr TIDY_CALL       tidyOptGetNextPick( TidyOption opt, TidyIterator* pos );
 
-/** Get current Option value as a string */
+/** Get string Option current value. Note, the optID "must" be a type 'TidyString'! */
 TIDY_EXPORT ctmbstr TIDY_CALL       tidyOptGetValue( TidyDoc tdoc, TidyOptionId optId );
 /** Set Option value as a string */
 TIDY_EXPORT Bool TIDY_CALL          tidyOptSetValue( TidyDoc tdoc, TidyOptionId optId, ctmbstr val );
@@ -859,12 +792,6 @@ TIDY_EXPORT TidyNode TIDY_CALL    tidyGetChild( TidyNode tnod );
 TIDY_EXPORT TidyNode TIDY_CALL    tidyGetNext( TidyNode tnod );
 TIDY_EXPORT TidyNode TIDY_CALL    tidyGetPrev( TidyNode tnod );
 
-/* Null for non-element nodes and all pure HTML
-TIDY_EXPORT ctmbstr     tidyNodeNsLocal( TidyNode tnod );
-TIDY_EXPORT ctmbstr     tidyNodeNsPrefix( TidyNode tnod );
-TIDY_EXPORT ctmbstr     tidyNodeNsUri( TidyNode tnod );
-*/
-
 /* Iterate over attribute values */
 TIDY_EXPORT TidyAttr TIDY_CALL    tidyAttrFirst( TidyNode tnod );
 TIDY_EXPORT TidyAttr TIDY_CALL    tidyAttrNext( TidyAttr tattr );
@@ -873,12 +800,6 @@ TIDY_EXPORT ctmbstr TIDY_CALL     tidyAttrName( TidyAttr tattr );
 TIDY_EXPORT ctmbstr TIDY_CALL     tidyAttrValue( TidyAttr tattr );
 
 TIDY_EXPORT void TIDY_CALL        tidyAttrDiscard( TidyDoc itdoc, TidyNode tnod, TidyAttr tattr );
-
-/* Null for pure HTML
-TIDY_EXPORT ctmbstr     tidyAttrNsLocal( TidyAttr tattr );
-TIDY_EXPORT ctmbstr     tidyAttrNsPrefix( TidyAttr tattr );
-TIDY_EXPORT ctmbstr     tidyAttrNsUri( TidyAttr tattr );
-*/
 
 /** @} end Tree group */
 
@@ -891,7 +812,7 @@ TIDY_EXPORT ctmbstr     tidyAttrNsUri( TidyAttr tattr );
 
 /* Node info */
 TIDY_EXPORT TidyNodeType TIDY_CALL tidyNodeGetType( TidyNode tnod );
-TIDY_EXPORT ctmbstr TIDY_CALL     tidyNodeGetName( TidyNode tnod );
+TIDY_EXPORT ctmbstr TIDY_CALL tidyNodeGetName( TidyNode tnod );
 
 TIDY_EXPORT Bool TIDY_CALL tidyNodeIsText( TidyNode tnod );
 TIDY_EXPORT Bool TIDY_CALL tidyNodeIsProp( TidyDoc tdoc, TidyNode tnod );
@@ -908,235 +829,154 @@ TIDY_EXPORT TidyTagId TIDY_CALL tidyNodeGetId( TidyNode tnod );
 TIDY_EXPORT uint TIDY_CALL tidyNodeLine( TidyNode tnod );
 TIDY_EXPORT uint TIDY_CALL tidyNodeColumn( TidyNode tnod );
 
-/** @defgroup NodeIsElementName Deprecated node interrogation per TagId
-**
-** @deprecated The functions tidyNodeIs{ElementName} are deprecated and 
-** should be replaced by tidyNodeGetId.
-** @{
-*/
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsHTML( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsHEAD( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsTITLE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsBASE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsMETA( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsBODY( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsFRAMESET( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsFRAME( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsIFRAME( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsNOFRAMES( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsHR( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsH1( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsH2( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsPRE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsLISTING( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsP( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsUL( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsOL( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsDL( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsDIR( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsLI( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsDT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsDD( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsTABLE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsCAPTION( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsTD( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsTH( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsTR( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsCOL( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsCOLGROUP( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsBR( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsA( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsLINK( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsB( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsI( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSTRONG( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsEM( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsBIG( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSMALL( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsPARAM( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsOPTION( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsOPTGROUP( TidyNode tnod );
 TIDY_EXPORT Bool TIDY_CALL tidyNodeIsIMG( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsMAP( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsAREA( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsNOBR( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsWBR( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsFONT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsLAYER( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSPACER( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsCENTER( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSTYLE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSCRIPT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsNOSCRIPT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsFORM( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsTEXTAREA( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsBLOCKQUOTE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsAPPLET( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsOBJECT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsDIV( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSPAN( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsINPUT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsQ( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsLABEL( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsH3( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsH4( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsH5( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsH6( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsADDRESS( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsXMP( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSELECT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsBLINK( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsMARQUEE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsEMBED( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsBASEFONT( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsISINDEX( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsS( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsSTRIKE( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsU( TidyNode tnod );
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsMENU( TidyNode tnod );
-
-/* HTML5 */
-TIDY_EXPORT Bool TIDY_CALL tidyNodeIsDATALIST( TidyNode tnod ); // bit like OPTIONS
-
-
-/** @} End NodeIsElementName group */
-
+TIDY_EXPORT Bool TIDY_CALL tidyNodeIsLINK( TidyNode tnod );
 /** @} End NodeAsk group */
 
 
-/** @defgroup Attribute Attribute Interrogation
+/** @defgroup Attribute Attribute Interrogation and Retrieval
 **
-** Get information about any given attribute.
+** Get information about attributes, and retrieve them from nodes.
 ** @{
 */
 
 TIDY_EXPORT TidyAttrId TIDY_CALL tidyAttrGetId( TidyAttr tattr );
 TIDY_EXPORT Bool TIDY_CALL tidyAttrIsEvent( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsProp( TidyAttr tattr );
-
-/** @defgroup AttrIsAttributeName Deprecated attribute interrogation per AttrId
-**
-** @deprecated The functions  tidyAttrIs{AttributeName} are deprecated and 
-** should be replaced by tidyAttrGetId.
-** @{
-*/
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsHREF( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsSRC( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsID( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsNAME( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsSUMMARY( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsALT( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsLONGDESC( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsUSEMAP( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsISMAP( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsLANGUAGE( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsTYPE( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsVALUE( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsCONTENT( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsTITLE( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsXMLNS( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsDATAFLD( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsWIDTH( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsHEIGHT( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsFOR( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsSELECTED( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsCHECKED( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsLANG( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsTARGET( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsHTTP_EQUIV( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsREL( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnMOUSEMOVE( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnMOUSEDOWN( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnMOUSEUP( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnCLICK( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnMOUSEOVER( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnMOUSEOUT( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnKEYDOWN( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnKEYUP( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnKEYPRESS( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnFOCUS( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsOnBLUR( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsBGCOLOR( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsLINK( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsALINK( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsVLINK( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsTEXT( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsSTYLE( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsABBR( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsCOLSPAN( TidyAttr tattr );
-TIDY_EXPORT Bool TIDY_CALL tidyAttrIsROWSPAN( TidyAttr tattr );
-
-/** @} End AttrIsAttributeName group */
-
-/** @} end AttrAsk group */
-
-
-/** @defgroup AttrGet Attribute Retrieval
-**
-** Lookup an attribute from a given node
-** @{
-*/
 
 TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetById( TidyNode tnod, TidyAttrId attId );
 
-/** @defgroup AttrGetAttributeName Deprecated attribute retrieval per AttrId
+/** @} end Attribute group */
+
+    
+/** @defgroup MessagesKeys Message Key Management
 **
-** @deprecated The functions tidyAttrGet{AttributeName} are deprecated and 
-** should be replaced by tidyAttrGetById.
-** For instance, tidyAttrGetID( TidyNode tnod ) can be replaced by 
-** tidyAttrGetById( TidyNode tnod, TidyAttr_ID ). This avoids a potential
-** name clash with tidyAttrGetId for case-insensitive languages.
+** These functions serve to manage message codes. To-do is to rename them
+** so they reflect messages and not errors.
 ** @{
 */
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetHREF( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetSRC( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetID( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetNAME( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetSUMMARY( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetALT( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetLONGDESC( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetUSEMAP( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetISMAP( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetLANGUAGE( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetTYPE( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetVALUE( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetCONTENT( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetTITLE( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetXMLNS( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetDATAFLD( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetWIDTH( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetHEIGHT( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetFOR( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetSELECTED( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetCHECKED( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetLANG( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetTARGET( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetHTTP_EQUIV( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetREL( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnMOUSEMOVE( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnMOUSEDOWN( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnMOUSEUP( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnCLICK( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnMOUSEOVER( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnMOUSEOUT( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnKEYDOWN( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnKEYUP( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnKEYPRESS( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnFOCUS( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetOnBLUR( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetBGCOLOR( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetLINK( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetALINK( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetVLINK( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetTEXT( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetSTYLE( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetABBR( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetCOLSPAN( TidyNode tnod );
-TIDY_EXPORT TidyAttr TIDY_CALL tidyAttrGetROWSPAN( TidyNode tnod );
 
-/** @} End AttrGetAttributeName group */
+TIDY_EXPORT ctmbstr TIDY_CALL tidyErrorCodeAsKey(uint code);
+TIDY_EXPORT TidyIterator TIDY_CALL getErrorCodeList();
+TIDY_EXPORT uint TIDY_CALL getNextErrorCode( TidyIterator* iter );
 
-/** @} end AttrGet group */
+/** @} end MessagesKeys group */
+    
+    
+/** @defgroup Localization Localization Support
+**
+** These functions help manage localization in Tidy.
+ ** @{
+*/
+
+    
+/**
+ **  Determines the current locale without affecting the C locale.
+ **  Tidy has always used the default C locale, and at this point
+ **  in its development we're not going to tamper with that.
+ **  @param  result The buffer to use to return the string.
+ **          Returns NULL on failure.
+ **  @return The same buffer for convenience.
+ */
+TIDY_EXPORT tmbstr TIDY_CALL tidySystemLocale(tmbstr result);
+
+/**
+ *  Tells Tidy to use a different language for output.
+ *  @param  languageCode A Windows or POSIX language code, and must match
+ *          a TIDY_LANGUAGE for an installed language.
+ *  @result Indicates that a setting was applied, but not necessarily the
+ *          specific request, i.e., true indicates a language and/or region
+ *          was applied. If es_mx is requested but not installed, and es is
+ *          installed, then es will be selected and this function will return
+ *          true. However the opposite is not true; if es is requested but
+ *          not present, Tidy will not try to select from the es_XX variants.
+ */
+TIDY_EXPORT Bool TIDY_CALL tidySetLanguage( ctmbstr languageCode );
+
+/**
+ *  Gets the current language used by Tidy.
+ */
+TIDY_EXPORT ctmbstr TIDY_CALL tidyGetLanguage();
+
+/**
+ *  Provides a string given `messageType` in the current
+ *  localization for `quantity`.
+ */
+TIDY_EXPORT ctmbstr TIDY_CALL tidyLocalizedStringN( uint messageType, uint quantity );
+
+/**
+ *  Provides a string given `messageType` in the current
+ *  localization for the single case.
+ */
+TIDY_EXPORT ctmbstr TIDY_CALL tidyLocalizedString( uint messageType );
+
+/**
+ *  Provides a string given `messageType` in the default
+ *  localization (which is `en`).
+ */
+TIDY_EXPORT ctmbstr TIDY_CALL tidyDefaultString( uint messageType );
+
+/*
+ *  Initializes the TidyIterator to point to the first item
+ *  in Tidy's list of localization string keys. Note that
+ *  these are provided for documentation generation purposes
+ *  and probably aren't useful for LibTidy implementors.
+ */
+TIDY_EXPORT TidyIterator TIDY_CALL getStringKeyList();
+
+/*
+ *  Provides the next key value in Tidy's list of localized
+ *  strings. Note that these are provided for documentation
+ *  generation purposes and probably aren't useful to
+ *  libtidy implementors.
+ */
+TIDY_EXPORT uint TIDY_CALL getNextStringKey( TidyIterator* iter );
+
+/**
+ *  Define an opaque type we can use for tidyLocaleMapItem, which
+ *  is used to iterate through the language list, and used to access
+ *  the windowsName() and the posixName().
+ */
+opaque_type(tidyLocaleMapItem);
+    
+/**
+ *  Initializes the TidyIterator to point to the first item
+ *  in Tidy's structure of Windows<->POSIX local mapping.
+ *  Items can be retrieved with getNextWindowsLanguage();
+ */
+TIDY_EXPORT TidyIterator TIDY_CALL getWindowsLanguageList();
+
+/**
+ *  Returns the next record of type `localeMapItem` in
+ *  Tidy's structure of Windows<->POSIX local mapping.
+ */
+TIDY_EXPORT const tidyLocaleMapItem* TIDY_CALL getNextWindowsLanguage( TidyIterator* iter );
+
+/**
+ *  Given a `tidyLocalMapItem`, return the Windows name.
+ */
+TIDY_EXPORT const ctmbstr TIDY_CALL TidyLangWindowsName( const tidyLocaleMapItem *item );
+
+/**
+ *  Given a `tidyLocalMapItem`, return the POSIX name.
+ */
+TIDY_EXPORT const ctmbstr TIDY_CALL TidyLangPosixName( const tidyLocaleMapItem *item );
+
+/**
+ *  Initializes the TidyIterator to point to the first item
+ *  in Tidy's list of installed language codes.
+ *  Items can be retrieved with getNextInstalledLanguage();
+ */
+TIDY_EXPORT TidyIterator TIDY_CALL getInstalledLanguageList();
+
+/**
+ *  Returns the next installed language.
+ */
+TIDY_EXPORT ctmbstr TIDY_CALL getNextInstalledLanguage( TidyIterator* iter );
+
+
+
+/** @} end MessagesKeys group */
+    
 
 #ifdef __cplusplus
 }  /* extern "C" */

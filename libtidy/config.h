@@ -78,7 +78,9 @@ const TidyOptionImpl* TY_(getNextOption)( TidyDocImpl* doc, TidyIterator* iter )
 TidyIterator TY_(getOptionPickList)( const TidyOptionImpl* option );
 ctmbstr TY_(getNextOptionPick)( const TidyOptionImpl* option, TidyIterator* iter );
 
+#if SUPPORT_CONSOLE_APP
 const TidyOptionDoc* TY_(OptGetDocDesc)( TidyOptionId optId );
+#endif /* SUPPORT_CONSOLE_APP */
 
 void TY_(InitConfig)( TidyDocImpl* doc );
 void TY_(FreeConfig)( TidyDocImpl* doc );
@@ -116,8 +118,6 @@ Bool  TY_(ConfigDiffThanSnapshot)( TidyDocImpl* doc );
 int TY_(CharEncodingId)( TidyDocImpl* doc, ctmbstr charenc );
 ctmbstr TY_(CharEncodingName)( int encoding );
 ctmbstr TY_(CharEncodingOptName)( int encoding );
-
-/* void SetEmacsFilename( TidyDocImpl* doc, ctmbstr filename ); */
 
 
 #ifdef _DEBUG
