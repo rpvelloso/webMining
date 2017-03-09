@@ -31,7 +31,7 @@ using pDOM = DOM *;
 class DOM {
   friend class Node;
  public:
-  DOM(const std::string &uri);
+  DOM(const std::string &uri, const std::string &html);
   ~DOM();
   void printHTML() const;
   pNode body();

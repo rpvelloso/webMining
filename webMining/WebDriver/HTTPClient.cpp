@@ -11,9 +11,9 @@ HTTPClient::HTTPClient(HTTPMethod method, const std::string &url, const std::str
   curl = curl_easy_init();
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    if (method == HTTPMethod::POST)
+    if (method == HTTPMethod::mPOST)
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post.c_str());
-    else if (method == HTTPMethod::DELETE)
+    else if (method == HTTPMethod::mDELETE)
       curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &(HTTPClient::curlWriteCallback));
@@ -33,7 +33,7 @@ std::string HTTPClient::getResponse() const {
   return response.str();
 }
 
-size_t HTTPClient::curlWriteCallback(char *in, uint size, uint nmemb, HTTPClient *client) {
+size_t HTTPClient::curlWriteCallback(char *in, size_t size, size_t nmemb, HTTPClient *client) {
   return client->appendResponse(in, size*nmemb);
 }
 

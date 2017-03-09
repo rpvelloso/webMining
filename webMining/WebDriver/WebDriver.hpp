@@ -17,15 +17,23 @@ public:
   WebDriver() {};
   virtual ~WebDriver() {};
 
-  virtual std::string newSession() = 0;
+  virtual void newSession() = 0;
   virtual void go(std::string url) = 0;
-  virtual std::string getPageSource() = 0;
+  virtual const std::string &getPageSource() = 0;
   virtual void deleteSession() = 0;
+
+  static void luaBinding(sol::state &lua) {
+  	lua.new_usertype<WebDriver>("WebDriver",
+  			"go", &WebDriver::go,
+  			"getPageSource", &WebDriver::getPageSource
+  			);
+  }
 };
 
 class FireFoxWebDriver : public WebDriver {
 public:
-  FireFoxWebDriver() : WebDriver() {
+  FireFoxWebDriver(std::string driverURL = "localhost:4444") {
+	  this->driverUrl = driverUrl;
     newSession();
   };
   virtual ~FireFoxWebDriver() {
@@ -34,7 +42,7 @@ public:
 
   virtual void newSession() {
     try{
-      HTTPClient httpClient(HTTPMethod::POST,"localhost:4444/session","{}");
+      HTTPClient httpClient(HTTPMethod::mPOST,driverUrl + "/session","{}");
       auto response = nlohmann::json::parse(httpClient.getResponse());
       auto session = response["value"]["sessionId"];
       if (session.is_null())
@@ -49,7 +57,7 @@ public:
     if (!sessionId.empty()) {
       try{
         nlohmann::json jurl = {{"url", url}};
-        HTTPClient httpClient(HTTPMethod::POST,"localhost:4444/session/" + sessionId + "/url", jurl.dump());
+        HTTPClient httpClient(HTTPMethod::mPOST,driverUrl + "/session/" + sessionId + "/url", jurl.dump());
         auto response = nlohmann::json::parse(httpClient.getResponse());
         auto ret = response["value"];
         if (!ret.empty())
@@ -60,28 +68,27 @@ public:
     }
   }
 
-  virtual std::string getPageSource() {
-    std::string source = "";
+  virtual const std::string &getPageSource() {
     if (!sessionId.empty()) {
       try{
-        HTTPClient httpClient(HTTPMethod::GET,"localhost:4444/session/" + sessionId + "/source");
+        HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/source");
         auto response = nlohmann::json::parse(httpClient.getResponse());
         auto ret = response["value"];
         if (!ret.empty() && ret.is_string())
-          source = ret;
+          pageSource = ret;
         else
           throw std::runtime_error("FireFoxWebDriver::getPageSource " + response.dump());
       } catch (std::exception &e) {
         throw;
       }
     }
-    return source;
+    return pageSource;
   }
 
   virtual void deleteSession() {
     if (!sessionId.empty()) {
       try{
-        HTTPClient httpClient(HTTPMethod::DELETE,"localhost:4444/session/" + sessionId);
+        HTTPClient httpClient(HTTPMethod::mDELETE,driverUrl + "/session/" + sessionId);
         auto response = nlohmann::json::parse(httpClient.getResponse());
         auto ret = response["value"];
         if (!ret.empty())
@@ -94,7 +101,10 @@ public:
   }
 private:
   std::string sessionId = "";
+  std::string driverUrl = "localhost:4444";
+  std::string pageSource;
 };
 
+static WebDriver *fireFoxWebDriver = new FireFoxWebDriver();
 
 #endif /* WEBDRIVER_WEBDRIVER_HPP_ */

@@ -15,9 +15,9 @@
 #include <curl/curl.h>
 
 enum class HTTPMethod {
-    GET,
-    POST,
-    DELETE
+    mGET,
+    mPOST,
+    mDELETE
 };
 
 class HTTPClient {
@@ -30,7 +30,7 @@ private:
     CURL *curl;
     std::stringstream response;
 
-    static size_t curlWriteCallback(char *in, uint size, uint nmemb, HTTPClient *client);
+    static size_t curlWriteCallback(char *in, size_t size, size_t nmemb, HTTPClient *client);
     size_t appendResponse(char *in, size_t len);
     void cleanup();
 };

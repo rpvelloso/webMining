@@ -28,7 +28,7 @@
 
 void DOM::luaBinding(sol::state &lua) {
 	lua.new_usertype<DOM>("DOM",
-			sol::constructors<sol::types<const std::string>>(),
+			sol::constructors<sol::types<const std::string>, sol::types<const std::string, const std::string>>(),
 			"printHTML", &DOM::printHTML,
 			"getURI", DOM::getURI,
 			"traverse", &DOM::traverse,
@@ -39,7 +39,7 @@ void DOM::luaBinding(sol::state &lua) {
 	Node::luaBinding(lua);
 }
 
-DOM::DOM(const std::string &uri) {
+DOM::DOM(const std::string &uri, const std::string &html = "") {
 	this->uri = uri;
 	tdoc = tidyCreate();
 
@@ -69,7 +69,13 @@ DOM::DOM(const std::string &uri) {
 
 	tidySetErrorBuffer(tdoc, &errbuf);
 
-	if (tidyParseFile(tdoc, uri.c_str()) >= 0) {
+	int parseResult;
+	if (html == "")
+		parseResult = tidyParseFile(tdoc, uri.c_str());
+	else
+		parseResult = tidyParseString(tdoc, html.c_str());
+
+	if (parseResult >= 0) {
 		tidyCleanAndRepair(tdoc);
 		tidyRunDiagnostics(tdoc);
 		clear();

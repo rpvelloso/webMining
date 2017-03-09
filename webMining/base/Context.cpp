@@ -21,6 +21,7 @@
 #include <string>
 
 #include "../DSRE/DSRE.hpp"
+#include "../WebDriver/WebDriver.hpp"
 #include "DOM.hpp"
 
 extern "C" {
@@ -52,6 +53,8 @@ Context::~Context() {
 void Context::bind(int argc, char **argv) {
   DOM::luaBinding (lua);
   DSRE::luaBinding(lua);
+  WebDriver::luaBinding(lua);
+  lua["webDriver"] = fireFoxWebDriver;
 
   luaopen_lsqlite3(lua.lua_state());
   lua_setglobal(lua.lua_state(), "sqlite3");
