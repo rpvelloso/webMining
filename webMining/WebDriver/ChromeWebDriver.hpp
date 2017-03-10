@@ -1,0 +1,33 @@
+/*
+ * ChromeWebDriver.hpp
+ *
+ *  Created on: 10 de mar de 2017
+ *      Author: rvelloso
+ */
+
+#ifndef WEBDRIVER_CHROMEWEBDRIVER_HPP_
+#define WEBDRIVER_CHROMEWEBDRIVER_HPP_
+
+#include "WebDriver.hpp"
+
+class ChromeWebDriver : public WebDriver {
+public:
+	ChromeWebDriver(std::string driverURL = "localhost:9515");
+
+  const std::string &getDriverAddress() const;
+  void setDriverAddress(const std::string &addr);
+
+  virtual ~ChromeWebDriver();
+  virtual void newSession();
+  virtual void go(std::string url);
+  virtual const std::string &getPageSource();
+  virtual void deleteSession();
+private:
+  std::string sessionId = "";
+  std::string driverUrl = "localhost:9515";
+  std::string pageSource;
+};
+
+static WebDriver *chromeWebDriver = new ChromeWebDriver();
+
+#endif /* WEBDRIVER_CHROMEWEBDRIVER_HPP_ */

@@ -52,3 +52,25 @@ processFile = function(filename)
     dom:printHTML()
     dsre:printTps()
 end
+
+processUrl = function(url, html)
+    print(string.format("Loading DOM tree: %s",url),CRLF)
+    local dom = DOM.new(url,html)
+    local dsre = DSRE.new()
+    dsre:setMinZScore(minZScore)
+    
+    print("Extracting records.")
+    local start = os.clock()
+
+    dsre:extract(dom)
+    print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
+    
+    print("Outputting results.")
+    displayResults(dsre,"./","output.html")
+    
+    print("Plotting graphs.")
+    plotSequences(dsre,"file","output.html")
+    
+    dom:printHTML()
+    dsre:printTps()
+end

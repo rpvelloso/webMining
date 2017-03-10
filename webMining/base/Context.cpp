@@ -22,6 +22,8 @@
 
 #include "../DSRE/DSRE.hpp"
 #include "../WebDriver/WebDriver.hpp"
+#include "../WebDriver/FireFoxWebDriver.hpp"
+#include "../WebDriver/ChromeWebDriver.hpp"
 #include "DOM.hpp"
 
 extern "C" {
@@ -54,7 +56,10 @@ void Context::bind(int argc, char **argv) {
   DOM::luaBinding (lua);
   DSRE::luaBinding(lua);
   WebDriver::luaBinding(lua);
-  lua["webDriver"] = fireFoxWebDriver;
+
+  lua["webDriver"] = lua.create_table_with(
+	"chrome",chromeWebDriver,
+	"fireFox",fireFoxWebDriver);
 
   luaopen_lsqlite3(lua.lua_state());
   lua_setglobal(lua.lua_state(), "sqlite3");

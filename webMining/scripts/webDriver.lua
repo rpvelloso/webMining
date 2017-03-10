@@ -13,11 +13,15 @@ loadfile("../scripts/plot.lua")()
 loadfile("../scripts/output.lua")()
 loadfile("../scripts/testbed.lua")()
 
+local driver = webDriver.chrome
+
 if #args > 4 then
   local url = args[5]
-  webDriver:go(url)
-  local html = webDriver:getPageSource()
+  driver:newSession()
+  driver:go(url)
+  local html = driver:getPageSource()
   processUrl(url, html)
+  driver:deleteSession()
   do return end
 end
 
