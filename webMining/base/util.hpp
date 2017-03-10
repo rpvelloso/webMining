@@ -39,6 +39,8 @@ std::string stringTok(std::string &inp, const std::string &delim);
 std::vector<double> fct(const std::vector<double> &signal);
 std::vector<double> _fft(std::vector<double> &, int, bool = true);
 
+bool decode64(const std::string &, std::vector<unsigned char> &);
+
 template<typename T>
 T contour(T s) {
   auto height = s[0];

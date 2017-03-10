@@ -70,6 +70,9 @@ const std::string &FireFoxWebDriver::getPageSource() {
 	return pageSource;
 }
 
+void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
+}
+
 void FireFoxWebDriver::deleteSession() {
 	if (!sessionId.empty()) {
 	  try{

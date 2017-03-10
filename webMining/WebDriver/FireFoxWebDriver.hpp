@@ -21,6 +21,7 @@ public:
   virtual void newSession();
   virtual void go(std::string url);
   virtual const std::string &getPageSource();
+  virtual void takeScreenshot(const std::string &filename);
   virtual void deleteSession();
 private:
   std::string sessionId = "";

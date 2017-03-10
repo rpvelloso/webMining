@@ -5,7 +5,9 @@
  *      Author: rvelloso
  */
 
+#include <fstream>
 #include "ChromeWebDriver.hpp"
+#include "../base/util.hpp"
 
 ChromeWebDriver::ChromeWebDriver(std::string driverURL) {
 	this->driverUrl = driverUrl;
@@ -72,6 +74,35 @@ const std::string &ChromeWebDriver::getPageSource() {
 	} else
 		throw std::runtime_error("ChromeWebDriver::getPageSource no session available");
 	return pageSource;
+}
+
+void ChromeWebDriver::takeScreenshot(const std::string &filename) {
+	if (!sessionId.empty()) {
+	  try{
+		HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
+
+		std::cerr << httpClient.getResponse() << std::endl;
+		auto response = nlohmann::json::parse(httpClient.getResponse());
+		std::cerr << response.dump(4) << std::endl;
+
+
+		int status = response["status"];
+		if (status != 0)
+		  throw std::runtime_error("ChromeWebDriver::takeScreenshot " + response.dump());
+
+		std::string base64Screenshot = response["value"];
+		std::vector<unsigned char> decodedScreenshot;
+
+		if (decode64(base64Screenshot, decodedScreenshot)) {
+			std::fstream outputFile(filename + ".png", std::fstream::trunc | std::fstream::binary | std::fstream::out);
+			outputFile.write((char *)&decodedScreenshot[0], decodedScreenshot.size());
+			outputFile.close();
+		}
+	  } catch (std::exception &e) {
+		throw;
+	  }
+	} else
+		throw std::runtime_error("ChromeWebDriver::takeScreenshot no session available");
 }
 
 void ChromeWebDriver::deleteSession() {

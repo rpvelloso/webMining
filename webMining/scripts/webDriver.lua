@@ -20,6 +20,7 @@ if #args > 4 then
   driver:newSession()
   driver:go(url)
   local html = driver:getPageSource()
+  driver:takeScreenshot("screenshot")
   processUrl(url, html)
   driver:deleteSession()
   do return end

@@ -24,6 +24,7 @@ public:
   virtual void newSession() = 0;
   virtual void go(std::string url) = 0;
   virtual const std::string &getPageSource() = 0;
+  virtual void takeScreenshot(const std::string &filename) = 0;
   virtual void deleteSession() = 0;
 
   static void luaBinding(sol::state &lua) {
@@ -33,6 +34,7 @@ public:
   			"newSession", WebDriver::newSession,
   			"go", WebDriver::go,
   			"getPageSource", &WebDriver::getPageSource,
+  			"takeScreenshot", WebDriver::takeScreenshot,
 			"deleteSession", WebDriver::deleteSession
   			);
   }

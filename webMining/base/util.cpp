@@ -19,6 +19,7 @@
 #include <vector>
 #include <cmath>
 #include <memory>
+#include <unordered_map>
 
 #include "../3rdparty/hsfft.h"
 
@@ -104,4 +105,38 @@ void hannWindow(std::vector<double> &inp) {
 	    double multiplier = 0.5 * (1.0 - std::cos(2.0*M_PI*(double)i/(double)(inp.size()-1)));
 	    inp[i] = multiplier * inp[i];
 	}
+}
+
+bool decode64(const std::string &inp, std::vector<unsigned char> &outp) {
+	static std::unordered_map<char, unsigned char> decodeTable({
+		{'A',  0}, {'B',  1}, {'C',  2}, {'D',  3}, {'E',  4}, {'F',  5}, {'G',  6}, {'H',  7},
+		{'I',  8}, {'J',  9}, {'K', 10}, {'L', 11}, {'M', 12}, {'N', 13}, {'O', 14}, {'P', 15},
+		{'Q', 16}, {'R', 17}, {'S', 18}, {'T', 19}, {'U', 20}, {'V', 21}, {'W', 22}, {'Z', 23},
+		{'Y', 24}, {'Z', 25}, {'a', 26}, {'b', 27}, {'c', 28}, {'d', 29}, {'e', 30}, {'f', 31},
+		{'g', 32}, {'h', 33}, {'i', 34}, {'j', 35}, {'k', 36}, {'l', 37}, {'m', 38}, {'n', 39},
+		{'o', 40}, {'p', 41}, {'q', 42}, {'r', 43}, {'s', 44}, {'t', 45}, {'u', 46}, {'v', 47},
+		{'w', 48}, {'x', 49}, {'y', 50}, {'z', 51}, {'0', 52}, {'1', 53}, {'2', 54}, {'3', 55},
+		{'4', 56}, {'5', 57}, {'6', 58}, {'7', 59}, {'8', 60}, {'9', 61}, {'+', 62}, {'/', 63},
+		{'=',0}
+	});
+
+	if (inp.size()%4 != 0)
+		return false;
+
+	outp.clear();
+	outp.reserve(inp.size()*0.75);
+
+	for (size_t i = 0; i < inp.size(); i += 4) {
+		std::vector<unsigned char> v({
+			decodeTable[inp[i]],
+			decodeTable[inp[i+1]],
+			decodeTable[inp[i+2]],
+			decodeTable[inp[i+3]]
+		});
+
+		outp.push_back( ((v[0] << 2) & 0b11111100) | ((v[1] >> 4) & 0b00000011) );
+		outp.push_back( ((v[1] << 4) & 0b11110000) | ((v[2] >> 2) & 0b00001111) );
+		outp.push_back( ((v[2] << 6) & 0b11000000) |  (v[3]       & 0b00111111) );
+	}
+	return true;
 }
