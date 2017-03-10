@@ -28,7 +28,6 @@ void ChromeWebDriver::newSession() {
 	  nlohmann::json jcap = {{"desiredCapabilities", {
 			  {"binary",""}
 	  }}};
-	  std::cerr << jcap.dump(4) << std::endl;
 	  HTTPClient httpClient(HTTPMethod::mPOST,driverUrl + "/session",jcap.dump());
 	  auto response = nlohmann::json::parse(httpClient.getResponse());
 	  int status = response["status"];
