@@ -6,6 +6,7 @@
  */
 
 #include <fstream>
+#include "JSONRequest.hpp"
 #include "FireFoxWebDriver.hpp"
 #include "../base/util.hpp"
 
@@ -27,8 +28,7 @@ void FireFoxWebDriver::setDriverAddress(const std::string &addr) {
 
 void FireFoxWebDriver::newSession() {
 	try{
-	  HTTPClient httpClient(HTTPMethod::mPOST,driverUrl + "/session","{}");
-	  auto response = nlohmann::json::parse(httpClient.getResponse());
+	  auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session","{}");
 	  auto session = response["value"]["sessionId"];
 	  if (session.is_null())
 		throw std::runtime_error("FireFoxWebDriver::newSession " + response.dump());
@@ -42,8 +42,7 @@ void FireFoxWebDriver::go(std::string url) {
 	if (!sessionId.empty()) {
 	  try{
 		nlohmann::json jurl = {{"url", url}};
-		HTTPClient httpClient(HTTPMethod::mPOST,driverUrl + "/session/" + sessionId + "/url", jurl.dump());
-		auto response = nlohmann::json::parse(httpClient.getResponse());
+		auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session/" + sessionId + "/url", jurl.dump());
 		auto ret = response["value"];
 		if (!ret.empty())
 		  throw std::runtime_error("FireFoxWebDriver::go " + response.dump());
@@ -57,8 +56,7 @@ void FireFoxWebDriver::go(std::string url) {
 const std::string &FireFoxWebDriver::getPageSource() {
 	if (!sessionId.empty()) {
 	  try{
-		HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/source");
-		auto response = nlohmann::json::parse(httpClient.getResponse());
+    auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/source");
 		auto ret = response["value"];
 		if (!ret.empty() && ret.is_string())
 		  pageSource = ret;
@@ -75,12 +73,7 @@ const std::string &FireFoxWebDriver::getPageSource() {
 void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
   if (!sessionId.empty()) {
     try{
-    HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
-
-    std::cerr << httpClient.getResponse() << std::endl;
-    auto response = nlohmann::json::parse(httpClient.getResponse());
-    std::cerr << response.dump(4) << std::endl;
-
+    auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
 
     if (!response["value"].is_string() || response["value"].empty())
       throw std::runtime_error("FireFoxWebDriver::takeScreenshot " + response.dump());
@@ -103,8 +96,7 @@ void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
 void FireFoxWebDriver::deleteSession() {
 	if (!sessionId.empty()) {
 	  try{
-		HTTPClient httpClient(HTTPMethod::mDELETE,driverUrl + "/session/" + sessionId);
-		auto response = nlohmann::json::parse(httpClient.getResponse());
+	  auto response = JSONRequest::go(HTTPMethod::mDELETE,driverUrl + "/session/" + sessionId);
 		auto ret = response["value"];
 		if (!ret.empty())
 		  throw std::runtime_error("FireFoxWebDriver::deleteSession " + response.dump());

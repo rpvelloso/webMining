@@ -6,6 +6,7 @@
  */
 
 #include <fstream>
+#include "JSONRequest.hpp"
 #include "ChromeWebDriver.hpp"
 #include "../base/util.hpp"
 
@@ -30,8 +31,7 @@ void ChromeWebDriver::newSession() {
 	  nlohmann::json jcap = {{"desiredCapabilities", {
 			  {"binary",""}
 	  }}};
-	  HTTPClient httpClient(HTTPMethod::mPOST,driverUrl + "/session",jcap.dump());
-	  auto response = nlohmann::json::parse(httpClient.getResponse());
+	  auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session",jcap.dump());
 	  int status = response["status"];
 	  auto session = response["sessionId"];
 	  if (status != 0)
@@ -46,8 +46,7 @@ void ChromeWebDriver::go(std::string url) {
 	if (!sessionId.empty()) {
 	  try{
 		nlohmann::json jurl = {{"url", url}};
-		HTTPClient httpClient(HTTPMethod::mPOST,driverUrl + "/session/" + sessionId + "/url", jurl.dump());
-		auto response = nlohmann::json::parse(httpClient.getResponse());
+		auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session/" + sessionId + "/url", jurl.dump());
 		int status = response["status"];
 		if (status != 0)
 		  throw std::runtime_error("ChromeWebDriver::go " + response.dump());
@@ -61,8 +60,7 @@ void ChromeWebDriver::go(std::string url) {
 const std::string &ChromeWebDriver::getPageSource() {
 	if (!sessionId.empty()) {
 	  try{
-		HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/source");
-		auto response = nlohmann::json::parse(httpClient.getResponse());
+	  auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/source");
 		int status = response["status"];
 		if (status == 0)
 		  pageSource = response["value"];
@@ -79,8 +77,7 @@ const std::string &ChromeWebDriver::getPageSource() {
 void ChromeWebDriver::takeScreenshot(const std::string &filename) {
 	if (!sessionId.empty()) {
 	  try{
-		HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
-		auto response = nlohmann::json::parse(httpClient.getResponse());
+    auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
 		int status = response["status"];
 		if (status != 0)
 		  throw std::runtime_error("ChromeWebDriver::takeScreenshot " + response.dump());
@@ -103,8 +100,7 @@ void ChromeWebDriver::takeScreenshot(const std::string &filename) {
 void ChromeWebDriver::deleteSession() {
 	if (!sessionId.empty()) {
 	  try{
-		HTTPClient httpClient(HTTPMethod::mDELETE,driverUrl + "/session/" + sessionId);
-		auto response = nlohmann::json::parse(httpClient.getResponse());
+    auto response = JSONRequest::go(HTTPMethod::mDELETE,driverUrl + "/session/" + sessionId);
 		int status = response["status"];
 		if (status != 0)
 		  throw std::runtime_error("ChromeWebDriver::deleteSession " + response.dump());
