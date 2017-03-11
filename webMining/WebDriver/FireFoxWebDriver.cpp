@@ -5,7 +5,9 @@
  *      Author: rvelloso
  */
 
+#include <fstream>
 #include "FireFoxWebDriver.hpp"
+#include "../base/util.hpp"
 
 FireFoxWebDriver::FireFoxWebDriver(std::string driverURL) {
 	this->driverUrl = driverUrl;
@@ -71,6 +73,31 @@ const std::string &FireFoxWebDriver::getPageSource() {
 }
 
 void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
+  if (!sessionId.empty()) {
+    try{
+    HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
+
+    std::cerr << httpClient.getResponse() << std::endl;
+    auto response = nlohmann::json::parse(httpClient.getResponse());
+    std::cerr << response.dump(4) << std::endl;
+
+
+    if (!response["value"].is_string() || response["value"].empty())
+      throw std::runtime_error("FireFoxWebDriver::takeScreenshot " + response.dump());
+
+    std::string base64Screenshot = response["value"];
+    std::vector<unsigned char> decodedScreenshot;
+
+    if (decode64(base64Screenshot, decodedScreenshot)) {
+      std::fstream outputFile(filename + ".png", std::fstream::trunc | std::fstream::binary | std::fstream::out);
+      outputFile.write((char *)&decodedScreenshot[0], decodedScreenshot.size());
+      outputFile.close();
+    }
+    } catch (std::exception &e) {
+    throw;
+    }
+  } else
+    throw std::runtime_error("FireFoxWebDriver::takeScreenshot no session available");
 }
 
 void FireFoxWebDriver::deleteSession() {

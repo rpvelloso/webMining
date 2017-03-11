@@ -80,12 +80,7 @@ void ChromeWebDriver::takeScreenshot(const std::string &filename) {
 	if (!sessionId.empty()) {
 	  try{
 		HTTPClient httpClient(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
-
-		std::cerr << httpClient.getResponse() << std::endl;
 		auto response = nlohmann::json::parse(httpClient.getResponse());
-		std::cerr << response.dump(4) << std::endl;
-
-
 		int status = response["status"];
 		if (status != 0)
 		  throw std::runtime_error("ChromeWebDriver::takeScreenshot " + response.dump());
