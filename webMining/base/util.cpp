@@ -52,14 +52,11 @@ std::vector<double> _fft(std::vector<double> &signal, int dir, bool psd = true) 
   size_t N = (signal.size() + (signal.size() % 2));
   std::vector<double> ret(N);
 
-  //fft_object obj = fft_init(N, dir);  // Initialize FFT object obj . N - FFT Length. 1 - Forward FFT and -1 for Inverse FFT
   auto fftDeleter = [](fft_set *ptr){free(ptr);};
   std::unique_ptr<fft_set, decltype(fftDeleter)> obj(fft_init(N, dir),fftDeleter);  // Initialize FFT object obj . N - FFT Length. 1 - Forward FFT and -1 for Inverse FFT
 
   std::unique_ptr<fft_data[]> inp(new fft_data[N]);
   std::unique_ptr<fft_data[]> oup(new fft_data[N]);
-  //fft_data* inp = (fft_data*) malloc(sizeof(fft_data) * N);
-  //fft_data* oup = (fft_data*) malloc(sizeof(fft_data) * N);
 
   for (size_t i = 0; i < N; i++) {
     inp[i].re = signal[i];
@@ -79,10 +76,6 @@ std::vector<double> _fft(std::vector<double> &signal, int dir, bool psd = true) 
     else
       ret[i] = oup[i].re;
   }
-
-  //free(inp);
-  //free(oup);
-  //free_fft(obj);
 
   return ret;
 }
