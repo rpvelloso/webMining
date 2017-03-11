@@ -13,6 +13,10 @@
 #include "../3rdparty/json.hpp"
 #include "../3rdparty/sol.hpp"
 
+class WebDriver;
+extern WebDriver *chromeWebDriver;
+extern WebDriver *fireFoxWebDriver;
+
 class WebDriver {
 public:
   WebDriver() {};
@@ -37,6 +41,11 @@ public:
   			"takeScreenshot", WebDriver::takeScreenshot,
 			"deleteSession", WebDriver::deleteSession
   			);
+
+    lua["webDriver"] = lua.create_table_with(
+    "chrome",chromeWebDriver,
+    "fireFox",fireFoxWebDriver);
+
   }
 };
 

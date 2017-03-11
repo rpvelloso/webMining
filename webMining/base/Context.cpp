@@ -57,10 +57,6 @@ void Context::bind(int argc, char **argv) {
   DSRE::luaBinding(lua);
   WebDriver::luaBinding(lua);
 
-  lua["webDriver"] = lua.create_table_with(
-	"chrome",chromeWebDriver,
-	"fireFox",fireFoxWebDriver);
-
   luaopen_lsqlite3(lua.lua_state());
   lua_setglobal(lua.lua_state(), "sqlite3");
 

@@ -29,6 +29,4 @@ private:
   std::string pageSource;
 };
 
-static WebDriver *fireFoxWebDriver = new FireFoxWebDriver();
-
 #endif /* WEBDRIVER_FIREFOXWEBDRIVER_HPP_ */

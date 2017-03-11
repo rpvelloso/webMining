@@ -10,6 +10,8 @@
 #include "FireFoxWebDriver.hpp"
 #include "../base/util.hpp"
 
+WebDriver *fireFoxWebDriver = new FireFoxWebDriver();
+
 FireFoxWebDriver::FireFoxWebDriver(std::string driverURL) {
 	this->driverUrl = driverUrl;
 };

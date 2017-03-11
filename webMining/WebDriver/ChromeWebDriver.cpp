@@ -10,6 +10,8 @@
 #include "ChromeWebDriver.hpp"
 #include "../base/util.hpp"
 
+WebDriver *chromeWebDriver = new ChromeWebDriver();
+
 ChromeWebDriver::ChromeWebDriver(std::string driverURL) {
 	this->driverUrl = driverUrl;
 };

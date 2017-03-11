@@ -29,6 +29,4 @@ private:
   std::string pageSource;
 };
 
-static WebDriver *chromeWebDriver = new ChromeWebDriver();
-
 #endif /* WEBDRIVER_CHROMEWEBDRIVER_HPP_ */
