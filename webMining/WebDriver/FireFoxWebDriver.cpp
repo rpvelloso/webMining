@@ -110,3 +110,6 @@ void FireFoxWebDriver::deleteSession() {
 		throw std::runtime_error("FireFoxWebDriver::deleteSession no session available");
 }
 
+nlohmann::json FireFoxWebDriver::status() {
+	return JSONRequest::go(HTTPMethod::mGET,driverUrl + "/status");
+}

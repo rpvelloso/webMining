@@ -99,6 +99,10 @@ void ChromeWebDriver::takeScreenshot(const std::string &filename) {
 		throw std::runtime_error("ChromeWebDriver::takeScreenshot no session available");
 }
 
+nlohmann::json ChromeWebDriver::status() {
+	return JSONRequest::go(HTTPMethod::mGET,driverUrl + "/status");
+}
+
 void ChromeWebDriver::deleteSession() {
 	if (!sessionId.empty()) {
 	  try{

@@ -9,15 +9,17 @@
 #define WEBDRIVER_FIREFOXWEBDRIVER_HPP_
 
 #include "WebDriver.hpp"
+#include "../3rdparty/json.hpp"
 
 class FireFoxWebDriver : public WebDriver {
 public:
   FireFoxWebDriver(std::string driverURL = "localhost:4444");
+  virtual ~FireFoxWebDriver();
 
   const std::string &getDriverAddress() const;
   void setDriverAddress(const std::string &addr);
 
-  virtual ~FireFoxWebDriver();
+  virtual nlohmann::json status();
   virtual void newSession();
   virtual void go(std::string url);
   virtual const std::string &getPageSource();

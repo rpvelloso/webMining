@@ -119,31 +119,33 @@ bool decode64(const std::string &inp, std::vector<unsigned char> &outp) {
 	outp.clear();
 	outp.reserve(inp.size()*0.75);
 
-	for (size_t i = 0; i < inp.size() - 4; i += 4) {
-		std::vector<unsigned char> v({
-			decodeTable[inp[i]],
-			decodeTable[inp[i+1]],
-			decodeTable[inp[i+2]],
-			decodeTable[inp[i+3]]
-		});
+	std::vector<unsigned char> v({0,0,0,0});
+	for (size_t i = 0; i < inp.size() - 4; ++i) {
+		auto it = decodeTable.find(inp[i]);
+		if (it == decodeTable.end()) // invalid symbol
+			return false;
 
-    outp.push_back( ((v[0] << 2) & 0b11111100) | ((v[1] >> 4) & 0b00000011) );
-    outp.push_back( ((v[1] << 4) & 0b11110000) | ((v[2] >> 2) & 0b00001111) );
-    outp.push_back( ((v[2] << 6) & 0b11000000) |  (v[3]       & 0b00111111) );
+		size_t pos = i%4;
+		v[pos] = it->second;
+		if (pos == 3) {
+			outp.push_back( ((v[0] << 2) & 0b11111100) | ((v[1] >> 4) & 0b00000011) );
+			outp.push_back( ((v[1] << 4) & 0b11110000) | ((v[2] >> 2) & 0b00001111) );
+			outp.push_back( ((v[2] << 6) & 0b11000000) |  (v[3]       & 0b00111111) );
+		}
 	}
 
-  std::vector<unsigned char> v({
-    decodeTable[inp[inp.size() - 4]],
-    decodeTable[inp[inp.size() - 3]],
-    decodeTable[inp[inp.size() - 2]],
-    decodeTable[inp[inp.size() - 1]]
-  });
+	std::vector<unsigned char> vEnd({
+		decodeTable[inp[inp.size() - 4]],
+		decodeTable[inp[inp.size() - 3]],
+		decodeTable[inp[inp.size() - 2]],
+		decodeTable[inp[inp.size() - 1]]
+	});
 
-  outp.push_back( ((v[0] << 2) & 0b11111100) | ((v[1] >> 4) & 0b00000011) );
-  if (inp[inp.size() - 2] != '=')
-    outp.push_back( ((v[1] << 4) & 0b11110000) | ((v[2] >> 2) & 0b00001111) );
-  if (inp[inp.size() - 1] != '=')
-    outp.push_back( ((v[2] << 6) & 0b11000000) |  (v[3]       & 0b00111111) );
+	outp.push_back( ((vEnd[0] << 2) & 0b11111100) | ((vEnd[1] >> 4) & 0b00000011) );
+	if (inp[inp.size() - 2] != '=')
+	outp.push_back( ((vEnd[1] << 4) & 0b11110000) | ((vEnd[2] >> 2) & 0b00001111) );
+	if (inp[inp.size() - 1] != '=')
+	outp.push_back( ((vEnd[2] << 6) & 0b11000000) |  (vEnd[3]       & 0b00111111) );
 
-return true;
+	return true;
 }

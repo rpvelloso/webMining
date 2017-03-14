@@ -25,6 +25,7 @@ public:
   virtual const std::string &getDriverAddress() const = 0;
   virtual void setDriverAddress(const std::string &addr) = 0;
 
+  virtual nlohmann::json status() = 0;
   virtual void newSession() = 0;
   virtual void go(std::string url) = 0;
   virtual const std::string &getPageSource() = 0;
