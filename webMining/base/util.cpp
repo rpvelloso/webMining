@@ -100,7 +100,7 @@ void hannWindow(std::vector<double> &inp) {
 	}
 }
 
-bool decode64(const std::string &inp, std::vector<unsigned char> &outp) {
+void decode64(const std::string &inp, std::vector<unsigned char> &outp) {
 	static std::unordered_map<char, unsigned char> decodeTable({
 		{'A',  0}, {'B',  1}, {'C',  2}, {'D',  3}, {'E',  4}, {'F',  5}, {'G',  6}, {'H',  7},
 		{'I',  8}, {'J',  9}, {'K', 10}, {'L', 11}, {'M', 12}, {'N', 13}, {'O', 14}, {'P', 15},
@@ -114,38 +114,36 @@ bool decode64(const std::string &inp, std::vector<unsigned char> &outp) {
 	});
 
 	if (inp.size()%4 != 0 || inp.empty())
-		return false;
+	  throw std::length_error("invalid base64 input length");
 
 	outp.clear();
 	outp.reserve(inp.size()*0.75);
 
-	std::vector<unsigned char> v({0,0,0,0});
-	for (size_t i = 0; i < inp.size() - 4; ++i) {
+  std::vector<unsigned char> u({0,0,0});
+  std::vector<unsigned char> v({0,0,0,0});
+
+	for (size_t i = 0; i < inp.size(); ++i) {
 		auto it = decodeTable.find(inp[i]);
 		if (it == decodeTable.end()) // invalid symbol
-			return false;
+			throw std::out_of_range("invalid base64 symbol");
 
 		size_t pos = i%4;
 		v[pos] = it->second;
-		if (pos == 3) {
-			outp.push_back( ((v[0] << 2) & 0b11111100) | ((v[1] >> 4) & 0b00000011) );
-			outp.push_back( ((v[1] << 4) & 0b11110000) | ((v[2] >> 2) & 0b00001111) );
-			outp.push_back( ((v[2] << 6) & 0b11000000) |  (v[3]       & 0b00111111) );
+		if (pos == 3) { // decode block
+      u[0] = ((v[0] << 2) & 0b11111100) | ((v[1] >> 4) & 0b00000011);
+      u[1] = ((v[1] << 4) & 0b11110000) | ((v[2] >> 2) & 0b00001111);
+      u[2] = ((v[2] << 6) & 0b11000000) |  (v[3]       & 0b00111111);
+      if (i != inp.size()-1) {
+        outp.push_back(u[0]);
+        outp.push_back(u[1]);
+        outp.push_back(u[2]);
+      }
 		}
 	}
 
-	std::vector<unsigned char> vEnd({
-		decodeTable[inp[inp.size() - 4]],
-		decodeTable[inp[inp.size() - 3]],
-		decodeTable[inp[inp.size() - 2]],
-		decodeTable[inp[inp.size() - 1]]
-	});
-
-	outp.push_back( ((vEnd[0] << 2) & 0b11111100) | ((vEnd[1] >> 4) & 0b00000011) );
+	outp.push_back(u[0]);
 	if (inp[inp.size() - 2] != '=')
-	outp.push_back( ((vEnd[1] << 4) & 0b11110000) | ((vEnd[2] >> 2) & 0b00001111) );
+	outp.push_back(u[1]);
 	if (inp[inp.size() - 1] != '=')
-	outp.push_back( ((vEnd[2] << 6) & 0b11000000) |  (vEnd[3]       & 0b00111111) );
-
-	return true;
+	outp.push_back(u[2]);
 }

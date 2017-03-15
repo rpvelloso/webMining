@@ -14,7 +14,9 @@
 class JSONRequest {
 public:
   static nlohmann::json go(HTTPMethod method, const std::string &url, const std::string &post = "") {
+    std::cerr << std::endl << methodStr[static_cast<int>(method)] << " " << url << std::endl << post << std::endl;
     HTTPClient httpClient(method,url,post);
+    std::cerr << httpClient.getResponse() << std::endl;
     return nlohmann::json::parse(httpClient.getResponse());
   };
 };

@@ -7,6 +7,8 @@
 
 #include "HTTPClient.hpp"
 
+std::vector<std::string> methodStr = {"GET", "POST", "DELETE"};
+
 HTTPClient::HTTPClient(HTTPMethod method, const std::string &url, const std::string &post) : curl(nullptr), response("") {
   curl = curl_easy_init();
   if (curl) {

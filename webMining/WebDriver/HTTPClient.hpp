@@ -9,6 +9,7 @@
 #define WEBDRIVER_HTTPCLIENT_HPP_
 
 #include <iostream>
+#include <vector>
 #include <sstream>
 #include <memory>
 #include <exception>
@@ -19,6 +20,8 @@ enum class HTTPMethod {
     mPOST,
     mDELETE
 };
+
+extern std::vector<std::string> methodStr;
 
 class HTTPClient {
 public:

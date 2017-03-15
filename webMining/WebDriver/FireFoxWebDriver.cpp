@@ -75,24 +75,41 @@ const std::string &FireFoxWebDriver::getPageSource() {
 void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
   if (!sessionId.empty()) {
     try{
-    auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
+      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
 
-    if (!response["value"].is_string() || response["value"].empty())
-      throw std::runtime_error("FireFoxWebDriver::takeScreenshot " + response.dump());
+      if (!response["value"].is_string() || response["value"].empty())
+        throw std::runtime_error("FireFoxWebDriver::takeScreenshot " + response.dump());
 
-    std::string base64Screenshot = response["value"];
-    std::vector<unsigned char> decodedScreenshot;
+      std::string base64Screenshot = response["value"];
+      std::vector<unsigned char> decodedScreenshot;
 
-    if (decode64(base64Screenshot, decodedScreenshot)) {
+      decode64(base64Screenshot, decodedScreenshot);
       std::fstream outputFile(filename + ".png", std::fstream::trunc | std::fstream::binary | std::fstream::out);
       outputFile.write((char *)&decodedScreenshot[0], decodedScreenshot.size());
       outputFile.close();
-    }
     } catch (std::exception &e) {
-    throw;
+      throw;
     }
   } else
     throw std::runtime_error("FireFoxWebDriver::takeScreenshot no session available");
+}
+
+void FireFoxWebDriver::executeScript(const std::string script, bool async) {
+  if (!sessionId.empty()) {
+    try{
+      nlohmann::json jscript = {{"script", script}, {"args", nlohmann::json::array()}};
+      auto response = JSONRequest::go(
+          HTTPMethod::mPOST,
+          driverUrl + "/session/" + sessionId + "/execute/" + (async?"async":"sync"),
+          jscript.dump());
+      /*int status = response["status"];
+      if (status != 0)
+        throw std::runtime_error("FireFoxWebDriver::executeScript " + response.dump());*/
+    } catch (std::exception &e) {
+      throw;
+    }
+  } else
+    throw std::runtime_error("FireFoxWebDriver::executeScript no session available");
 }
 
 void FireFoxWebDriver::deleteSession() {
