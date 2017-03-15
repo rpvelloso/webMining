@@ -94,7 +94,7 @@ void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
     throw std::runtime_error("FireFoxWebDriver::takeScreenshot no session available");
 }
 
-void FireFoxWebDriver::executeScript(const std::string script, bool async) {
+std::string FireFoxWebDriver::executeScript(const std::string script, bool async) {
   if (!sessionId.empty()) {
     try{
       nlohmann::json jscript = {{"script", script}, {"args", nlohmann::json::array()}};
@@ -102,9 +102,9 @@ void FireFoxWebDriver::executeScript(const std::string script, bool async) {
           HTTPMethod::mPOST,
           driverUrl + "/session/" + sessionId + "/execute/" + (async?"async":"sync"),
           jscript.dump());
-      /*int status = response["status"];
-      if (status != 0)
-        throw std::runtime_error("FireFoxWebDriver::executeScript " + response.dump());*/
+   	  if (response["value"].is_structured() && !response["value"]["error"].empty())
+   		  throw std::runtime_error("FireFoxWebDriver::executeScript " + response.dump());
+      return response["value"].dump();
     } catch (std::exception &e) {
       throw;
     }

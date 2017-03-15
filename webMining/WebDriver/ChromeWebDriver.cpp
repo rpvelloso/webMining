@@ -102,7 +102,7 @@ nlohmann::json ChromeWebDriver::status() {
 	return JSONRequest::go(HTTPMethod::mGET,driverUrl + "/status");
 }
 
-void ChromeWebDriver::executeScript(const std::string script, bool async) {
+std::string ChromeWebDriver::executeScript(const std::string script, bool async) {
   if (!sessionId.empty()) {
     try{
       nlohmann::json jscript = {{"script", script}, {"args",nlohmann::json::array()}};
@@ -113,6 +113,7 @@ void ChromeWebDriver::executeScript(const std::string script, bool async) {
       int status = response["status"];
       if (status != 0)
         throw std::runtime_error("ChromeWebDriver::executeScript " + response.dump());
+      return response["value"].dump();
     } catch (std::exception &e) {
       throw;
     }

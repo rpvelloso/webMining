@@ -24,7 +24,7 @@ public:
   virtual void go(std::string url);
   virtual const std::string &getPageSource();
   virtual void takeScreenshot(const std::string &filename);
-  virtual void executeScript(const std::string script, bool async);
+  virtual std::string executeScript(const std::string script, bool async);
   virtual void deleteSession();
 private:
   std::string sessionId = "";

@@ -19,9 +19,10 @@ if #args > 4 then
   local url = args[5]
   driver:newSession()
   driver:go(url)
-  driver:executeScript("alert('test');",true)
-  --local html = driver:getPageSource()
-  --driver:takeScreenshot("screenshot")
+  local ret = driver:executeScript("return document.title;",false)
+  print('return from script: ', ret)
+  local html = driver:getPageSource()
+  driver:takeScreenshot("screenshot")
   --processUrl(url, html)
   driver:deleteSession()
   do return end

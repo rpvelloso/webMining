@@ -30,7 +30,7 @@ public:
   virtual void go(std::string url) = 0;
   virtual const std::string &getPageSource() = 0;
   virtual void takeScreenshot(const std::string &filename) = 0;
-  virtual void executeScript(const std::string script, bool async) = 0;
+  virtual std::string executeScript(const std::string script, bool async) = 0;
   virtual void deleteSession() = 0;
 
   static void luaBinding(sol::state &lua) {
