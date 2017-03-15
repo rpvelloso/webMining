@@ -17,14 +17,16 @@ public:
 
   const std::string &getDriverAddress() const;
   void setDriverAddress(const std::string &addr);
+  const std::string &getSession();
+  void setSession(const std::string &session);
 
-  virtual nlohmann::json status();
-  virtual void newSession();
-  virtual void go(std::string url);
-  virtual const std::string &getPageSource();
-  virtual void takeScreenshot(const std::string &filename);
-  virtual std::string executeScript(const std::string script, bool async);
-  virtual void deleteSession();
+  nlohmann::json status();
+  void newSession();
+  void go(std::string url);
+  const std::string &getPageSource();
+  void takeScreenshot(const std::string &filename);
+  std::string executeScript(const std::string script, bool async);
+  void deleteSession();
 private:
   std::string sessionId = "";
   std::string driverUrl = "localhost:9515";

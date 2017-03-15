@@ -24,6 +24,8 @@ public:
 
   virtual const std::string &getDriverAddress() const = 0;
   virtual void setDriverAddress(const std::string &addr) = 0;
+  virtual const std::string &getSession() = 0;
+  virtual void setSession(const std::string &session) = 0;
 
   virtual nlohmann::json status() = 0;
   virtual void newSession() = 0;
@@ -37,6 +39,8 @@ public:
   	lua.new_usertype<WebDriver>("WebDriver",
       "getDriverAddress",&WebDriver::getDriverAddress,
       "setDriverAddress",WebDriver::setDriverAddress,
+      "getSession",&WebDriver::getSession,
+      "setSession",WebDriver::setSession,
       "newSession", WebDriver::newSession,
       "go", WebDriver::go,
       "getPageSource", &WebDriver::getPageSource,

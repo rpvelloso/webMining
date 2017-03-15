@@ -21,10 +21,11 @@ if #args > 4 then
   driver:go(url)
   local ret = driver:executeScript("return document.title;",false)
   print('return from script: ', ret)
+  print('session: ', driver:getSession())
   local html = driver:getPageSource()
   driver:takeScreenshot("screenshot")
   --processUrl(url, html)
-  driver:deleteSession()
+  --driver:deleteSession()
   do return end
 end
 

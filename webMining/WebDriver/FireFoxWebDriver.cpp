@@ -17,7 +17,7 @@ FireFoxWebDriver::FireFoxWebDriver(std::string driverURL) {
 };
 
 FireFoxWebDriver::~FireFoxWebDriver() {
-if (!sessionId.empty())
+if (!getSession().empty())
 	deleteSession();
 };
 
@@ -34,17 +34,17 @@ void FireFoxWebDriver::newSession() {
 	  auto session = response["value"]["sessionId"];
 	  if (session.is_null())
 		throw std::runtime_error("FireFoxWebDriver::newSession " + response.dump());
-	  sessionId = session;
+	  setSession(session);
 	} catch (std::exception &e) {
 	  throw;
 	}
 }
 
 void FireFoxWebDriver::go(std::string url) {
-	if (!sessionId.empty()) {
+	if (!getSession().empty()) {
 	  try{
 		nlohmann::json jurl = {{"url", url}};
-		auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session/" + sessionId + "/url", jurl.dump());
+		auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session/" + getSession() + "/url", jurl.dump());
 		auto ret = response["value"];
 		if (!ret.empty())
 		  throw std::runtime_error("FireFoxWebDriver::go " + response.dump());
@@ -56,9 +56,9 @@ void FireFoxWebDriver::go(std::string url) {
 }
 
 const std::string &FireFoxWebDriver::getPageSource() {
-	if (!sessionId.empty()) {
+	if (!getSession().empty()) {
 	  try{
-    auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/source");
+    auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/source");
 		auto ret = response["value"];
 		if (!ret.empty() && ret.is_string())
 		  pageSource = ret;
@@ -73,9 +73,9 @@ const std::string &FireFoxWebDriver::getPageSource() {
 }
 
 void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
-  if (!sessionId.empty()) {
+  if (!getSession().empty()) {
     try{
-      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
+      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/screenshot");
 
       if (!response["value"].is_string() || response["value"].empty())
         throw std::runtime_error("FireFoxWebDriver::takeScreenshot " + response.dump());
@@ -95,12 +95,12 @@ void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
 }
 
 std::string FireFoxWebDriver::executeScript(const std::string script, bool async) {
-  if (!sessionId.empty()) {
+  if (!getSession().empty()) {
     try{
       nlohmann::json jscript = {{"script", script}, {"args", nlohmann::json::array()}};
       auto response = JSONRequest::go(
           HTTPMethod::mPOST,
-          driverUrl + "/session/" + sessionId + "/execute/" + (async?"async":"sync"),
+          driverUrl + "/session/" + getSession() + "/execute/" + (async?"async":"sync"),
           jscript.dump());
    	  if (response["value"].is_structured() && !response["value"]["error"].empty())
    		  throw std::runtime_error("FireFoxWebDriver::executeScript " + response.dump());
@@ -112,14 +112,22 @@ std::string FireFoxWebDriver::executeScript(const std::string script, bool async
     throw std::runtime_error("FireFoxWebDriver::executeScript no session available");
 }
 
+const std::string& FireFoxWebDriver::getSession() {
+	return sessionId;
+}
+
+void FireFoxWebDriver::setSession(const std::string& session) {
+	sessionId = session;
+}
+
 void FireFoxWebDriver::deleteSession() {
-	if (!sessionId.empty()) {
+	if (!getSession().empty()) {
 	  try{
-	  auto response = JSONRequest::go(HTTPMethod::mDELETE,driverUrl + "/session/" + sessionId);
+	  auto response = JSONRequest::go(HTTPMethod::mDELETE,driverUrl + "/session/" + getSession());
 		auto ret = response["value"];
 		if (!ret.empty())
 		  throw std::runtime_error("FireFoxWebDriver::deleteSession " + response.dump());
-		sessionId = "";
+		setSession("");
 	  } catch (std::exception &e) {
 		throw;
 	  }

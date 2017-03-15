@@ -17,7 +17,7 @@ ChromeWebDriver::ChromeWebDriver(std::string driverURL) {
 };
 
 ChromeWebDriver::~ChromeWebDriver() {
-if (!sessionId.empty())
+if (!getSession().empty())
 	deleteSession();
 };
 
@@ -38,17 +38,17 @@ void ChromeWebDriver::newSession() {
 	  auto session = response["sessionId"];
 	  if (status != 0)
 		throw std::runtime_error("ChromeWebDriver::newSession " + response.dump());
-	  sessionId = session;
+	  setSession(session);
 	} catch (std::exception &e) {
 	  throw;
 	}
 }
 
 void ChromeWebDriver::go(std::string url) {
-	if (!sessionId.empty()) {
+	if (!getSession().empty()) {
 	  try{
 		nlohmann::json jurl = {{"url", url}};
-		auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session/" + sessionId + "/url", jurl.dump());
+		auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session/" + getSession() + "/url", jurl.dump());
 		int status = response["status"];
 		if (status != 0)
 		  throw std::runtime_error("ChromeWebDriver::go " + response.dump());
@@ -60,9 +60,9 @@ void ChromeWebDriver::go(std::string url) {
 }
 
 const std::string &ChromeWebDriver::getPageSource() {
-	if (!sessionId.empty()) {
+	if (!getSession().empty()) {
 	  try{
-	  auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/source");
+	  auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/source");
 		int status = response["status"];
 		if (status == 0)
 		  pageSource = response["value"];
@@ -77,9 +77,9 @@ const std::string &ChromeWebDriver::getPageSource() {
 }
 
 void ChromeWebDriver::takeScreenshot(const std::string &filename) {
-	if (!sessionId.empty()) {
+	if (!getSession().empty()) {
 	  try{
-      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + sessionId + "/screenshot");
+      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/screenshot");
       int status = response["status"];
       if (status != 0)
         throw std::runtime_error("ChromeWebDriver::takeScreenshot " + response.dump());
@@ -103,12 +103,12 @@ nlohmann::json ChromeWebDriver::status() {
 }
 
 std::string ChromeWebDriver::executeScript(const std::string script, bool async) {
-  if (!sessionId.empty()) {
+  if (!getSession().empty()) {
     try{
       nlohmann::json jscript = {{"script", script}, {"args",nlohmann::json::array()}};
       auto response = JSONRequest::go(
           HTTPMethod::mPOST,
-          driverUrl + "/session/" + sessionId + (async?"/execute_async":"/execute"),
+          driverUrl + "/session/" + getSession() + (async?"/execute_async":"/execute"),
           jscript.dump());
       int status = response["status"];
       if (status != 0)
@@ -121,14 +121,22 @@ std::string ChromeWebDriver::executeScript(const std::string script, bool async)
     throw std::runtime_error("ChromeWebDriver::executeScript no session available");
 }
 
+const std::string& ChromeWebDriver::getSession() {
+	return sessionId;
+}
+
+void ChromeWebDriver::setSession(const std::string& session) {
+	sessionId = session;
+}
+
 void ChromeWebDriver::deleteSession() {
-	if (!sessionId.empty()) {
+	if (!getSession().empty()) {
 	  try{
-	    auto response = JSONRequest::go(HTTPMethod::mDELETE,driverUrl + "/session/" + sessionId);
+	    auto response = JSONRequest::go(HTTPMethod::mDELETE,driverUrl + "/session/" + getSession());
 	    int status = response["status"];
 	    if (status != 0)
 	      throw std::runtime_error("ChromeWebDriver::deleteSession " + response.dump());
-	    sessionId = "";
+	    setSession("");
 	  } catch (std::exception &e) {
 	    throw;
 	  }
