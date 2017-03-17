@@ -120,6 +120,20 @@ void FireFoxWebDriver::setSession(const std::string& session) {
 	sessionId = session;
 }
 
+std::string FireFoxWebDriver::getCurrentURL() {
+  if (!getSession().empty()) {
+    try{
+      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/url");
+      if (response["value"].is_structured() && !response["value"]["error"].empty())
+        throw std::runtime_error("FireFoxWebDriver::getCurrentURL " + response.dump());
+      return response["value"];
+    } catch (std::exception &e) {
+      throw;
+    }
+  } else
+    throw std::runtime_error("FireFoxWebDriver::getCurrentURL no session available");
+}
+
 void FireFoxWebDriver::deleteSession() {
 	if (!getSession().empty()) {
 	  try{

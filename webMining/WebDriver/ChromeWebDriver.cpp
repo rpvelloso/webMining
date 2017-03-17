@@ -129,6 +129,21 @@ void ChromeWebDriver::setSession(const std::string& session) {
 	sessionId = session;
 }
 
+std::string ChromeWebDriver::getCurrentURL() {
+  if (!getSession().empty()) {
+    try{
+      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/url");
+      int status = response["status"];
+      if (status != 0)
+        throw std::runtime_error("ChromeWebDriver::getCurrentURL " + response.dump());
+      return response["value"];
+    } catch (std::exception &e) {
+      throw;
+    }
+  } else
+    throw std::runtime_error("ChromeWebDriver::getCurrentURL no session available");
+}
+
 void ChromeWebDriver::deleteSession() {
 	if (!getSession().empty()) {
 	  try{

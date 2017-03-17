@@ -9,6 +9,8 @@
 #define WEBDRIVER_WEBDRIVER_HPP_
 
 #include <exception>
+#include <fstream>
+#include <sstream>
 #include "HTTPClient.hpp"
 #include "../3rdparty/json.hpp"
 #include "../3rdparty/sol.hpp"
@@ -30,9 +32,16 @@ public:
   virtual nlohmann::json status() = 0;
   virtual void newSession() = 0;
   virtual void go(std::string url) = 0;
+  virtual std::string getCurrentURL() = 0;
   virtual const std::string &getPageSource() = 0;
   virtual void takeScreenshot(const std::string &filename) = 0;
   virtual std::string executeScript(const std::string script, bool async) = 0;
+  virtual std::string executeScriptFromFile(const std::string filename, bool async) {
+    std::fstream scriptFile(filename);
+    std::stringstream script;
+    script << scriptFile.rdbuf();
+    return executeScript(script.str(), async);
+  };
   virtual void deleteSession() = 0;
 
   static void luaBinding(sol::state &lua) {
@@ -43,9 +52,11 @@ public:
       "setSession",WebDriver::setSession,
       "newSession", WebDriver::newSession,
       "go", WebDriver::go,
+      "getCurrentURL",WebDriver::getCurrentURL,
       "getPageSource", &WebDriver::getPageSource,
       "takeScreenshot", WebDriver::takeScreenshot,
       "executeScript", WebDriver::executeScript,
+      "executeScriptFromFile", WebDriver::executeScriptFromFile,
       "deleteSession", WebDriver::deleteSession
   	);
 

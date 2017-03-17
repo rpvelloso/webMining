@@ -23,6 +23,7 @@ public:
   nlohmann::json status();
   void newSession();
   void go(std::string url);
+  std::string getCurrentURL();
   const std::string &getPageSource();
   void takeScreenshot(const std::string &filename);
   std::string executeScript(const std::string script, bool async);
