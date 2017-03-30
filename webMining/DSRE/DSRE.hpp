@@ -25,6 +25,7 @@
 #include "DSREDataRegion.hpp"
 #include "../3rdparty/sol.hpp"
 #include "../base/TPSExtractor.hpp"
+#include "DSREAbstractRecordAligner.hpp"
 
 class DSRE : public TPSExtractor<DSREDataRegion> {
  public:
@@ -35,6 +36,7 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   void setMinZScore(double minZScore);
   double getMinCV() const;
   void setMinCV(double minCV);
+  void setAlignmentStrategy(AlignmentStrategy strategy);
 
   static void luaBinding(sol::state &lua);
 
@@ -44,9 +46,6 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   std::vector<size_t> detectStructure();
   std::set<size_t> locateRecords(DSREDataRegion &region);
   void pruneRecords(DSREDataRegion &, std::set<size_t> &);
-  void alignRecords(DSREDataRegion &, std::set<size_t> &);
-  void extractRecords(std::vector<std::wstring> &m, std::set<size_t> &recpos,
-                      DSREDataRegion &);
   void rankRegions(const std::vector<size_t> &);
 
   std::list<std::pair<size_t, size_t> > segmentDifference(
@@ -56,6 +55,8 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
 
   double minZScore;
   double minCV;
+
+  std::unique_ptr<DSREAbstractRecordAligner> alignStrategy;
 };
 
 #endif /* DSRE_HPP_ */
