@@ -13,7 +13,6 @@
 #include "../base/DataRegion.hpp"
 
 DSREAligner::DSREAligner() {
-	std::cerr << "Using Default Alignment" << std::endl;
 }
 
 DSREAligner::~DSREAligner() {

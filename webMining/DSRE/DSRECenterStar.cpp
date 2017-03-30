@@ -8,7 +8,6 @@
 #include "DSRECenterStar.hpp"
 
 DSRECenterStar::DSRECenterStar() {
-	std::cerr << "Using CenterStar Alignment" << std::endl;
 }
 
 DSRECenterStar::~DSRECenterStar() {
@@ -16,10 +15,8 @@ DSRECenterStar::~DSRECenterStar() {
 
 void DSRECenterStar::align(DSREDataRegion& region, std::set<size_t>& recpos) {
   std::vector<std::wstring> m;
-  std::vector<std::vector<pNode>> n;
 
   // create a sequence for each record found
-  auto firstNode = region.getNodeSequence().begin();
   auto firstTP = region.getTps().begin();
   size_t max_size = 0;
   if (recpos.size() > 1) {
@@ -27,7 +24,6 @@ void DSRECenterStar::align(DSREDataRegion& region, std::set<size_t>& recpos) {
 	for (auto rp = ++(recpos.begin()); rp != recpos.end(); ++rp, ++prev) {
 	  if (((*rp) - (*prev)) > 0) {
 		m.emplace_back(firstTP + *prev, firstTP + *rp);
-		n.emplace_back(firstNode + *prev, firstNode + *rp);
 
 		max_size = std::max((*rp) - (*prev), max_size);
 	  }
@@ -35,7 +31,6 @@ void DSRECenterStar::align(DSREDataRegion& region, std::set<size_t>& recpos) {
 
 	if (*prev < region.getTps().size() - 1) {
 	  m.emplace_back(region.getTps().substr(*prev, max_size));
-	  n.emplace_back(firstNode + *prev, firstNode + *prev + max_size);
 	}
   }
 
