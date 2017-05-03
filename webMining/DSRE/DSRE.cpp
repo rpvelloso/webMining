@@ -252,7 +252,7 @@ std::vector<size_t> DSRE::detectStructure() {
 }
 
 #define PADDING 2.0
-#define INTERVAL 3.0
+#define INTERVAL 2.0
 
 std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
   std::wstring s = region.getTps();
@@ -313,12 +313,12 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         std::advance(
             firstFreq,
 			//(std::max((double)recpos.size(), INTERVAL) - INTERVAL) * transformScale
-            std::max((recpos.size()-1) * transformScale, INTERVAL) - INTERVAL
+            std::max((recpos.size()-1) * transformScale, INTERVAL*transformScale) - (INTERVAL*transformScale)
 			) ;
         std::advance(
         		lastFreq,
 				//((recpos.size() + INTERVAL) * transformScale) + 1
-				((recpos.size()+1) * transformScale) + INTERVAL+1.0
+				((recpos.size()+1) * transformScale) + (INTERVAL*transformScale)+1.0
 				);
 
         for (auto p = firstFreq; p != lastFreq; ++p) {
@@ -394,7 +394,26 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
     float tpsCenter = (tpsSize - 1) / 2;
     float maxDistance = tpsSize / 2;
 
+    float globalMax = tagPathSequence[0];
+    float globalMean = 0;
+	for (auto v:tagPathSequence) {
+		if (v > globalMax)
+			globalMax = v;
+		globalMean += v;
+	}
+	globalMean /= tpsSize;
+
     for (auto i : structured) {
+    	auto regionSize = dataRegions[i].getTps().size();
+    	float localMax = dataRegions[i].getTps()[0];
+    	float localMean = 0;
+    	for (auto v:dataRegions[i].getTps()) {
+    		if (v > localMax)
+    			localMax = v;
+    		localMean += v;
+    	}
+    	localMean /= regionSize;
+
       float recCount = dataRegions[i].recordCount();
       float recSize = dataRegions[i].recordSize();
       /*auto stddev = regs[i].stddev;*/
@@ -414,8 +433,10 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
       float sizeScore = dataRegions[i].size() / tpsSize;
       float recScore = std::min(recCount, recSize)
           / std::max(recCount, recSize);
+      float rangeScore = std::min((localMax - localMean),(globalMax - globalMean)) /
+    		  std::max((localMax - localMean),(globalMax - globalMean));
 
-      dataRegions[i].setScore((positionScore + sizeScore + recScore) / 3);
+      dataRegions[i].setScore((positionScore + sizeScore + recScore + 3*rangeScore) / 6);
     }
 
     // k-means clustering to identify content
