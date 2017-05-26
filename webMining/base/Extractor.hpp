@@ -16,7 +16,7 @@
 #ifndef EXTRACTOR_HPP_
 #define EXTRACTOR_HPP_
 
-#include <crtdefs.h>
+//#include <crtdefs.h>
 #include <stdexcept>
 #include <vector>
 

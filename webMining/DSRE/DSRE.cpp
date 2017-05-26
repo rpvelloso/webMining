@@ -32,7 +32,7 @@ void DSRE::luaBinding(sol::state &lua) {
 		  "setMinZScore",&DSRE::setMinZScore,
 		  "getMinCV",&DSRE::getMinCV,
 		  "setMinCV",&DSRE::setMinCV,
-		  "setAlignmentStrategy",DSRE::setAlignmentStrategy
+		  "setAlignmentStrategy",&DSRE::setAlignmentStrategy
 		  );
 
   DSREDataRegion::luaBinding(lua);

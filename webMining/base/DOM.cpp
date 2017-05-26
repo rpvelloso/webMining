@@ -30,7 +30,7 @@ void DOM::luaBinding(sol::state &lua) {
 	lua.new_usertype<DOM>("DOM",
 			sol::constructors<sol::types<const std::string>, sol::types<const std::string, const std::string>>(),
 			"printHTML", &DOM::printHTML,
-			"getURI", DOM::getURI,
+			"getURI", &DOM::getURI,
 			"traverse", &DOM::traverse,
 			"setVisitFunction", &DOM::setVisitFunction,
 			"body", &DOM::body,

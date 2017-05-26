@@ -16,7 +16,7 @@
 #ifndef UTIL_HPP_
 #define UTIL_HPP_
 
-#include <crtdefs.h>
+//#include <crtdefs.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>

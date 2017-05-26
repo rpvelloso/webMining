@@ -47,17 +47,17 @@ public:
   static void luaBinding(sol::state &lua) {
   	lua.new_usertype<WebDriver>("WebDriver",
       "getDriverAddress",&WebDriver::getDriverAddress,
-      "setDriverAddress",WebDriver::setDriverAddress,
+      "setDriverAddress",&WebDriver::setDriverAddress,
       "getSession",&WebDriver::getSession,
-      "setSession",WebDriver::setSession,
-      "newSession", WebDriver::newSession,
-      "go", WebDriver::go,
-      "getCurrentURL",WebDriver::getCurrentURL,
+      "setSession",&WebDriver::setSession,
+      "newSession", &WebDriver::newSession,
+      "go", &WebDriver::go,
+      "getCurrentURL",&WebDriver::getCurrentURL,
       "getPageSource", &WebDriver::getPageSource,
-      "takeScreenshot", WebDriver::takeScreenshot,
-      "executeScript", WebDriver::executeScript,
-      "executeScriptFromFile", WebDriver::executeScriptFromFile,
-      "deleteSession", WebDriver::deleteSession
+      "takeScreenshot", &WebDriver::takeScreenshot,
+      "executeScript", &WebDriver::executeScript,
+      "executeScriptFromFile", &WebDriver::executeScriptFromFile,
+      "deleteSession", &WebDriver::deleteSession
   	);
 
     lua["webDriver"] = lua.create_table_with(

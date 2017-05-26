@@ -15,7 +15,7 @@
 
 #include "StructuredDataRegion.hpp"
 
-#include <crtdefs.h>
+//#include <crtdefs.h>
 #include <algorithm>
 #include <iterator>
 #include <stdexcept>

@@ -16,7 +16,7 @@
 #ifndef STRUCTUREDDATAREGION_HPP_
 #define STRUCTUREDDATAREGION_HPP_
 
-#include <crtdefs.h>
+//#include <crtdefs.h>
 #include <vector>
 
 #include "DataRegion.hpp"
