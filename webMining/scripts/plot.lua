@@ -2,7 +2,7 @@ plotSequences = function(dsre,output,filename)
   local regions = dsre:regionCount()
   local tps = dsre:getTps()
 
-  f = io.open(filename..".plot.txt","w")
+  local f = io.open(filename..".plot.txt","w")
   if output == "file" then
     f:write("set term ",term["default"],CRLF)
   else

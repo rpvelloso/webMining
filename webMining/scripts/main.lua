@@ -1,5 +1,5 @@
-gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
---gnuplot = "/usr/bin/gnuplot"
+--gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "/usr/bin/gnuplot"
 CRLF = "\n"
 
 term = {}
@@ -18,21 +18,32 @@ loadfile("../scripts/testbed.lua")()
 --queryDB()
 --do return end
 
-minZScore = 9.0
-minCV = 0.35
+minZScore = 5.0
+minCV = 0.30
+
+--driver = webDriver.fireFox
+
+if driver ~= nil then
+  driver:newSession()
+end
 
 if #args > 4 then
   processFile(args[5])
   do return end
 end
 
-processTestBed("../../datasets/lightExtractorExperiment")
+processTestBed("../../datasets/top")
 do return end
+processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\top")
+processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\clustvx")
+processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\yamada")
+processTestBed("../../datasets/zhao3")
+processTestBed("../../datasets/yamada")
+processTestBed("../../datasets/clustvx")
+processTestBed("../../datasets/lightExtractorExperiment")
 -- [[
 processTestBed("../../datasets/trieschnigg2")
-processTestBed("../../datasets/yamada")
 processTestBed("../../datasets/tpsf")
-processTestBed("../../datasets/clustvx")
 processTestBed("../../datasets/alvarez")
 processTestBed("../../datasets/zhao3")
 processTestBed("../../datasets/TWEB_TB2")
