@@ -26,8 +26,8 @@
 
 #include "../3rdparty/Ckmeans.1d.dp.h"
 
-#define fft(X) _fft(X,1)
-#define ifft(X) _fft(X,-1,false)
+#define fft(beginIt, endIt) _fft(beginIt, endIt, 1)
+#define ifft(beginIt, endIt) _fft(beginIt, endIt, -1,false)
 void hannWindow(std::vector<double> &inp);
 
 struct LinearRegression {
@@ -37,7 +37,7 @@ struct LinearRegression {
 
 std::string stringTok(std::string &inp, const std::string &delim);
 std::vector<double> fct(const std::vector<double> &signal);
-std::vector<double> _fft(std::vector<double> &, int, bool = true);
+std::vector<double> _fft(std::vector<double>::iterator, std::vector<double>::iterator, int, bool = true);
 void decode64(const std::string &, std::vector<unsigned char> &);
 
 template<typename T>

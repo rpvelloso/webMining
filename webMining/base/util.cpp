@@ -48,8 +48,9 @@ std::string stringTok(std::string &inp, const std::string &delim) {
   return token;
 }
 
-std::vector<double> _fft(std::vector<double> &signal, int dir, bool psd = true) {
-  size_t N = (signal.size() + (signal.size() % 2));
+std::vector<double> _fft(std::vector<double>::iterator beginIt, std::vector<double>::iterator endIt, int dir, bool psd = true) {
+  size_t signalSize = std::distance(beginIt, endIt);
+  size_t N = (signalSize + (signalSize % 2));
   std::vector<double> ret(N);
 
   auto fftDeleter = [](fft_set *ptr){free(ptr);};
@@ -58,13 +59,14 @@ std::vector<double> _fft(std::vector<double> &signal, int dir, bool psd = true) 
   std::unique_ptr<fft_data[]> inp(new fft_data[N]);
   std::unique_ptr<fft_data[]> oup(new fft_data[N]);
 
-  for (size_t i = 0; i < N; i++) {
-    inp[i].re = signal[i];
+  auto it = beginIt;
+  for (size_t i = 0; it != endIt ;++it, ++i) {
+    inp[i].re = *it;
     inp[i].im = 0;
   }
 
-  if (signal.size() != N) {  // repeat last sample when signal size is odd
-    inp[N - 1].re = signal[N - 2];
+  if (signalSize != N) {  // repeat last sample when signal size is odd
+    inp[N - 1].re = *it;
     inp[N - 1].im = 0;
   }
 
@@ -87,7 +89,7 @@ std::vector<double> fct(const std::vector<double> &signal) {
     sig4n[(i * 2) + 1] = signal[i];
     sig4n[(signal.size() * 4) - (i * 2) - 1] = signal[i];
   }
-  auto ft = _fft(sig4n, 1, false);
+  auto ft = _fft(sig4n.begin(), sig4n.end(), 1, false);
   ft.resize(signal.size());
 
   return ft;

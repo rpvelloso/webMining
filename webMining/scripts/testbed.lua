@@ -1,4 +1,4 @@
-minZScore = 9.0
+minPSD = 9.0
 minCV = 0.35
 
 processTestBed = function(dir, generateOutput)
@@ -12,8 +12,9 @@ processTestBed = function(dir, generateOutput)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom
     local dsre = DSRE.new()
+    dsre:setUseFourier(false)
     dsre:setAlignmentStrategy(1)
-    dsre:setMinZScore(minZScore)
+    dsre:setMinPSD(minPSD)
     dsre:setMinCV(minCV)
     
     local start = os.clock()
@@ -46,7 +47,8 @@ processFile = function(filename)
     local dom
     local dsre = DSRE.new()
     dsre:setAlignmentStrategy(1)
-    dsre:setMinZScore(minZScore)
+    dsre:setUseFourier(false)
+    dsre:setMinPSD(minPSD)
     dsre:setMinCV(minCV)
     
     print("Extracting records.")
@@ -77,7 +79,10 @@ processUrl = function(url, html)
     print(string.format("Loading DOM tree: %s",url),CRLF)
     local dom = DOM.new(url,html)
     local dsre = DSRE.new()
-    dsre:setMinZScore(minZScore)
+    dsre:setAlignmentStrategy(1)
+    dsre:setUseFourier(false)
+    dsre:setMinPSD(minPSD)
+    dsre:setMinCV(minCV)
     
     print("Extracting records.")
     local start = os.clock()

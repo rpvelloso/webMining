@@ -16,6 +16,9 @@
 #include <algorithm>
 #include <iomanip>
 #include "DSRE.hpp"
+
+#include "../base/Fourier.hpp"
+#include "../base/Goertzel.hpp"
 #include "DSREAligner.hpp"
 #include "DSRECenterStar.hpp"
 #include "../base/util.hpp"
@@ -28,18 +31,19 @@ void DSRE::luaBinding(sol::state &lua) {
 		  "printTps", &DSRE::printTps,
 		  "regionCount", &DSRE::regionCount,
 		  "getDataRegion", &DSRE::getDataRegion,
-		  "getMinZScore",&DSRE::getMinZScore,
-		  "setMinZScore",&DSRE::setMinZScore,
+		  "getMinPSD",&DSRE::getMinPSD,
+		  "setMinPSD",&DSRE::setMinPSD,
 		  "getMinCV",&DSRE::getMinCV,
 		  "setMinCV",&DSRE::setMinCV,
-		  "setAlignmentStrategy",&DSRE::setAlignmentStrategy
+		  "setAlignmentStrategy",&DSRE::setAlignmentStrategy,
+		  "setUseFourier",&DSRE::setUseFourier
 		  );
 
   DSREDataRegion::luaBinding(lua);
 }
 
 DSRE::DSRE()
-    : TPSExtractor<DSREDataRegion>(), minZScore(3.0), minCV(0.35), alignStrategy(new DSREAligner()) {
+    : TPSExtractor<DSREDataRegion>(), minPSD(3.0), minCV(0.35), alignStrategy(new DSREAligner()) {
 }
 
 DSRE::~DSRE() {
@@ -112,6 +116,10 @@ void DSRE::setAlignmentStrategy(AlignmentStrategy strategy) {
 	default:
 		alignStrategy.reset(new DSREAligner());
 	}
+}
+
+void DSRE::setUseFourier(bool useFourier) {
+	this->useFourier = useFourier;
 }
 
 std::unordered_map<int, int> DSRE::symbolFrequency(std::wstring s,
@@ -299,42 +307,31 @@ std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
         signal.insert(signal.end(), signal.begin(), signal.end()); // 8x
         signal.resize(signal.size() * PADDING, 0);  // zero pad
 
-        auto psd = fft(signal); // transform
-        auto psdSD = stddev(psd);
-        auto psdMean = mean(psd);
+        std::unique_ptr<PSD> psd(useFourier?
+        		make_fourier(signal.begin(), signal.end()):
+        		make_goertzel(signal.begin(), signal.end()));
+
         double transformScale = (double) signal.size()
             / (double) originalSize;
-        for (auto &i : psd)  // convert to Z Score
-          i = (i - psdMean) / psdSD;
 
         double peakFreq = -1;
-        auto firstFreq = psd.begin();
-        auto lastFreq = psd.begin();
-        std::advance(
-            firstFreq,
-			//(std::max((double)recpos.size(), INTERVAL) - INTERVAL) * transformScale
-            std::max((recpos.size()-1) * transformScale, INTERVAL*transformScale) - (INTERVAL*transformScale)
-			) ;
-        std::advance(
-        		lastFreq,
-				//((recpos.size() + INTERVAL) * transformScale) + 1
-				((recpos.size()+1) * transformScale) + (INTERVAL*transformScale)+1.0
-				);
 
-        for (auto p = firstFreq; p != lastFreq; ++p) {
-          if (std::abs(*p) > minZScore) {
-            peakFreq = *p;
-            break;
-          }
+        for (int pos = ((recpos.size()-1) * transformScale) - (INTERVAL*transformScale); pos < ((recpos.size()+1) * transformScale) + (INTERVAL*transformScale)+1.0; ++pos) {
+        	auto peak = psd->getPSD(pos);
+        	if (peak > minPSD) {
+        		peakFreq = peak;
+        		break;
+        	}
         }
-        if (peakFreq > minZScore) {
+
+        if (peakFreq > minPSD) {
           std::cerr << ", peak = " << peakFreq << std::endl;
 
           // adjust region to (recpos[0]; recpos[n-1])
           region.shiftStartPos(recpos[0]);
           region.shiftEndPos(-(s.size() - 1 - regionEnd));
           region.refreshTps();
-          region.setTransform(psd);
+          region.setTransform(psd->getFullPSD());
 
           // correct recpos
           std::for_each(recpos.begin(), recpos.end(), [recpos](auto &a) {
@@ -478,15 +475,15 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
        });
 }
 
-double DSRE::getMinZScore() const {
-  return minZScore;
+double DSRE::getMinPSD() const {
+  return minPSD;
 }
 
-void DSRE::setMinZScore(double minZScore) {
-  this->minZScore = minZScore;
+void DSRE::setMinPSD(double minZScore) {
+  this->minPSD = minZScore;
 }
 double DSRE::getMinCV() const {
-  return minZScore;
+  return minPSD;
 }
 
 void DSRE::setMinCV(double minCV) {

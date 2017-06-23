@@ -32,11 +32,12 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   DSRE();
   virtual ~DSRE();
   void extract(pDOM dom) override;
-  double getMinZScore() const;
-  void setMinZScore(double minZScore);
+  double getMinPSD() const;
+  void setMinPSD(double minZScore);
   double getMinCV() const;
   void setMinCV(double minCV);
   void setAlignmentStrategy(AlignmentStrategy strategy);
+  void setUseFourier(bool);
 
   static void luaBinding(sol::state &lua);
 
@@ -53,10 +54,11 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
   void mergeRegions(std::list<std::pair<size_t, size_t> > &);
   std::unordered_map<int, int> symbolFrequency(std::wstring, std::set<int> &);
 
-  double minZScore;
+  double minPSD;
   double minCV;
 
   std::unique_ptr<DSREAbstractRecordAligner> alignStrategy;
+  bool useFourier = true;
 };
 
 #endif /* DSRE_HPP_ */
