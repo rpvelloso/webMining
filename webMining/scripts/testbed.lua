@@ -1,5 +1,6 @@
 minPSD = 9.0
 minCV = 0.35
+fourier = true
 
 processTestBed = function(dir, generateOutput)
   local t, popen = {}, io.popen
@@ -12,7 +13,7 @@ processTestBed = function(dir, generateOutput)
     print(string.format("Loading DOM tree: %s",filename),CRLF)
     local dom
     local dsre = DSRE.new()
-    dsre:setUseFourier(false)
+    dsre:setUseFourier(fourier)
     dsre:setAlignmentStrategy(1)
     dsre:setMinPSD(minPSD)
     dsre:setMinCV(minCV)
@@ -47,7 +48,7 @@ processFile = function(filename)
     local dom
     local dsre = DSRE.new()
     dsre:setAlignmentStrategy(1)
-    dsre:setUseFourier(false)
+    dsre:setUseFourier(fourier)
     dsre:setMinPSD(minPSD)
     dsre:setMinCV(minCV)
     
@@ -80,7 +81,7 @@ processUrl = function(url, html)
     local dom = DOM.new(url,html)
     local dsre = DSRE.new()
     dsre:setAlignmentStrategy(1)
-    dsre:setUseFourier(false)
+    dsre:setUseFourier(fourier)
     dsre:setMinPSD(minPSD)
     dsre:setMinCV(minCV)
     

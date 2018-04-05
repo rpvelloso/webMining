@@ -260,7 +260,7 @@ std::vector<size_t> DSRE::detectStructure() {
 }
 
 #define PADDING 2.0
-#define INTERVAL 2.0
+#define INTERVAL 1.0
 
 std::set<size_t> DSRE::locateRecords(DSREDataRegion &region) {
   std::wstring s = region.getTps();
@@ -400,6 +400,8 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
 	}
 	globalMean /= tpsSize;
 
+	std::unordered_map<int, std::vector<float> > features;
+
     for (auto i : structured) {
     	auto regionSize = dataRegions[i].getTps().size();
     	float localMax = dataRegions[i].getTps()[0];
@@ -432,8 +434,12 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
           / std::max(recCount, recSize);
       float rangeScore = std::min((localMax - localMean),(globalMax - globalMean)) /
     		  std::max((localMax - localMean),(globalMax - globalMean));
+      float angleScore = 1.0 - std::abs(dataRegions[i].getLinearRegression().a) / (M_PI/2.0);
 
-      dataRegions[i].setScore((positionScore + sizeScore + recScore + 3*rangeScore) / 6);
+      dataRegions[i].setScore((positionScore + sizeScore + recScore + 3*rangeScore + angleScore) / 7);
+      //dataRegions[i].setScore((sizeScore + 2*rangeScore) / 3);
+
+      features[i] = {positionScore, sizeScore, recScore, rangeScore, angleScore};
     }
 
     // k-means clustering to identify content
@@ -446,10 +452,23 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
     auto j = ++(scoreResult.cluster.begin());
     for (auto i : structured) {
       dataRegions[i].setContent((((*j) == 2) || (scoreResult.nClusters < 2)));
+      features[i].push_back(dataRegions[i].isContent());
 
       // restore the original region's tps
       dataRegions[i].refreshTps();
       ++j;
+    }
+
+    for (auto &i:features) {
+		std::cerr
+		  << "*** SCORE [" << dataRegions[i.first].getStartPos() << ":" << dataRegions[i.first].size()<< "] ***"
+		  << " 1:" << i.second[0]
+		  << " 2:" << i.second[1]
+		  << " 3:" << i.second[2]
+		  << " 4:" << i.second[3]
+		  << " 5:" << i.second[4]
+		  << " 6:" << i.second[5]
+		  << std::endl;
     }
   }
 
@@ -461,17 +480,11 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
   dataRegions.erase(drEnd, dataRegions.end());
 
   sort(dataRegions.begin(), dataRegions.end(),
-       [](const DSREDataRegion &a, const DSREDataRegion &b)
-       {
+       [](const DSREDataRegion &a, const DSREDataRegion &b) {
          if (a.isContent() == b.isContent())
-         return (a.getScore() > b.getScore());
+        	 return (a.getScore() > b.getScore());
          else
-         {
-           if (a.isContent())
-           return true;
-           else
-           return false;
-         }
+        	 return a.isContent();
        });
 }
 
