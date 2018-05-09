@@ -18,6 +18,16 @@ loadfile("../scripts/testbed.lua")()
 driver = webDriver.fireFox
 driver:newSession()
 
+function urlencode(str)
+   if (str) then
+      str = string.gsub (str, "\n", "\r\n")
+      str = string.gsub (str, "([^%w ])",
+         function (c) return string.format ("%%%02X", string.byte(c)) end)
+      str = string.gsub (str, " ", "+")
+   end
+   return str    
+end
+
 sites = {
 "https://www.submarino.com.br/busca/___QUERY___",
 "https://www.americanas.com.br/busca/___QUERY___",
@@ -74,10 +84,14 @@ sites = {
 "http://www.kdpneus.com.br/___QUERY___",
 "https://www.pneustore.com.br/search/?text=___QUERY___",
 "http://www.tireshop.com.br/4/___QUERY___/q",
-"https://www.containercultura.com.br/busca/?q=___QUERY___/"
+"https://www.containercultura.com.br/busca/?q=___QUERY___/",
+"https://busca.brastemp.com.br/busca?q=___QUERY___",
+"http://www.bebestore.com.br/bebestore/busca?q=___QUERY___",
+"https://www.amaramar.com.br/Busca/___QUERY___/",
+"https://www.tricae.com.br/catalog/?q=___QUERY___"
 }
 
-query = "notebook intel" -- args[5]
+query = "michelin primacy 3 205/55R16" -- args[5]
 
 minPSD = 11
 --minCV = 0.30

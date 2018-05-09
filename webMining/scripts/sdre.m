@@ -201,6 +201,8 @@ function rec = findRecords(reg, a, b)
 	plot(1:n,reg,'k.-'); hold on;
 	plot(1:n,(a.*[1:n]) + b,'k--');
 	text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") ' o']);
+	num2str(a*180/pi,"%3.2f")
+	a
 	%text(n,(a.*n) + b,[num2str(a*180/pi,"%3.2f") '\circ']);
 	title('a - data region, linear regression and record boundary');
 	xlabel('position');
