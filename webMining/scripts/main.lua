@@ -30,24 +30,25 @@ end
 if #args > 4 then
   processFile(args[5])
   --driver:go(args[5])
-  --processUrl(driver:getCurrentURL(), driver:getPageSource())
+  --processUrl(driver:getCurrentURL(), driver:getPageSource(), "./", "output.html")
   do return end
 end
+
 
 processTestBed("../../datasets/top")
 processTestBed("../../datasets/clustvx")
 processTestBed("../../datasets/tpsf")
 processTestBed("../../datasets/lightExtractorExperiment")
+processTestBed("../../datasets/zhao3")
+processTestBed("../../datasets/yamada")
 do return end
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\top")
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\clustvx")
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\yamada")
 processTestBed("../../datasets/zhao3")
-processTestBed("../../datasets/yamada")
 -- [[
 processTestBed("../../datasets/trieschnigg2")
 processTestBed("../../datasets/alvarez")
-processTestBed("../../datasets/zhao3")
 processTestBed("../../datasets/TWEB_TB2")
 processTestBed("../../datasets/TWEB_TB3")
 processTestBed("../../datasets/wien")

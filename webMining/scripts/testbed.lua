@@ -76,7 +76,7 @@ processFile = function(filename)
     dsre:printTps()
 end
 
-processUrl = function(url, html)
+processUrl = function(url, html, dir, output)
     print(string.format("Loading DOM tree: %s",url),CRLF)
     local dom = DOM.new(url,html)
     local dsre = DSRE.new()
@@ -92,11 +92,11 @@ processUrl = function(url, html)
     print(string.format("elapsed time: %.2f",os.clock() - start),CRLF)
     
     print("Outputting results.")
-    displayResults(dsre,"./","output.html")
+    displayResults(dsre,dir,output)
     
     print("Plotting graphs.")
-    plotSequences(dsre,"file","output.html")
+    plotSequences(dsre,"file",dir.."/"..output)
     
-    dom:printHTML()
-    dsre:printTps()
+    --dom:printHTML()
+    --dsre:printTps()
 end
