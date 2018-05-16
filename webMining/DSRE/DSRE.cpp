@@ -429,17 +429,20 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
 
       float positionScore = 1
           - (std::abs(tpsCenter - regionCenter) / maxDistance);
+      //float startScore = 1.0 - (regionCenter/tpsSize);
+      float endHScore = regionCenter/tpsSize;
       float sizeScore = dataRegions[i].size() / tpsSize;
       float recScore = std::min(recCount, recSize)
           / std::max(recCount, recSize);
       float rangeScore = std::min((localMax - localMean),(globalMax - globalMean)) /
     		  std::max((localMax - localMean),(globalMax - globalMean));
+      float endVScore = localMean/globalMax;
       float angleScore = 1.0 - std::abs(dataRegions[i].getLinearRegression().a) / (M_PI/2.0);
 
       dataRegions[i].setScore((positionScore + sizeScore + recScore + 3*rangeScore + angleScore) / 7);
       //dataRegions[i].setScore((sizeScore + 2*rangeScore) / 3);
 
-      features[i] = {positionScore, sizeScore, recScore, rangeScore, angleScore};
+      features[i] = {positionScore, sizeScore, recScore, rangeScore, angleScore, endHScore, endVScore};
     }
 
     // k-means clustering to identify content
@@ -461,14 +464,12 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
 
     for (auto &i:features) {
 		std::cerr
-		  << "*** SCORE [" << dataRegions[i.first].getStartPos() << ":" << dataRegions[i.first].size()<< "] ***"
-		  << " 1:" << i.second[0]
-		  << " 2:" << i.second[1]
-		  << " 3:" << i.second[2]
-		  << " 4:" << i.second[3]
-		  << " 5:" << i.second[4]
-		  << " 6:" << i.second[5]
-		  << std::endl;
+		  << "*** FEATURES *** " << (i.second.back()>0?1:-1);
+		i.second.pop_back();
+		int j = 1;
+		for (auto v:i.second)
+		  std::cerr << " " << j++ << ":" << v;
+		std::cerr << std::endl;
     }
   }
 
