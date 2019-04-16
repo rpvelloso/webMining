@@ -18,6 +18,12 @@ For online documents, using remotely controlled browser (Chrome + w3c web driver
 
 ### Example script (basic.lua)
 
+To run the script bellow, open chromedriver in another terminal and:
+```bash
+./webMining -debug -i basic.lua http://url > output.txt 2> output.debug.txt
+```
+
+#### basic.lua
 ```lua
 CRLF = '\n'
 extractURL = function(url, html, minPSD, minCV) -- loads and parses HTML into a DOM tree 
