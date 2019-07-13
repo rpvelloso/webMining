@@ -26,6 +26,7 @@
 #include "../3rdparty/sol.hpp"
 #include "../base/TPSExtractor.hpp"
 #include "DSREAbstractRecordAligner.hpp"
+#include "DSREContentClassifier.h"
 
 class DSRE : public TPSExtractor<DSREDataRegion> {
  public:
@@ -59,6 +60,7 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
 
   std::unique_ptr<DSREAbstractRecordAligner> alignStrategy;
   bool useFourier = true;
+  DSREContentClassifier classifier;
 };
 
 #endif /* DSRE_HPP_ */

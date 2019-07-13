@@ -1,5 +1,5 @@
-gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
---gnuplot = "/usr/bin/gnuplot"
+--gnuplot = "c:\\Progra~2\\gnuplot\\bin\\gnuplot.exe"
+gnuplot = "/usr/bin/gnuplot"
 CRLF = "\n"
 
 term = {}
@@ -20,6 +20,7 @@ loadfile("../scripts/testbed.lua")()
 
 minPSD = 11
 --minCV = 0.30
+fourier = true
 
 --driver = webDriver.fireFox
 
@@ -35,13 +36,13 @@ if #args > 4 then
 end
 
 
-processTestBed("../../datasets/top")
-processTestBed("../../datasets/clustvx")
-processTestBed("../../datasets/tpsf")
+processTestBed("../../../datasets/top")
+processTestBed("../../../datasets/clustvx")
+processTestBed("../../../datasets/yamada")
+do return end
+processTestBed("../../../datasets/tpsf")
 processTestBed("../../datasets/lightExtractorExperiment")
 processTestBed("../../datasets/zhao3")
-processTestBed("../../datasets/yamada")
-do return end
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\top")
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\clustvx")
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\yamada")

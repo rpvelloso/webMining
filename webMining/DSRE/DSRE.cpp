@@ -443,9 +443,13 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
       //dataRegions[i].setScore((sizeScore + 2*rangeScore) / 3);
 
       features[i] = {positionScore, sizeScore, recScore, rangeScore, angleScore, endHScore, endVScore};
+
+      dataRegions[i].setContent(classifier.predict(positionScore, sizeScore, recScore, rangeScore, angleScore, endHScore, endVScore));
+      features[i].push_back(dataRegions[i].isContent()?1.0:-1.0);
     }
 
     // k-means clustering to identify content
+    /*
     std::vector<double> ckmeansScoreInput;
     ckmeansScoreInput.push_back(0);
     for (auto i : structured)
@@ -461,10 +465,11 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
       dataRegions[i].refreshTps();
       ++j;
     }
+	*/
 
     for (auto &i:features) {
 		std::cerr
-		  << "*** FEATURES *** " << (i.second.back()>0?1:-1);
+		  << "*** FEATURES *** " << i.second.back(); //(i.second.back()>0?1:-1);
 		i.second.pop_back();
 		int j = 1;
 		for (auto v:i.second)

@@ -22,7 +22,7 @@ processTestBed = function(dir, generateOutput)
 
     if driver ~= nil then
       -- driver:go(filename)
-      driver:go('file://c:\\Users\\rvelloso\\workspace' .. filename:sub(6):gsub('/','\\'))
+      driver:go('file:///home/roberto/workspace' .. filename:sub(9):gsub('/','\\'))
       dom = DOM.new(filename, driver:getPageSource())
     else
       dom = DOM.new(filename)
