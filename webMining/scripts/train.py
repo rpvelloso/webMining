@@ -33,7 +33,7 @@ model = Pipeline([
 #('classifier', XGBClassifier(max_depth=3))
 ])
 
-print(mean(cross_val_score(estimator=model, X=x, y=y, cv=ShuffleSplit(n_splits=400, test_size=0.5), scoring='f1')))
+print(mean(cross_val_score(estimator=model, X=x, y=y, cv=ShuffleSplit(n_splits=100, test_size=0.5), scoring='f1')))
 
 model.fit(x, y)
 dump(model, 'classifier.joblib')
