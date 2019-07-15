@@ -28,11 +28,40 @@ data = load_svmlight_file('dataset.svmlight')
 x = data[0].todense()
 y = data[1]
 
+GNB = Pipeline([
+    ('columnselector', ColumnSelector(cols=(0, 1, 2, 3, 5, 6))),
+    #('polyfeat',PolynomialFeatures(degree=2)),
+    ('qtrans', QuantileTransformer(n_quantiles=5, output_distribution='uniform')),
+    ('classifier', GaussianNB())
+    ])
+
+SVM = Pipeline([
+    ('columnselector', ColumnSelector(cols=(1, 2, 3, 5, 6))),
+    ('polyfeat',PolynomialFeatures(degree=3)),
+    ('qtrans', QuantileTransformer(n_quantiles=3, output_distribution='uniform')),
+    ('classifier', SVC(kernel='poly', C=0.6, gamma=0.188, degree=3, shrinking=True))
+    ])
+
+KNN = Pipeline([
+    ('columnselector', ColumnSelector(cols=(0, 1, 2, 3, 5, 6))),
+    #('polyfeat',PolynomialFeatures(degree=2)),
+    ('qtrans', QuantileTransformer(n_quantiles=5, output_distribution='uniform')),
+    ('classifier', KNeighborsClassifier(weights='uniform', p=3, n_neighbors=13))
+    ])
+
+XGB = Pipeline([
+    ('columnselector', ColumnSelector(cols=(0, 1, 2, 3, 5, 6))),
+    #('polyfeat',PolynomialFeatures(degree=2)),
+    ('qtrans', QuantileTransformer(n_quantiles=10, output_distribution='normal')),
+    ('classifier', XGBClassifier(min_child_weight=9, subsample=0.60, n_estimators=92, max_depth=1, ))
+    ])
+
+
 model = Pipeline([
-('column_selector', ColumnSelector(cols=(0,1,2,3,4,5,6))),
+#('column_selector', ColumnSelector(cols=(0,1,2,3,4,5,6))),
 ('scaler', StandardScaler()),
-('poly', PolynomialFeatures(degree=3)),
-('quantile', QuantileTransformer(n_quantiles=5, output_distribution='uniform')),
+#('poly', PolynomialFeatures(degree=3)),
+#('quantile', QuantileTransformer(n_quantiles=5, output_distribution='uniform')),
 #('classifier', LogisticRegression(penalty='l2', solver='liblinear'))
 #('classifier', GradientBoostingClassifier())
 #('classifier', SVC(kernel='poly', C=0.6, gamma=0.188, degree=3, shrinking=True))
@@ -41,10 +70,10 @@ model = Pipeline([
 #('classifier', XGBClassifier(max_depth=3))
 ('classifier', EnsembleVoteClassifier(
     clfs=[
-        GaussianNB(),
-        KNeighborsClassifier(n_neighbors=13),
-        XGBClassifier(max_depth=3),
-        SVC(kernel='poly', C=0.6, gamma=0.188, degree=3, shrinking=True)],
+        GNB,
+        KNN,
+        XGB,
+        SVM],
     weights=[0.5, 0.5, 0.5, 1]))
 ])
 
