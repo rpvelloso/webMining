@@ -113,10 +113,12 @@ model = Pipeline([
     weights=[0.5, 0.5, 0.5, 1]))
 ])
 
-print(mean(cross_val_score(
+scores  = mean(cross_val_score(
     estimator=model,
     X=x, y=y,
-    cv=ShuffleSplit(n_splits=1, test_size=0.3), scoring='f1')))
+    cv=ShuffleSplit(n_splits=100, test_size=0.3), scoring='f1'))
+
+print("score: %0.2f (+/- %0.5f)" % (scores.mean(), scores.std() * 2))
 
 model.fit(x, y)
 dump(model, 'classifier.joblib')
@@ -127,10 +129,10 @@ print('precision: ', precision_score(y, y_pred))
 print('recall: ', recall_score(y, y_pred))
 
 
-plot_learning_curve(
-    model, 'Learning Curve', x, y,
-    train_sizes=[np.linspace(0.1, 1, 100)],
-    cv=5).show()
+#plot_learning_curve(
+#    model, 'Learning Curve', x, y,
+#    train_sizes=[np.linspace(0.1, 1, 100)],
+#    cv=5).show()
 
 
 

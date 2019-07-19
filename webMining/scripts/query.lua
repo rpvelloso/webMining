@@ -93,9 +93,9 @@ sites = {
 "https://www.tricae.com.br/catalog/?q=___QUERY___"
 }
 
-restart = 55
+restart = 0
 
-query = "usb otg" -- args[5]
+query = "tablet 10" -- args[5]
 query = urlencode(query)
 
 minPSD = 11

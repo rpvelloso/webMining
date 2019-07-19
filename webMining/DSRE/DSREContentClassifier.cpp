@@ -47,7 +47,12 @@ bool DSREContentClassifier::predict(
 		throw new std::runtime_error("calling classifier predict method failed.\n");
 	}
 
-	return PyLong_AsLong(pResult) == 1;
+	auto result = PyLong_AsLong(pResult);
+
+	Py_DECREF(pArgs);
+	Py_DECREF(pResult);
+
+	return result == 1;
 };
 
 void DSREContentClassifier::loadPythonScript() {
@@ -64,5 +69,10 @@ void DSREContentClassifier::loadPythonScript() {
 		PyErr_Print();
 		throw new std::runtime_error("error loading python script.");
 	}
+
 	pFunc = PyObject_GetAttrString(pModule, "predict");
+	if (pFunc == nullptr) {
+		PyErr_Print();
+		throw new std::runtime_error("error getting the reference of predict() function.");
+	}
 }
