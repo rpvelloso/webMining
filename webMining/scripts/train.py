@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 from statistics import mean
 from joblib import dump, load
 
@@ -23,6 +26,39 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score, SCORERS
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import ShuffleSplit
+
+from sklearn.model_selection import learning_curve
+
+def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
+                        n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
+    plt.figure()
+    plt.title(title)
+    if ylim is not None:
+        plt.ylim(*ylim)
+    plt.xlabel("Training examples")
+    plt.ylabel("Score")
+    train_sizes, train_scores, test_scores = learning_curve(
+        estimator, X, y, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes)
+    train_scores_mean = np.mean(train_scores, axis=1)
+    train_scores_std = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    test_scores_std = np.std(test_scores, axis=1)
+    plt.grid()
+
+    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
+                     train_scores_mean + train_scores_std, alpha=0.1,
+                     color="r")
+    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
+                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
+    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
+             label="Training score")
+    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
+             label="Cross-validation score")
+
+    plt.legend(loc="best")
+    return plt
+
+
 
 data = load_svmlight_file('dataset.svmlight')
 x = data[0].todense()
@@ -80,7 +116,7 @@ model = Pipeline([
 print(mean(cross_val_score(
     estimator=model,
     X=x, y=y,
-    cv=ShuffleSplit(n_splits=400, test_size=0.3), scoring='f1')))
+    cv=ShuffleSplit(n_splits=1, test_size=0.3), scoring='f1')))
 
 model.fit(x, y)
 dump(model, 'classifier.joblib')
@@ -91,6 +127,10 @@ print('precision: ', precision_score(y, y_pred))
 print('recall: ', recall_score(y, y_pred))
 
 
+plot_learning_curve(
+    model, 'Learning Curve', x, y,
+    train_sizes=[np.linspace(0.1, 1, 100)],
+    cv=5).show()
 
 
 
