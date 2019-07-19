@@ -384,6 +384,8 @@ void DSRE::pruneRecords(DSREDataRegion &region, std::set<size_t> &recpos) {
     recpos.insert(r.second);
 }
 
+DSREContentClassifier DSRE::classifier;
+
 void DSRE::rankRegions(const std::vector<size_t>& structured) {
   if (structured.size()) {
     // compute content score

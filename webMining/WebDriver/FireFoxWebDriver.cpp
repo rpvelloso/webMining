@@ -30,7 +30,7 @@ void FireFoxWebDriver::setDriverAddress(const std::string &addr) {
 
 void FireFoxWebDriver::newSession() {
 	try{
-	  auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session","{}");
+	  auto response = JSONRequest::go(HTTPMethod::mPOST,driverUrl + "/session","{\"capabilities\": {\"alwaysMatch\": {\"browserName\": \"firefox\"}}}");
 	  auto session = response["value"]["sessionId"];
 	  if (session.is_null())
 		throw std::runtime_error("FireFoxWebDriver::newSession " + response.dump());
