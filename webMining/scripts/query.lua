@@ -95,7 +95,7 @@ sites = {
 
 restart = 0
 
-query = "notebook i7" -- args[5]
+query = args[5]
 query = urlencode(query)
 
 minPSD = 11
