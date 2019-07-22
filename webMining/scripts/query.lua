@@ -95,7 +95,7 @@ sites = {
 
 restart = 0
 
-query = "tablet 10" -- args[5]
+query = "notebook i7" -- args[5]
 query = urlencode(query)
 
 minPSD = 11
@@ -106,8 +106,11 @@ for i, site in ipairs(sites) do
     local s = string.gsub(site, "___QUERY___", query)
     local i = string.find(s, "://") + 3
     local j = string.find(string.sub(s, i), "/") + i - 2
+    local filename = string.sub(s, i, j)
+    
     print(s)
     driver:go(s)
-    processUrl(driver:getCurrentURL(), driver:getPageSource(), "results/", string.sub(s, i, j)..".html")
+    processUrl(driver:getCurrentURL(), driver:getPageSource(), "results/", filename..".html")
+    driver:takeScreenshot("results/"..filename)
   end
 end 
