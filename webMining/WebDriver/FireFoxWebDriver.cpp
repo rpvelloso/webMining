@@ -75,7 +75,7 @@ const std::string &FireFoxWebDriver::getPageSource() {
 void FireFoxWebDriver::takeScreenshot(const std::string &filename) {
   if (!getSession().empty()) {
     try{
-      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/screenshot");
+      auto response = JSONRequest::go(HTTPMethod::mGET,driverUrl + "/session/" + getSession() + "/moz/screenshot/full");
 
       if (!response["value"].is_string() || response["value"].empty())
         throw std::runtime_error("FireFoxWebDriver::takeScreenshot " + response.dump());
