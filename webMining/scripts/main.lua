@@ -20,9 +20,9 @@ loadfile("../scripts/testbed.lua")()
 
 minPSD = 11
 --minCV = 0.30
-fourier = true
+fourier = false
 
---driver = webDriver.fireFox
+driver = webDriver.fireFox
 
 if driver ~= nil then
   driver:newSession()
@@ -36,17 +36,16 @@ if #args > 4 then
 end
 
 
+processTestBed("../../../datasets/yamada")
+processTestBed("../../../datasets/tpsf")
+processTestBed("../../../datasets/lightExtractorExperiment")
+processTestBed("../../../datasets/zhao3")
 processTestBed("../../../datasets/top")
 processTestBed("../../../datasets/clustvx")
-processTestBed("../../../datasets/yamada")
 do return end
-processTestBed("../../../datasets/tpsf")
-processTestBed("../../datasets/lightExtractorExperiment")
-processTestBed("../../datasets/zhao3")
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\top")
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\clustvx")
 processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\yamada")
-processTestBed("../../datasets/zhao3")
 -- [[
 processTestBed("../../datasets/trieschnigg2")
 processTestBed("../../datasets/alvarez")

@@ -21,8 +21,9 @@ processTestBed = function(dir, generateOutput)
     local start = os.clock()
 
     if driver ~= nil then
-      -- driver:go(filename)
-      driver:go('file:///home/roberto/workspace' .. filename:sub(9):gsub('/','\\'))
+      --driver:go(filename)
+      driver:go('file:///home/roberto/workspace/webMining/webMining/Default/' .. filename) 
+      --driver:go('file:///home/roberto/workspace' .. filename:sub(9):gsub('/','\\'))
       dom = DOM.new(filename, driver:getPageSource())
     else
       dom = DOM.new(filename)
@@ -56,8 +57,9 @@ processFile = function(filename)
     local start = os.clock()
 
     if driver ~= nil then
-      --driver:go('file://c:\\Users\\rvelloso\\workspace' .. filename:sub(6):gsub('/','\\'))
-      driver:go(filename)
+      driver:go('file:///home/roberto/workspace/webMining/webMining/Default/' .. filename) 
+--:sub(6):gsub('/','\\'))
+      --driver:go('file://' .. filename)
       dom = DOM.new(filename, driver:getPageSource())
     else
       dom = DOM.new(filename)
