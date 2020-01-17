@@ -21,7 +21,7 @@ webMining	:	$(OBJS) libtidy
 libtidy	:
 	$(MAKE) -C 3rdparty/libtidy
 clean:
-	rm -rf $(OBJS) webMining.exe
+	rm -rf $(OBJS) webMining
 	make clean -C 3rdparty/libtidy
 	
 %.o	:	%.c
