@@ -1,9 +1,9 @@
 CC =gcc
 CFLAGS = -Wall -g3 -O0 -I/usr/include/lua5.3 -fPIC -std=c11
-CXXFLAGS = -g3 -O0 -I/usr/include/lua5.3 -I/usr/local/include -I3rdparty/libtidy \
+CXXFLAGS = -g3 -O0 -I/usr/include/lua5.3 -I/usr/local/include -I/usr/include/python3.6m -I3rdparty/libtidy \
 	-fPIC -std=c++1y
 LD = g++
-LDFLAGS = -L/usr/local/lib -lcurl -llua -lpython
+LDFLAGS = -lcurl -llua5.3 -lpython3.6m -lpthread -ldl
 
 OBJS = 3rdparty/Ckmeans.1d.dp.o  3rdparty/lsqlite3.o \
 3rdparty/hsfft.o            3rdparty/sqlite3.o \

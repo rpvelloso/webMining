@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -O0 -g3 -fPIC -std=c11
+CFLAGS = -Wall -O0 -g3 -fPIC
 LD = ld
 LDFLAGS = -r
 OBJS = access.o    attrs.o     entities.o  language.o  pprint.o    tidylib.o \
