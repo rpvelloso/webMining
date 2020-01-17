@@ -84,3 +84,9 @@ end
 
 [Paper published in ICWE'19](
 https://www.researchgate.net/publication/332666543_Web_Page_Structured_Content_Detection_Using_Supervised_Machine_Learning)
+
+## Build deps (Ubuntu and Windows)
+
+### libcurl3-dev
+### liblua5.3-dev
+### python3-dev
