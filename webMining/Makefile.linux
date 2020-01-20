@@ -5,15 +5,7 @@ CXXFLAGS = -g3 -O0 -I/usr/include/lua5.3 -I/usr/local/include -I/usr/include/pyt
 LD = g++
 LDFLAGS = -lcurl -llua5.3 -lpython3.6m -lpthread -ldl
 
-OBJS = 3rdparty/Ckmeans.1d.dp.o  3rdparty/lsqlite3.o \
-3rdparty/hsfft.o            3rdparty/sqlite3.o \
-WebDriver/ChromeWebDriver.o   WebDriver/HTTPClient.o \
-WebDriver/FireFoxWebDriver.o \
-base/Context.o     base/Node.o                  base/util.o \
-base/DOM.o         base/StructuredDataRegion.o \
-base/DataRegion.o  base/main.o \
-DSRE/DSRE.o         DSRE/DSRECenterStar.o         DSRE/DSREDataRegion.o \
-DSRE/DSREAligner.o  DSRE/DSREContentClassifier.o
+include Makefile.common
 
 all	:	webMining
 webMining	:	$(OBJS) libtidy
@@ -23,9 +15,4 @@ libtidy	:
 clean:
 	rm -rf $(OBJS) webMining
 	make clean -C 3rdparty/libtidy
-	
-%.o	:	%.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-%.o	:	%.cxx
-%.o	:	%.cc
 	

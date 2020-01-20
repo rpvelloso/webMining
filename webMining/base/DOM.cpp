@@ -117,22 +117,19 @@ void DOM::traverse(int strategy, pNode start) {
 void DOM::printHTML() const {
 	std::cout << output.bp << std::endl;
 }
-;
 
 pNode DOM::body() {
 	return domNodes[tidyGetBody(tdoc)];
 }
-;
 
-void DOM::mapNodes(TidyNode node) {
+void DOM::mapNodes(TidyNode node, int depth) {
 	if (domNodes.count(node) == 0) {
-		domNodes[node] = new Node(this, node);
+		domNodes[node] = new Node(this, node, depth);
 
 		for (auto child = tidyGetChild(node); child; child = tidyGetNext(child))
-			mapNodes(child);
+			mapNodes(child, depth + 1); // remove this recursion
 	}
 }
-;
 
 static void cleanHelper(TidyNode n, std::vector<TidyNode> &remove) {
 	static std::unordered_set<std::string> removeTags = { "script", "noscript" };

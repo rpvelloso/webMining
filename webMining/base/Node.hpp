@@ -30,7 +30,7 @@ class DOM;
 class Node {
   friend class DOM;
  public:
-  Node(DOM *d, TidyNode n);
+  Node(DOM *d, TidyNode n, int depth);
   ~Node();
   pNode next() const;
   std::string getAttr(std::string attrName);
@@ -42,6 +42,7 @@ class Node {
   bool isText() const;
   std::string toString() const;
   static void luaBinding(sol::state &lua);
+  int getDepth() const;
  private:
   Node() = delete;
   TidyNode node;
@@ -49,6 +50,7 @@ class Node {
   std::map<std::string, std::string> attrs;
   std::string tagName;
   std::string value;
+  int depth;
 };
 
 #endif /* NODE_HPP_ */

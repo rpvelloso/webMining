@@ -42,7 +42,7 @@ class DOM {
   static void luaBinding(sol::state &lua);
   size_t size() const;
  private:
-  void mapNodes(TidyNode node);
+  void mapNodes(TidyNode node, int depth = 0);
   std::unordered_map<TidyNode, pNode> domNodes;
   void clear();
   sol::function visit;
