@@ -34,7 +34,7 @@ void Node::luaBinding(sol::state &lua) {
                          );
 }
 
-Node::Node(DOM *d, TidyNode n, int depth)
+Node::Node(DOM *d, TidyNode n, size_t depth)
     : node(n), dom(d), depth(depth) {
   for (auto attr = tidyAttrFirst(node); attr; attr = tidyAttrNext(attr)) {
     if (auto attrName = tidyAttrName(attr)) {
@@ -118,6 +118,18 @@ std::string Node::toString() const {
   return result.str();
 }
 
-int Node::getDepth() const {
+size_t Node::getDepth() const {
 	return depth;
+}
+
+size_t Node::getChildCount() const {
+	return childCount;
+}
+
+void Node::align(pNode node) {
+	alignments.emplace_back(node);
+}
+
+const std::vector<pNode>& Node::getAlignments() {
+	return alignments;
 }

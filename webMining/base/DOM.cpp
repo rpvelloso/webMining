@@ -126,8 +126,10 @@ void DOM::mapNodes(TidyNode node, int depth) {
 	if (domNodes.count(node) == 0) {
 		domNodes[node] = new Node(this, node, depth);
 
-		for (auto child = tidyGetChild(node); child; child = tidyGetNext(child))
+		for (auto child = tidyGetChild(node); child; child = tidyGetNext(child)) {
+			++domNodes[node]->childCount;
 			mapNodes(child, depth + 1); // remove this recursion
+		}
 	}
 }
 
