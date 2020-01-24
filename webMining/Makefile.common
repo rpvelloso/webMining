@@ -6,7 +6,7 @@ base/Context.o     base/Node.o                  base/util.o \
 base/DOM.o         base/StructuredDataRegion.o \
 base/DataRegion.o  base/main.o \
 DSRE/DSRE.o         DSRE/DSRECenterStar.o         DSRE/DSREDataRegion.o \
-DSRE/DSREAligner.o  DSRE/DSREContentClassifier.o
+DSRE/DSREAligner.o  DSRE/DSREContentClassifier.o base/STM.o
 
 %.o	:	%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@

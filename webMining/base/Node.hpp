@@ -31,10 +31,10 @@ class Node {
   friend class DOM;
  public:
   Node(DOM *d, TidyNode n, size_t depth);
-  ~Node();
-  pNode next() const;
+  virtual ~Node();
+  virtual pNode next() const;
   std::string getAttr(std::string attrName);
-  pNode child() const;
+  virtual pNode child() const;
   int type() const;
   std::string getTagName() const;
   bool isImage() const;
@@ -43,17 +43,17 @@ class Node {
   std::string toString() const;
   static void luaBinding(sol::state &lua);
   size_t getDepth() const;
-  size_t getChildCount() const;
+  virtual size_t getChildCount() const;
   void align(pNode);
   const std::vector<pNode> &getAlignments();
- private:
-  Node() = delete;
+protected:
+  Node() = default;
   TidyNode node;
   DOM *dom;
   std::map<std::string, std::string> attrs;
-  std::string tagName;
-  std::string value;
-  size_t depth;
+  std::string tagName = "";
+  std::string value = "";
+  size_t depth = 0;
   size_t childCount = 0;
   std::vector<pNode> alignments;
 };

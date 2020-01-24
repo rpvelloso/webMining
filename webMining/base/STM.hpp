@@ -14,11 +14,11 @@
 class STM {
 public:
 	STM() = delete;
-	static int match(Node *a, Node *b, bool align = false);
+	static int match(pNode a, pNode b, bool align = false);
 private:
 	static void alignTrees(
-			Node *a,
-			Node *b,
+			pNode a,
+			pNode b,
 			const std::vector<std::vector<int>> &m);
 };
 

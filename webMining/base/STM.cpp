@@ -5,18 +5,19 @@
  *      Author: rvelloso
  */
 
+#include "Node.hpp"
 #include "STM.hpp"
 
-bool operator==(Node* a, Node* b) {
-	return a->getTagName() == b->getTagName();
+bool operator==(const Node &a, const Node &b) {
+	return a.getTagName() == b.getTagName();
 }
 
-bool operator!=(Node* a, Node* b) {
+bool operator!=(const Node &a, const Node &b) {
 	return !(a == b);
 }
 
-int STM::match(Node* a, Node* b, bool align) {
-	if (a != b) {
+int STM::match(pNode a, pNode b, bool align) {
+	if (*a != *b) {
 		return 0;
 	}
 
@@ -36,7 +37,7 @@ int STM::match(Node* a, Node* b, bool align) {
 	for (auto child_a = a->child(); child_a; child_a = child_a->next(), ++i) {
 		size_t j = 1;
 		for (auto child_b = b->child(); child_b; child_b = child_b->next(), ++j) {
-			int z = m[i-1][j-1] + STM(child_a, child_b, align);
+			int z = m[i-1][j-1] + match(child_a, child_b, align);
 			m[i][j] = std::max(std::max(m[i][j-1],m[i-1][j]),z);
 		}
 	}
