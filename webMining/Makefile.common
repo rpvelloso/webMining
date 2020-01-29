@@ -8,8 +8,36 @@ base/DataRegion.o  base/main.o \
 DSRE/DSRE.o         DSRE/DSRECenterStar.o         DSRE/DSREDataRegion.o \
 DSRE/DSREAligner.o  DSRE/DSREContentClassifier.o base/STM.o
 
+DEPDIR := .d
+$(shell mkdir -p $(DEPDIR) >/dev/null)
+$(shell mkdir -p $(DEPDIR)/3rdparty >/dev/null)
+$(shell mkdir -p $(DEPDIR)/3rdparty/libtidy >/dev/null)
+$(shell mkdir -p $(DEPDIR)/base >/dev/null)
+$(shell mkdir -p $(DEPDIR)/DSRE >/dev/null)
+$(shell mkdir -p $(DEPDIR)/WebDriver >/dev/null)
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+
+COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c
+COMPILE.cc = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+POSTCOMPILE = @mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d && touch $@
+
 %.o	:	%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-%.o	:	%.cxx
+%.o	:	%.c $(DEPDIR)/%.d
+	$(COMPILE.c) $(OUTPUT_OPTION) $<
+	$(POSTCOMPILE)
+
 %.o	:	%.cc
-	
+%.o	:	%.cc $(DEPDIR)/%.d
+	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+	$(POSTCOMPILE)
+
+%.o	:	%.cxx
+%.o	:	%.cxx $(DEPDIR)/%.d
+	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+	$(POSTCOMPILE)
+
+$(DEPDIR)/%.d: ;
+.PRECIOUS: $(DEPDIR)/%.d
+
+include $(wildcard $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS))))
