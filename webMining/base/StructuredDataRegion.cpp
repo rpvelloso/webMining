@@ -33,6 +33,14 @@ Record StructuredDataRegion::getRecord(size_t pos) const {
   throw new std::out_of_range("record not found");
 }
 
+const Node &StructuredDataRegion::getCell(size_t row, size_t col) const {
+  if (row < recordCount() && col < recordSize())
+    return *records[row][col];
+
+  throw new std::out_of_range("record not found");
+
+}
+
 void StructuredDataRegion::addRecord(const std::vector<pNode>& r) {
   records.emplace_back(r);
 }

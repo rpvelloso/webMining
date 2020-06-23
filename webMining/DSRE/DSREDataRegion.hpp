@@ -41,6 +41,7 @@ class DSREDataRegion : public StructuredDataRegion {
   void eraseNodeSequence(std::function<bool(const pNode &)>);
   void eraseTPS(std::function<bool(const wchar_t &)>);
   const std::wstring& getTps() const;
+  const std::vector<int> getSequence() const;
   LinearRegression getLinearRegression() const noexcept;
   void detectStructure();
   bool isStructured() const;

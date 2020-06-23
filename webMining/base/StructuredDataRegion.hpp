@@ -29,6 +29,8 @@ class StructuredDataRegion : public DataRegion {
   StructuredDataRegion();
   virtual ~StructuredDataRegion();
   Record getRecord(size_t pos) const;
+  const Node &getCell(size_t row, size_t col) const;
+
   void addRecord(const std::vector<pNode> &r);
   size_t recordCount() const noexcept;
   size_t recordSize() const noexcept;

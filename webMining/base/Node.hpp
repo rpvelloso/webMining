@@ -31,7 +31,7 @@ class Node {
   friend class DOM;
  public:
   Node(DOM *d, TidyNode n, size_t depth);
-  virtual ~Node();
+  virtual ~Node() = default;
   virtual pNode next() const;
   std::string getAttr(std::string attrName);
   virtual pNode child() const;

@@ -34,6 +34,11 @@ class TPSExtractor : public StructuredExtractor<DataRegionType> {
     return tagPathSequence;
   }
 
+  std::vector<int> getSequence() const noexcept {
+    std::vector<int> result(tagPathSequence.begin(), tagPathSequence.end());
+    return result;
+  }
+
   void printTps() const {
     std::unordered_map<int, std::string> tpcMap;
 

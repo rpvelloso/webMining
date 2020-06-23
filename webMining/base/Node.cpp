@@ -55,10 +55,6 @@ Node::Node(DOM *d, TidyNode n, size_t depth)
     tagName = name;
 }
 
-Node::~Node() {
-}
-;
-
 pNode Node::next() const {
   auto n = tidyGetNext(node);
   if (n && dom->domNodes.count(n) > 0)
