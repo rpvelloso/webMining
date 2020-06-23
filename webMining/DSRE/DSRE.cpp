@@ -46,9 +46,6 @@ DSRE::DSRE()
     : TPSExtractor<DSREDataRegion>(), minPSD(3.0), minCV(0.35), alignStrategy(new DSREAligner()) {
 }
 
-DSRE::~DSRE() {
-}
-
 void DSRE::extract(pDOM dom) {
   cleanup();
   std::cerr << std::endl << "Processing " << dom->getURI() << " ..."
@@ -450,9 +447,9 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
       features[i].push_back(dataRegions[i].isContent()?1.0:-1.0);
     }
 
-    // k-means clustering to identify content
-    /*
-    std::vector<double> ckmeansScoreInput;
+    // k-means clustering to identify content - replaced by classifier.predict - refactor into a classifier class
+    
+    /*std::vector<double> ckmeansScoreInput;
     ckmeansScoreInput.push_back(0);
     for (auto i : structured)
       ckmeansScoreInput.push_back(dataRegions[i].getScore());  // cluster by score
@@ -466,8 +463,8 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
       // restore the original region's tps
       dataRegions[i].refreshTps();
       ++j;
-    }
-	*/
+    }*/
+	
 
     for (auto &i:features) {
 		std::cerr

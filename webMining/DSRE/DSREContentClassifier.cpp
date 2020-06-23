@@ -61,7 +61,7 @@ void DSREContentClassifier::loadPythonScript() {
 	Py_Initialize();
 	PyRun_SimpleString("import sys, os");
 	PyRun_SimpleString("sys.path.append(os.getcwd())");
-	PyRun_SimpleString("sys.path.insert(0, \"C:\\WinPython\\python-3.6.5.amd64\\Lib\\site-packages\")");
+	//PyRun_SimpleString("sys.path.insert(0, \"C:\\WinPython\\python-3.6.5.amd64\\Lib\\site-packages\")");
 
 	pName = PyUnicode_DecodeFSDefault("classifier");
 	pModule = PyImport_Import(pName);

@@ -31,7 +31,7 @@
 class DSRE : public TPSExtractor<DSREDataRegion> {
  public:
   DSRE();
-  virtual ~DSRE();
+  virtual ~DSRE() = default;
   void extract(pDOM dom) override;
   double getMinPSD() const;
   void setMinPSD(double minZScore);
