@@ -31,7 +31,8 @@ using pDOM = DOM *;
 class DOM {
   friend class Node;
  public:
-  DOM(const std::string &uri, const std::string &html);
+  DOM(const std::string &filename);
+  DOM(const std::string &url, const std::string &html);
   ~DOM();
   void printHTML() const;
   pNode body();
@@ -42,6 +43,7 @@ class DOM {
   static void luaBinding(sol::state &lua);
   size_t size() const;
  private:
+  void init(decltype(tidyParseFile) loader, const std::string &content);
   void mapNodes(TidyNode node, int depth = 0);
   std::unordered_map<TidyNode, pNode> domNodes;
   void clear();

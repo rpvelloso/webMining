@@ -22,7 +22,7 @@ minPSD = 11
 --minCV = 0.30
 fourier = false
 
-driver = webDriver.fireFox
+--driver = webDriver.fireFox
 
 if driver ~= nil then
   driver:newSession()

@@ -15,7 +15,7 @@
 
 #include "StructuredDataRegion.hpp"
 
-//#include <crtdefs.h>
+#include <iostream>
 #include <algorithm>
 #include <iterator>
 #include <stdexcept>
@@ -39,6 +39,25 @@ const Node &StructuredDataRegion::getCell(size_t row, size_t col) const {
 
   throw new std::out_of_range("record not found");
 
+}
+
+std::vector<std::vector<std::string>> StructuredDataRegion::getTable() const {
+  auto rows = recordCount();
+  auto cols = recordSize();
+
+  if (rows > 0 && cols > 0) {
+    std::vector<std::vector<std::string>> result(rows, std::vector<std::string>(cols, ""));
+
+    for (size_t i = 0; i < rows; ++i) {
+      for (size_t j = 0; j < cols; ++j) {
+        if (records[i][j] != nullptr)
+          result[i][j] = records[i][j]->toString();
+      }
+    }
+
+    return result;
+  }
+  return std::vector<std::vector<std::string>>();
 }
 
 void StructuredDataRegion::addRecord(const std::vector<pNode>& r) {

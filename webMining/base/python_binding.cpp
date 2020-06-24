@@ -7,13 +7,20 @@ using namespace boost::python;
 
 
 BOOST_PYTHON_MODULE(webMining) {
-    class_<std::vector<int> >("IntVec")
-        .def(vector_indexing_suite<std::vector<int> >());
+    class_<std::vector<int>>("IntVector")
+        .def(vector_indexing_suite<std::vector<int>>());
 
-    class_<std::vector<double> >("DoubleVec")
-        .def(vector_indexing_suite<std::vector<double> >());
+    class_<std::vector<double>>("DoubleVector")
+        .def(vector_indexing_suite<std::vector<double>>());
 
-    class_<DOM, boost::noncopyable>("DOM", init<const std::string &, const std::string &>())
+    class_<std::vector<std::vector<std::string>>>("StringMatrix")
+        .def(vector_indexing_suite<std::vector<std::vector<std::string>>>());
+
+    class_<std::vector<std::string>>("StringVector")
+        .def(vector_indexing_suite<std::vector<std::string>>());
+
+    class_<DOM, boost::noncopyable>("DOM", init<const std::string &>())
+        .def(init<const std::string &, const std::string &>())
         .def("printHTML", &DOM::printHTML)
         .def("getURI", &DOM::getURI);
 
@@ -33,7 +40,8 @@ BOOST_PYTHON_MODULE(webMining) {
         .def("isContent", &DSREDataRegion::isContent)
         .def("getSequence", &DSREDataRegion::getSequence)
         .def("getTransform", &DSREDataRegion::getTransform)
-        .def("getCell", &DSREDataRegion::getCell, return_value_policy<reference_existing_object>());
+        .def("getCell", &DSREDataRegion::getCell, return_value_policy<reference_existing_object>())
+        .def("getTable", &DSREDataRegion::getTable);
 
     class_<Node, boost::noncopyable>("Node", no_init)
         .def("toString", &Node::toString);

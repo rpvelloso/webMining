@@ -39,8 +39,7 @@ void DOM::luaBinding(sol::state &lua) {
 	Node::luaBinding(lua);
 }
 
-DOM::DOM(const std::string &uri, const std::string &html = "") {
-	this->uri = uri;
+void DOM::init(decltype(tidyParseFile) loader, const std::string &content) {
 	tdoc = tidyCreate();
 
 	tidyOptSetValue(tdoc, TidyIndentContent, "auto");
@@ -69,11 +68,7 @@ DOM::DOM(const std::string &uri, const std::string &html = "") {
 
 	tidySetErrorBuffer(tdoc, &errbuf);
 
-	int parseResult;
-	if (html == "")
-		parseResult = tidyParseFile(tdoc, uri.c_str());
-	else
-		parseResult = tidyParseString(tdoc, html.c_str());
+	int parseResult = loader(tdoc, content.c_str());
 
 	if (parseResult >= 0) {
 		tidyCleanAndRepair(tdoc);
@@ -83,6 +78,16 @@ DOM::DOM(const std::string &uri, const std::string &html = "") {
 		mapNodes(tidyGetHtml(tdoc));
 	} else
 		throw new std::runtime_error("error parsing file " + uri);
+}
+
+DOM::DOM(const std::string &filename) {
+	this->uri = filename;
+	init(tidyParseFile, filename);
+}
+
+DOM::DOM(const std::string &url, const std::string &html) {
+	this->uri = url;
+	init(tidyParseString, html);
 }
 
 DOM::~DOM() {
