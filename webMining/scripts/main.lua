@@ -18,9 +18,9 @@ loadfile("../scripts/testbed.lua")()
 --queryDB()
 --do return end
 
-minPSD = 11
---minCV = 0.30
-fourier = false
+--minPSD = 11
+minCV = 0.40
+--fourier = false
 
 --driver = webDriver.fireFox
 
@@ -36,16 +36,17 @@ if #args > 4 then
 end
 
 
-processTestBed("../../../datasets/yamada")
-processTestBed("../../../datasets/tpsf")
-processTestBed("../../../datasets/lightExtractorExperiment")
-processTestBed("../../../datasets/zhao3")
-processTestBed("../../../datasets/top")
 processTestBed("../../../datasets/clustvx")
+processTestBed("../../../datasets/lightExtractorExperiment")
+processTestBed("../../../datasets/top")
+processTestBed("../../../datasets/tpsf")
+processTestBed("../../../datasets/yamada")
+processTestBed("../../../datasets/zhao3")
+--processTestBed("../../../datasets/unstructured")
 do return end
-processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\top")
-processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\clustvx")
-processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\yamada")
+--processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\top")
+--processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\clustvx")
+--processTestBed("C:\\Users\\rvelloso\\workspace\\datasets\\yamada")
 -- [[
 processTestBed("../../datasets/trieschnigg2")
 processTestBed("../../datasets/alvarez")

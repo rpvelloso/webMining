@@ -116,8 +116,7 @@ const std::wstring& DSREDataRegion::getTps() const {
 }
 
 const std::vector<int> DSREDataRegion::getSequence() const {
-  std::vector<int> result(tps.begin(), tps.end());
-  return result;
+  return std::vector<int>(tps.begin(), tps.end());
 }
 
 LinearRegression DSREDataRegion::getLinearRegression() const noexcept {
