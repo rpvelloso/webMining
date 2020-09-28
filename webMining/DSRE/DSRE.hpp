@@ -60,7 +60,7 @@ class DSRE : public TPSExtractor<DSREDataRegion> {
 
   std::unique_ptr<DSREAbstractRecordAligner> alignStrategy;
   bool useFourier = true;
-  static DSREContentClassifier classifier;
+  DSREContentClassifier &classifier;
 };
 
 #endif /* DSRE_HPP_ */

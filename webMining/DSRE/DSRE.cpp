@@ -43,7 +43,7 @@ void DSRE::luaBinding(sol::state &lua) {
 }
 
 DSRE::DSRE()
-    : TPSExtractor<DSREDataRegion>(), minPSD(3.0), minCV(0.35), alignStrategy(new DSREAligner()) {
+    : TPSExtractor<DSREDataRegion>(), minPSD(3.0), minCV(0.35), alignStrategy(new DSREAligner()), classifier(DSREContentClassifier::getInstance()) {
 }
 
 void DSRE::extract(pDOM dom) {
@@ -381,8 +381,6 @@ void DSRE::pruneRecords(DSREDataRegion &region, std::set<size_t> &recpos) {
     recpos.insert(r.second);
 }
 
-DSREContentClassifier DSRE::classifier;
-
 void DSRE::rankRegions(const std::vector<size_t>& structured) {
   if (structured.size()) {
     // compute content score
@@ -455,15 +453,15 @@ void DSRE::rankRegions(const std::vector<size_t>& structured) {
       ckmeansScoreInput.push_back(dataRegions[i].getScore());  // cluster by score
     auto scoreResult = kmeans_1d_dp(ckmeansScoreInput, 2, 2);
 
-    auto j = ++(scoreResult.cluster.begin());
+    auto j = ++(scoreResult.cluster.begin());*/
     for (auto i : structured) {
-      dataRegions[i].setContent((((*j) == 2) || (scoreResult.nClusters < 2)));
-      features[i].push_back(dataRegions[i].isContent());
+      /*dataRegions[i].setContent((((*j) == 2) || (scoreResult.nClusters < 2)));
+      features[i].push_back(dataRegions[i].isContent());*/
 
       // restore the original region's tps
       dataRegions[i].refreshTps();
-      ++j;
-    }*/
+      //++j;
+    }
 	
 
     for (auto &i:features) {

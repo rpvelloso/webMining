@@ -13,7 +13,19 @@ DSREContentClassifier::DSREContentClassifier() {
 }
 
 DSREContentClassifier::~DSREContentClassifier() {
+	Py_DECREF(pFunc);
+	
 	Py_Finalize();
+}
+
+DSREContentClassifier &DSREContentClassifier::getInstance() {
+	static DSREContentClassifier *instance = nullptr;
+
+	if (!instance) {
+		instance = new DSREContentClassifier();
+	}
+
+	return *instance;
 }
 
 bool DSREContentClassifier::predict(
@@ -25,22 +37,18 @@ bool DSREContentClassifier::predict(
 		float endHScore,
 		float endVScore) {
 
-	PyObject *pFeatures, *pArgs;
-
-	pFeatures = PyTuple_New(7);
-	pArgs = PyTuple_New(1);
-
-	PyTuple_SetItem(pFeatures, 0, PyFloat_FromDouble(positionScore));
-	PyTuple_SetItem(pFeatures, 1, PyFloat_FromDouble(sizeScore));
-	PyTuple_SetItem(pFeatures, 2, PyFloat_FromDouble(recScore));
-	PyTuple_SetItem(pFeatures, 3, PyFloat_FromDouble(rangeScore));
-	PyTuple_SetItem(pFeatures, 4, PyFloat_FromDouble(angleScore));
-	PyTuple_SetItem(pFeatures, 5, PyFloat_FromDouble(endHScore));
-	PyTuple_SetItem(pFeatures, 6, PyFloat_FromDouble(endVScore));
-
-	PyTuple_SetItem(pArgs, 0, pFeatures);
+	PyObject *pArgs = Py_BuildValue("([fffffff])",
+		positionScore,
+		sizeScore,
+		recScore,
+		rangeScore,
+		angleScore,
+		endHScore,
+		endVScore		
+	);
 
 	PyObject* pResult = PyObject_CallObject(pFunc, pArgs);
+	Py_DECREF(pArgs);
 
 	if(pResult == NULL) {
 		PyErr_Print();
@@ -48,29 +56,29 @@ bool DSREContentClassifier::predict(
 	}
 
 	auto result = PyLong_AsLong(pResult);
-
-	Py_DECREF(pArgs);
 	Py_DECREF(pResult);
 
 	return result == 1;
 };
 
 void DSREContentClassifier::loadPythonScript() {
-	PyObject *pName, *pModule;
-
 	Py_Initialize();
 	PyRun_SimpleString("import sys, os");
 	PyRun_SimpleString("sys.path.append(os.getcwd())");
 	//PyRun_SimpleString("sys.path.insert(0, \"C:\\WinPython\\python-3.6.5.amd64\\Lib\\site-packages\")");
 
+	PyObject *pName, *pModule;
+
 	pName = PyUnicode_DecodeFSDefault("classifier");
 	pModule = PyImport_Import(pName);
+	Py_DECREF(pName);
 	if (pModule == nullptr) {
 		PyErr_Print();
 		throw new std::runtime_error("error loading python script.");
 	}
 
 	pFunc = PyObject_GetAttrString(pModule, "predict");
+	Py_DECREF(pModule);
 	if (pFunc == nullptr) {
 		PyErr_Print();
 		throw new std::runtime_error("error getting the reference of predict() function.");

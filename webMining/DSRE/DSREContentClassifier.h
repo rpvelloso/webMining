@@ -12,7 +12,8 @@
 
 class DSREContentClassifier {
 public:
-	DSREContentClassifier();
+	static DSREContentClassifier &getInstance();
+
 	virtual ~DSREContentClassifier();
 	bool predict(
 		float positionScore,
@@ -23,6 +24,7 @@ public:
 		float endHScore,
 		float endVScore);
 private:
+	DSREContentClassifier();
 	PyObject *pFunc;
 
 	void loadPythonScript();

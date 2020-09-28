@@ -74,8 +74,8 @@ processFile = function(filename)
     print("Plotting graphs.")
     plotSequences(dsre,"file","output.html")
     
-    dom:printHTML()
-    dsre:printTps()
+    --dom:printHTML()
+    --dsre:printTps()
 end
 
 processUrl = function(url, html, dir, output)
