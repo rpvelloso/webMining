@@ -41,7 +41,9 @@ BOOST_PYTHON_MODULE(webMining) {
         .def("getSequence", &DSREDataRegion::getSequence)
         .def("getTransform", &DSREDataRegion::getTransform)
         .def("getCell", &DSREDataRegion::getCell, return_value_policy<reference_existing_object>())
-        .def("getTable", &DSREDataRegion::getTable);
+        .def("getTable", &DSREDataRegion::getTable)
+        .def("getStartPos", &DSREDataRegion::getStartPos)
+        .def("getEndPos", &DSREDataRegion::getEndPos);
 
     class_<Node, boost::noncopyable>("Node", no_init)
         .def("toString", &Node::toString);
