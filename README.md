@@ -85,6 +85,8 @@ end
 [Paper published in ICWE'19](
 https://www.researchgate.net/publication/332666543_Web_Page_Structured_Content_Detection_Using_Supervised_Machine_Learning)
 
+[Paper published in SBBD'20](
+https://sbbd.org.br/2020/wp-content/uploads/sites/13/2020/09/OPtimizedExtraction-ST7.pdf)
 ## Building from source
 ```bash
 make
