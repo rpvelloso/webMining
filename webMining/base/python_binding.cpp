@@ -1,5 +1,6 @@
 #include "../DSRE/DSRE.hpp"
 #include "DOM.hpp"
+#include "../WebDriver/FireFoxWebDriver.hpp"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -48,5 +49,11 @@ BOOST_PYTHON_MODULE(webMining) {
     class_<Node, boost::noncopyable>("Node", no_init)
         .def("toString", &Node::toString);
 
-    
+    class_<FireFoxWebDriver>("FireFoxWebDriver", init<>())
+        .def("go", &FireFoxWebDriver::go)
+        .def("newSession", &FireFoxWebDriver::newSession)
+        .def("deleteSession", &FireFoxWebDriver::deleteSession)
+        .def("getCurrentURL", &FireFoxWebDriver::getCurrentURL)
+        .def("getPageSource", &FireFoxWebDriver::getPageSource, return_value_policy<copy_const_reference>())
+        .def("takeScreenshot", &FireFoxWebDriver::takeScreenshot);
 }

@@ -3,7 +3,7 @@ CFLAGS = -Wall -g3 -O0 -I/usr/include/lua5.3 -fPIC -std=c11 `python3-config --cf
 CXXFLAGS = -g3 -O0 -I/usr/include/lua5.3 -I/usr/local/include -I3rdparty/libtidy \
 	-fPIC -std=c++1y `python3-config --cflags`
 LD = g++
-LDFLAGS = -fPIC -lcurl -llua5.3 -lboost_numpy -lboost_python -L/home/roberto/anaconda3/lib -lpython3.7m -lcrypt -lpthread -ldl -lutil -lrt -lm
+LDFLAGS = -fPIC -lcurl -llua5.3 -lboost_numpy38 -lboost_python38 -L/home/roberto/anaconda3/lib -lpython3.8 -lcrypt -lpthread -ldl -lutil -lrt -lm
 
 
 include Makefile.common
